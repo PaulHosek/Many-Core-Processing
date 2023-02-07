@@ -19,7 +19,7 @@ pgmHeader = 'P2' + ' ' + str(width) + ' ' + str(height) + ' ' + str(255) +  '\n'
 pgmHeader_byte = bytearray(pgmHeader,'utf-8')
 
 # write the header to the file
-fout.write(pgmHeader)
+fout.write(pgmHeader_byte)
 
 # write the data to the file 
 img = np.reshape(arr,(height,width))

@@ -2,15 +2,19 @@
 #include <math.h>
 #include <stdlib.h>
 #include "compute.h"
+#include <stdio.h>
 
 /// Replace/erase the following line:
 #include "grid.c"
+
+struct grid initialize(const struct parameters *);
+double update(int, struct grid *);
 
 void do_compute(const struct parameters* p, struct results *r)
 {
 /// Replace/erase the following line:
 struct grid grid = initialize(p);
-printf("%f", T(&grid, 0));
+printf("1. temperature: %f\n", T(&grid, 0));
 #include "ref2.c"
 }
 
