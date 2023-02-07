@@ -10,6 +10,7 @@ void do_compute(const struct parameters* p, struct results *r)
 {
 /// Replace/erase the following line:
 struct grid grid = initialize(p);
+printf("%f", T(&grid, 0));
 #include "ref2.c"
 }
 
@@ -42,6 +43,8 @@ struct grid initialize(const struct parameters* p)
         WD(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
         WI(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
     }
+
+    return cylinder_grid;
 }
 
 double update(int index, struct grid * grid)
