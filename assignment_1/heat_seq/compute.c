@@ -4,7 +4,7 @@
 #include "compute.h"
 
 /// Replace/erase the following line:
-#include "ref1.c"
+#include "grid.c"
 
 void do_compute(const struct parameters* p, struct results *r)
 {
