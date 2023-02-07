@@ -9,7 +9,39 @@
 void do_compute(const struct parameters* p, struct results *r)
 {
 /// Replace/erase the following line:
+struct grid grid = initialize(p);
 #include "ref2.c"
+}
+
+struct grid initialize(const struct parameters* p)
+{
+    struct grid cylinder_grid;
+
+    cylinder_grid.M = p->M;
+    cylinder_grid.N = p->N;
+
+    cylinder_grid.points = (struct pointType *) malloc((p->M + 2) * p->N * sizeof(struct pointType));
+
+    // Halo rows
+    for (int index = 0; index < p->N; index++)
+    {
+        T(&cylinder_grid, index) = p->tinit[index];
+        T(&cylinder_grid, (p->M + 1) * p->N + index) = p->tinit[(p->M - 1) * p->N + index];
+    }
+
+    // Fill the temperature values into the grid cells
+    for (int index = 0; index < p->N * p->M; index++)
+    {
+        T(&cylinder_grid, p->N + index) = p->tinit[index];
+
+        const double conductivity = p->conductivity[index];
+        const double joint_weight_diagonal_neighbors = (1 - conductivity) / (sqrt(2.0) + 1);
+        const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
+
+        C(&cylinder_grid, p->N + index) = conductivity;
+        WD(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
+        WI(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
+    }
 }
 
 double update(int index, struct grid * grid)
