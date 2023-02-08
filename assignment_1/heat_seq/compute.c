@@ -31,8 +31,8 @@ struct grid initialize(const struct parameters* p)
         const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
 
         C(&cylinder_grid, p->N + index) = conductivity;
-        WD(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
-        WI(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
+        WD(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
+        WI(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
     }
 
     return cylinder_grid;
@@ -142,7 +142,5 @@ void do_compute(const struct parameters* p, struct results *r)
 
     } while ((it < p->maxiter) && (!converged));
 
-
     free(grid.points);
 }
-
