@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "grid.c"
 
-<<<<<<< HEAD
 struct grid initialize(const struct parameters *);
 double update(int, struct grid *);
 
@@ -30,8 +29,6 @@ printf("DEBUG: (m+1, n-1): temperature: %f\n", T(&grid, (grid.M + 2) * grid.N - 
 // #include "ref2.c"
 }
 
-=======
->>>>>>> bb81c464e633c4dc9964f9274ea07058432faf78
 struct grid initialize(const struct parameters* p)
 {
     struct grid cylinder_grid;
