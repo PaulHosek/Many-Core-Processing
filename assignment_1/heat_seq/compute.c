@@ -84,21 +84,23 @@ void do_compute(const struct parameters* p, struct results *r)
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     int it = 0;
-    int converged = 1;
+    int converged;
+
     do {
         double maxdiff = 0.0;
         double tmin = p->io_tmax;
         double tsum = 0.0;
         double tmax = p->io_tmin;
         // Check convergence every timestep
-        int converged = 1;
+        converged = 1;
+
 
         for (int index = p->N; index < p->N * (p->M + 1); ++ index){
             double new_temperature = update(index, &grid);
 
             double diff = abs(T(&grid, index) - new_temperature);
 
-            // Check all-below-threshold condition
+            // Continue loop if one difference > threshold
             if (diff >= p->threshold){
                 converged = 0;
             }
@@ -137,6 +139,10 @@ void do_compute(const struct parameters* p, struct results *r)
         grid.old ^= 1;
 
         ++ it; 
+
     } while ((it < p->maxiter) && (!converged));
+
+
+    free(grid.points);
 }
 
