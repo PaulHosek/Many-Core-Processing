@@ -11,9 +11,11 @@ int main(int argc, char **argv)
 
     read_parameters(&p, argc, argv);
 
-    struct grid grid = initialize(p);
+    struct grid grid = initialize(&p);
 
-    printf("Get point N+2:  \n", T(&grid, p->N+2));
+    printf("Get point N+2:  \n", T(&grid, p.N +2));
+
+    free(grid.points);
 
     return 0;
 }
