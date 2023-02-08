@@ -114,7 +114,7 @@ void do_compute(const struct parameters* p, struct results *r)
         double tsum = 0.0;
         double tmax = p->io_tmin;
         // Check convergence every timestep
-        int converged = 1;
+        converged = 1;
         for (int index = p->N; index < p->N * (p->M + 1); ++ index){
             double new_temperature = update(index, &grid);
 
@@ -158,7 +158,7 @@ void do_compute(const struct parameters* p, struct results *r)
         // Flip old and new values
         grid.old ^= 1;
         update_temperature_sums(&grid);
-        ++ it; 
+        ++ it;
     } while ((it < p->maxiter) && (!converged));
 }
 
