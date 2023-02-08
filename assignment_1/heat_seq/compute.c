@@ -5,6 +5,39 @@
 #include <stdio.h>
 #include "grid.c"
 
+double * sum_matrix(struct grid * grid)
+{
+    const int N = grid->N;
+    const int M = grid->M;
+
+    double (* sum_matrix) = (double *) malloc(N * M * 2);
+    for (int row = 0; row < M; row++)
+    {
+        for (int col = 0; col < N; col++)
+        {
+            int index = (row + 1) * N + col;
+
+            int index_left =  index - 1;
+            int index_right = index + 1;
+
+            if (index % N == 0)
+            {
+                index_left = index + N - 1;
+            }
+
+            if (index % N == N - 1)
+            {
+                index_right = index - N + 1;
+            }
+
+            sum_matrix[2 * (row * N + col)] = T(grid, index_left) + T(grid, index_right);
+            sum_matrix[2 * (row * N + col) + 1] = T(grid, index - N) + T(grid, index + N);
+        }
+    }
+
+    return sum_matrix;
+}
+
 struct grid initialize(const struct parameters* p)
 {
     struct grid cylinder_grid;
@@ -22,12 +55,13 @@ struct grid initialize(const struct parameters* p)
     }
 
     // Fill the temperature values into the grid cells
+    const double denominator = sqrt(2.0) + 1;
     for (int index = 0; index < p->N * p->M; index++)
     {
         T(&cylinder_grid, p->N + index) = p->tinit[index];
 
         const double conductivity = p->conductivity[index];
-        const double joint_weight_diagonal_neighbors = (1 - conductivity) / (sqrt(2.0) + 1);
+        const double joint_weight_diagonal_neighbors = (1 - conductivity) / denominator;
         const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
 
         C(&cylinder_grid, p->N + index) = conductivity;
@@ -55,10 +89,8 @@ double update(int index, struct grid * grid)
         index_right = index - n + 1;
     }
 
-    double new_temperature = 0.0;
-
     // Scaled old temperature at the cell
-    new_temperature += T(grid, index) * C(grid, index);
+    double new_temperature = T(grid, index) * C(grid, index);
 
     // Adjacent neighbors
     new_temperature += (T(grid, index_left) + T(grid, index - n) + T(grid, index_right) + T(grid, index + n))
