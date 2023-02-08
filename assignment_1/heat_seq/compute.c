@@ -14,8 +14,21 @@ void do_compute(const struct parameters* p, struct results *r)
 {
 /// Replace/erase the following line:
 struct grid grid = initialize(p);
-printf("1. temperature: %f\n", T(&grid, 0));
-#include "ref2.c"
+printf("DEBUG: (0,0): temperature: %f\n", T(&grid, 0));
+printf("DEBUG: (0, n-1): temperature: %f\n", T(&grid, grid.N - 1));
+printf("DEBUG: (1,0): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, grid.N), C(&grid, grid.N), WD(&grid, grid.N), WI(&grid, grid.N));
+printf("DEBUG: (1,1): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, grid.N + 1), C(&grid, grid.N + 1), WD(&grid, grid.N + 1), WI(&grid, grid.N + 1));
+printf("DEBUG: (1, n-2): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 2 * grid.N - 2), C(&grid, 2 * grid.N - 2), WD(&grid, 2 * grid.N - 2), WI(&grid, 2 * grid.N - 2));
+printf("DEBUG: (1, n-1): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 2 * grid.N - 1), C(&grid, 2 * grid.N - 1), WD(&grid, 2 * grid.N - 1), WI(&grid, 2 * grid.N - 1));
+printf("DEBUG: (2,0): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 2* grid.N), C(&grid, 2* grid.N), WD(&grid, 2* grid.N), WI(&grid, 2* grid.N));
+printf("DEBUG: (2,1): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 2* grid.N + 1), C(&grid, 2* grid.N + 1), WD(&grid, 2* grid.N + 1), WI(&grid, 2* grid.N + 1));
+printf("DEBUG: (2, n-2): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 3 * grid.N - 2), C(&grid, 3 * grid.N - 2), WD(&grid, 3 * grid.N - 2), WI(&grid, 3 * grid.N - 2));
+printf("DEBUG: (2, n-1): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, 3 * grid.N - 1), C(&grid, 3 * grid.N - 1), WD(&grid, 3 * grid.N - 1), WI(&grid, 3 * grid.N - 1));
+printf("DEBUG: (m, 0): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, grid.M * grid.N), C(&grid, grid.M * grid.N), WD(&grid, grid.M * grid.N), WI(&grid, grid.M * grid.N));
+printf("DEBUG: (m, n-1): temperature: %f, conductivity: %f, weights: [%f, %f]\n", T(&grid, (grid.M + 1) * grid.N - 1), C(&grid, (grid.M + 1) * grid.N - 1), WD(&grid, (grid.M + 1) * grid.N - 1), WI(&grid, (grid.M + 1) * grid.N - 1));
+printf("DEBUG: (m+1, 0): temperature: %f\n", T(&grid, (grid.M + 1) * grid.N));
+printf("DEBUG: (m+1, n-1): temperature: %f\n", T(&grid, (grid.M + 2) * grid.N - 1));
+// #include "ref2.c"
 }
 
 struct grid initialize(const struct parameters* p)
@@ -44,8 +57,8 @@ struct grid initialize(const struct parameters* p)
         const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
 
         C(&cylinder_grid, p->N + index) = conductivity;
-        WD(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
-        WI(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
+        WD(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
+        WI(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
     }
 
     return cylinder_grid;
