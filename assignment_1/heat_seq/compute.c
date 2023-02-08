@@ -5,37 +5,29 @@
 #include <stdio.h>
 #include "grid.c"
 
-double * sum_matrix(struct grid * grid)
+void update_temperature_sums(struct grid * grid)
 {
-    const int N = grid->N;
     const int M = grid->M;
+    const int N = grid->N;
 
-    double (* sum_matrix) = (double *) malloc(N * M * 2);
-    for (int row = 0; row < M; row++)
+    for (int index = N; index < N * (M + 1); ++ index)
     {
-        for (int col = 0; col < N; col++)
+        int index_left =  index - 1;
+        int index_right = index + 1;
+
+        if (index % N == 0)
         {
-            int index = (row + 1) * N + col;
-
-            int index_left =  index - 1;
-            int index_right = index + 1;
-
-            if (index % N == 0)
-            {
-                index_left = index + N - 1;
-            }
-
-            if (index % N == N - 1)
-            {
-                index_right = index - N + 1;
-            }
-
-            sum_matrix[2 * (row * N + col)] = T(grid, index_left) + T(grid, index_right);
-            sum_matrix[2 * (row * N + col) + 1] = T(grid, index - N) + T(grid, index + N);
+            index_left = index + N - 1;
         }
-    }
 
-    return sum_matrix;
+        if (index % N == N - 1)
+        {
+            index_right = index - N + 1;
+        }
+
+        TSH(grid, index) = T(grid, index_left) + T(grid, index_right);
+        TSV(grid, index) = T(grid, index - N) + T(grid, index + N);
+    }
 }
 
 struct grid initialize(const struct parameters* p)
@@ -68,7 +60,7 @@ struct grid initialize(const struct parameters* p)
         WD(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
         WI(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
     }
-
+    update_temperature_sums(&cylinder_grid);
     return cylinder_grid;
 }
 
@@ -93,18 +85,17 @@ double update(int index, struct grid * grid)
     double new_temperature = T(grid, index) * C(grid, index);
 
     // Adjacent neighbors
-    new_temperature += (T(grid, index_left) + T(grid, index - n) + T(grid, index_right) + T(grid, index + n))
+    new_temperature += (TSV(grid, index) + TSH(grid, index))
                     * WD(grid, index);
     
     // Diagonal neighbors
-    new_temperature += (T(grid, index_left - n) + T(grid, index_right - n) + T(grid, index_left + n) + T(grid, index_right + n))
+    new_temperature += (TSV(grid, index_left) + TSV(grid, index_right))
                     * WI(grid, index);
 
     TN(grid, index) = new_temperature;
 
     return new_temperature;
 }
-
 
 void do_compute(const struct parameters* p, struct results *r)
 {
@@ -124,7 +115,6 @@ void do_compute(const struct parameters* p, struct results *r)
         double tmax = p->io_tmin;
         // Check convergence every timestep
         int converged = 1;
-
         for (int index = p->N; index < p->N * (p->M + 1); ++ index){
             double new_temperature = update(index, &grid);
 
@@ -167,7 +157,7 @@ void do_compute(const struct parameters* p, struct results *r)
 
         // Flip old and new values
         grid.old ^= 1;
-
+        update_temperature_sums(&grid);
         ++ it; 
     } while ((it < p->maxiter) && (!converged));
 }
