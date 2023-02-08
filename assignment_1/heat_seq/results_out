@@ -1,0 +1,22 @@
+Parameters:
+  -n 150 # number of rows
+  -m 100 # number of columns
+  -i 42 # maximum number of iterations
+  -k 10 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../images/pat1_100x150.pgm # input file for conductivity
+  -t ../../images/pat1_100x150.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+Reading PGM data from ../../images/pat1_100x150.pgm...
+Reading PGM data from ../../images/pat1_100x150.pgm...
+Output:
+
+   Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
+10             2.983348e+01  9.107088e+01  7.339680e+00  5.126099e+01  6.382333e-03  2.843788e+08
+20             2.747471e+01  9.092004e+01  6.971652e+00  5.113275e+01  1.280312e-02  2.835246e+08
+30             2.634281e+01  9.085655e+01  6.868485e+00  5.101915e+01  1.912768e-02  2.846660e+08
+40             2.564666e+01  9.075728e+01  6.824222e+00  5.091887e+01  2.507930e-02  2.894817e+08
+43             1.000000e+02  0.000000e+00  0.000000e+00  0.000000e+00  2.627242e-02  2.970606e+08

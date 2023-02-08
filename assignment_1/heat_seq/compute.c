@@ -83,14 +83,19 @@ void do_compute(const struct parameters* p, struct results *r)
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
 
-    int it = 0;
+    int it = 1;
     int converged;
+    int continue_simulation;
+    double maxdiff;
+    double tmin;
+    double tmax;
+    double tsum;
 
     do {
-        double maxdiff = 0.0;
-        double tmin = p->io_tmax;
-        double tsum = 0.0;
-        double tmax = p->io_tmin;
+        maxdiff = 0.0;
+        tmin = p->io_tmax;
+        tsum = 0.0;
+        tmax = p->io_tmin;
         // Check convergence every timestep
         converged = 1;
 
@@ -98,13 +103,13 @@ void do_compute(const struct parameters* p, struct results *r)
         for (int index = p->N; index < p->N * (p->M + 1); ++ index){
             double new_temperature = update(index, &grid);
 
-            double diff = abs(T(&grid, index) - new_temperature);
+            double diff = fabs(T(&grid, index) - new_temperature);
 
             // Continue loop if one difference > threshold
             if (diff >= p->threshold){
                 converged = 0;
             }
-
+            
             if (it % p->period == 0){
                 // Update results 
                 tsum += new_temperature;
@@ -122,7 +127,7 @@ void do_compute(const struct parameters* p, struct results *r)
             
         }
 
-        // Report results
+        // Update results
         if (it % p->period == 0){
             r->niter = it;
             r->tmin = tmin;
@@ -132,15 +137,14 @@ void do_compute(const struct parameters* p, struct results *r)
             clock_gettime(CLOCK_MONOTONIC, &after);
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-            report_results(p, r);
+            report_results(p,r);
         }
 
         // Flip old and new values
         grid.old ^= 1;
 
         ++ it; 
-
-    } while ((it < p->maxiter) && (!converged));
+    } while ((it <= p->maxiter) && (!converged));
 
     free(grid.points);
 }
