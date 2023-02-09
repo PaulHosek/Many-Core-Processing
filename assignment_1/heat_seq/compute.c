@@ -10,23 +10,23 @@ void update_temperature_sums(struct grid * grid)
     const int M = grid->M;
     const int N = grid->N;
 
-    for (int index = N; index < N * (M + 1); ++ index)
+    for (int index = M; index < M * (N + 1); ++ index)
     {
         int index_left =  index - 1;
         int index_right = index + 1;
 
-        if (index % N == 0)
+        if (index % M == 0)
         {
-            index_left = index + N - 1;
+            index_left = index + M - 1;
         }
 
-        if (index % N == N - 1)
+        if (index % M == M - 1)
         {
-            index_right = index - N + 1;
+            index_right = index - M + 1;
         }
 
         TSH(grid, index) = T(grid, index_left) + T(grid, index_right);
-        TSV(grid, index) = T(grid, index - N) + T(grid, index + N);
+        TSV(grid, index) = T(grid, index - M) + T(grid, index + M);
     }
 }
 
@@ -122,7 +122,7 @@ void do_compute(const struct parameters* p, struct results *r)
         tmax = p->io_tmin;
         // Check convergence every timestep
         converged = 1;
-        for (int index = p->N; index < p->N * (p->M + 1); ++ index){
+        for (int index = p->M; index < p->M * (p->N + 1); ++ index){
             double new_temperature = update(index, &grid);
 
             double diff = fabs(T(&grid, index) - new_temperature);
