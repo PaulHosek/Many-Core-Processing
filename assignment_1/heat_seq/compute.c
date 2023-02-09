@@ -10,7 +10,7 @@ void update_temperature_sums(struct grid * grid)
     const int M = grid->M;
     const int N = grid->N;
 
-    for (int index = M; index < M * (N + 1); ++ index)
+    for (int index = 0; index < M * (N + 2); ++ index)
     {
         int index_left =  index - 1;
         int index_right = index + 1;
@@ -26,7 +26,12 @@ void update_temperature_sums(struct grid * grid)
         }
 
         TSH(grid, index) = T(grid, index_left) + T(grid, index_right);
-        TSV(grid, index) = T(grid, index - M) + T(grid, index + M);
+
+        // Vertical sum only for non-halo rows
+        if ((index >= M) && (index < (N + 1) * M))
+        {
+            TSV(grid, index) = T(grid, index - M) + T(grid, index + M);
+        }
     }
 }
 
