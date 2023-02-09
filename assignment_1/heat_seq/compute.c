@@ -10,7 +10,7 @@ void update_temperature_sums(struct grid * grid)
     const int M = grid->M;
     const int N = grid->N;
 
-    for (int index = 0; index < M * (N + 2); ++ index)
+    for (int index = M; index < M * (N + 1); ++ index)
     {
         int index_left =  index - 1;
         int index_right = index + 1;
@@ -26,12 +26,7 @@ void update_temperature_sums(struct grid * grid)
         }
 
         TSH(grid, index) = T(grid, index_left) + T(grid, index_right);
-
-        // Vertical sum only for non-halo rows
-        if ((index >= M) && (index < (N + 1) * M))
-        {
-            TSV(grid, index) = T(grid, index - M) + T(grid, index + M);
-        }
+        TSV(grid, index) = T(grid, index - M) + T(grid, index + M);
     }
 }
 
@@ -51,6 +46,26 @@ struct grid initialize(const struct parameters* p)
         TN(&cylinder_grid, index) = T(&cylinder_grid, index);
         T(&cylinder_grid, (p->N + 1) * p->M + index) = p->tinit[(p->N - 1) * p->M + index];
         TN(&cylinder_grid, (p->N + 1) * p->M + index) = T(&cylinder_grid, (p->N + 1) * p->M + index);
+    
+        // Temperature sums
+        int index_left =  index - 1;
+        int index_right = index + 1;
+
+        if (index % p->M == 0)
+        {
+            index_left = index + p->M - 1;
+        }
+
+        if (index % p->M == p->M - 1)
+        {
+            index_right = index - p->M + 1;
+        }
+
+        // Upper halo
+        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left) + T(&cylinder_grid, index_right);
+
+        // Lower halo
+        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + (p->N + 1) * p->M) + T(&cylinder_grid, index_right + (p->N + 1) * p->M);
     }
 
     // Fill the temperature values into the grid cells
@@ -67,6 +82,7 @@ struct grid initialize(const struct parameters* p)
         WD(&cylinder_grid, p->M + index) = joint_weight_direct_neighbors / 4.0;
         WI(&cylinder_grid, p->M + index) = joint_weight_diagonal_neighbors / 4.0;
     }
+
     update_temperature_sums(&cylinder_grid);
     return cylinder_grid;
 }
