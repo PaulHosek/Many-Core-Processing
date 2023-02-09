@@ -34,45 +34,51 @@ struct grid initialize(const struct parameters* p)
 {
     struct grid cylinder_grid;
 
-    cylinder_grid.M = p->M;
-    cylinder_grid.N = p->N;
+    const int M = p->M;
+    const int N = p->N;
 
-    cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
+    cylinder_grid.M = M;
+    cylinder_grid.N = N;
+
+    cylinder_grid.points = (struct pointType *) malloc((N + 2) * M * sizeof(struct pointType));
 
     // Halo rows
-    for (int index = 0; index < p->M; index++)
+    const int lower_halo_row_offset = (N + 1) * M;
+    for (int index = 0; index < M; index++)
     {
-        T(&cylinder_grid, index) = p->tinit[index];
-        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
-        T(&cylinder_grid, (p->N + 1) * p->M + index) = p->tinit[(p->N - 1) * p->M + index];
-        TN(&cylinder_grid, (p->N + 1) * p->M + index) = T(&cylinder_grid, (p->N + 1) * p->M + index);
+        const double temperature_upper_halo = p->tinit[index];
+        const double temperature_lower_halo = p->tinit[(N - 1) * M + index];
+        T(&cylinder_grid, index) = temperature_upper_halo;
+        TN(&cylinder_grid, index) = temperature_upper_halo;
+        T(&cylinder_grid, lower_halo_row_offset + index) = temperature_lower_halo;
+        TN(&cylinder_grid, lower_halo_row_offset + index) = temperature_lower_halo;
     
         // Temperature sums
         int index_left =  index - 1;
         int index_right = index + 1;
 
-        if (index % p->M == 0)
+        if (index % M == 0)
         {
-            index_left = index + p->M - 1;
+            index_left = index + M - 1;
         }
 
-        if (index % p->M == p->M - 1)
+        if (index % M == M - 1)
         {
-            index_right = index - p->M + 1;
+            index_right = index - M + 1;
         }
 
         // Upper halo
         TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left) + T(&cylinder_grid, index_right);
 
         // Lower halo
-        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + (p->N + 1) * p->M) + T(&cylinder_grid, index_right + (p->N + 1) * p->M);
+        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + lower_halo_row_offset) + T(&cylinder_grid, index_right + lower_halo_row_offset);
     }
 
     // Fill the temperature values into the grid cells
     const double denominator = sqrt(2.0) + 1;
-    for (int index = 0; index < p->N * p->M; index++)
+    for (int index = 0; index < N * M; index++)
     {
-        T(&cylinder_grid, p->M + index) = p->tinit[index];
+        T(&cylinder_grid, M + index) = p->tinit[index];
 
         const double conductivity = p->conductivity[index];
         const double joint_weight_diagonal_neighbors = (1 - conductivity) / denominator;
