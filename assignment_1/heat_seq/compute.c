@@ -79,7 +79,6 @@ void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
     struct grid grid = initialize(p);
-    print_grid(&grid);
 
     // Measure time
     struct timespec before, after;
