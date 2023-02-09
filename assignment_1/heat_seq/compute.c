@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include "compute.h"
 #include <stdio.h>
-#include "grid.c"
+#include "grid.h"
+
 
 struct grid initialize(const struct parameters* p)
 {
@@ -78,6 +79,7 @@ void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
     struct grid grid = initialize(p);
+    print_grid(&grid);
 
     // Measure time
     struct timespec before, after;
@@ -145,5 +147,6 @@ void do_compute(const struct parameters* p, struct results *r)
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
 
+    print_grid(&grid);
     free(grid.points);
 }
