@@ -19,7 +19,9 @@ struct grid initialize(const struct parameters* p)
     for (int index = 0; index < p->M; index++)
     {
         T(&cylinder_grid, index) = p->tinit[index];
+        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
         T(&cylinder_grid, (p->N + 1) * p->M + index) = p->tinit[(p->N - 1) * p->M + index];
+        TN(&cylinder_grid, (p->N + 1) * p->M + index) = T(&cylinder_grid, (p->N + 1) * p->M + index);
     }
 
     // Fill the temperature values into the grid cells
@@ -146,6 +148,5 @@ void do_compute(const struct parameters* p, struct results *r)
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
 
-    print_grid(&grid);
     free(grid.points);
 }
