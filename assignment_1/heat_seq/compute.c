@@ -12,27 +12,27 @@ struct grid initialize(const struct parameters* p)
     cylinder_grid.M = p->M;
     cylinder_grid.N = p->N;
 
-    cylinder_grid.points = (struct pointType *) malloc((p->M + 2) * p->N * sizeof(struct pointType));
+    cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
 
     // Halo rows
-    for (int index = 0; index < p->N; index++)
+    for (int index = 0; index < p->M; index++)
     {
         T(&cylinder_grid, index) = p->tinit[index];
-        T(&cylinder_grid, (p->M + 1) * p->N + index) = p->tinit[(p->M - 1) * p->N + index];
+        T(&cylinder_grid, (p->N + 1) * p->M + index) = p->tinit[(p->N - 1) * p->M + index];
     }
 
     // Fill the temperature values into the grid cells
-    for (int index = 0; index < p->N * p->M; index++)
+    for (int index = 0; index < p->M * p->N; index++)
     {
-        T(&cylinder_grid, p->N + index) = p->tinit[index];
+        T(&cylinder_grid, p->M + index) = p->tinit[index];
 
         const double conductivity = p->conductivity[index];
         const double joint_weight_diagonal_neighbors = (1 - conductivity) / (sqrt(2.0) + 1);
         const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
 
-        C(&cylinder_grid, p->N + index) = conductivity;
-        WD(&cylinder_grid, p->N + index) = joint_weight_direct_neighbors / 4.0;
-        WI(&cylinder_grid, p->N + index) = joint_weight_diagonal_neighbors / 4.0;
+        C(&cylinder_grid, p->M + index) = conductivity;
+        WD(&cylinder_grid, p->M + index) = joint_weight_direct_neighbors / 4.0;
+        WI(&cylinder_grid, p->M + index) = joint_weight_diagonal_neighbors / 4.0;
     }
 
     return cylinder_grid;
@@ -40,19 +40,19 @@ struct grid initialize(const struct parameters* p)
 
 double update(int index, struct grid * grid)
 {
-    const int n = grid->N;
+    const int m = grid->M;
 
     int index_left =  index - 1;
     int index_right = index + 1;
 
-    if (index % n == 0)
+    if (index % m == 0)
     {
-        index_left = index + n - 1;
+        index_left = index + m - 1;
     }
     
-    if (index % n == n - 1)
+    if (index % m == m - 1)
     {
-        index_right = index - n + 1;
+        index_right = index - m + 1;
     }
 
     double new_temperature = 0.0;
@@ -61,11 +61,11 @@ double update(int index, struct grid * grid)
     new_temperature += T(grid, index) * C(grid, index);
 
     // Adjacent neighbors
-    new_temperature += (T(grid, index_left) + T(grid, index - n) + T(grid, index_right) + T(grid, index + n))
+    new_temperature += (T(grid, index_left) + T(grid, index - m) + T(grid, index_right) + T(grid, index + m))
                     * WD(grid, index);
     
     // Diagonal neighbors
-    new_temperature += (T(grid, index_left - n) + T(grid, index_right - n) + T(grid, index_left + n) + T(grid, index_right + n))
+    new_temperature += (T(grid, index_left - m) + T(grid, index_right - m) + T(grid, index_left + m) + T(grid, index_right + m))
                     * WI(grid, index);
 
     TN(grid, index) = new_temperature;
@@ -85,7 +85,6 @@ void do_compute(const struct parameters* p, struct results *r)
 
     int it = 1;
     int converged;
-    int continue_simulation;
     double maxdiff;
     double tmin;
     double tmax;
@@ -100,7 +99,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
 
 
-        for (int index = p->N; index < p->N * (p->M + 1); ++ index){
+        for (int index = p->M; index < p->M * (p->N + 1); ++ index){
             double new_temperature = update(index, &grid);
 
             double diff = fabs(T(&grid, index) - new_temperature);
