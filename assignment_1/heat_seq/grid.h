@@ -4,6 +4,7 @@
 
 struct pointType {
     double temperature[2];        /* Old and new temperature value */
+    double temperature_sums[2];   /* Temperature sums N+S and E+W */
     double conductivity;          /* Conductivity */
     double weight_direct;        /* Weight as direct neighbor */
     double weight_indirect;      /* Weight as diagonal neighbor */
@@ -18,6 +19,8 @@ struct grid {
 
 
 #define T(g, p)        (g)->points[p].temperature[(g)->old]     /* temperature (getter) */
+#define TSV(g, p)      (g)->points[p].temperature_sums[0]       /* vertical temperature sum */
+#define TSH(g, p)      (g)->points[p].temperature_sums[1]       /* horizontal temperature sum */
 #define TN(g, p)       (g)->points[p].temperature[(g)->old^1]    /* new temperature, just for setting */
 #define WD(g, p)       (g)->points[p].weight_direct             /* Weight as direct neighbor*/
 #define WI(g, p)       (g)->points[p].weight_indirect           /* Weight as diagonal neighbor*/

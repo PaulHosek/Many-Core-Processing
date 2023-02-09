@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "grid.h"
 
-
 void update_temperature_sums(struct grid * grid)
 {
     const int M = grid->M;
@@ -50,12 +49,8 @@ struct grid initialize(const struct parameters* p)
     }
 
     // Fill the temperature values into the grid cells
-<<<<<<< HEAD
     const double denominator = sqrt(2.0) + 1;
     for (int index = 0; index < p->N * p->M; index++)
-=======
-    for (int index = 0; index < p->M * p->N; index++)
->>>>>>> main
     {
         T(&cylinder_grid, p->M + index) = p->tinit[index];
 
@@ -92,19 +87,11 @@ double update(int index, struct grid * grid)
     double new_temperature = T(grid, index) * C(grid, index);
 
     // Adjacent neighbors
-<<<<<<< HEAD
     new_temperature += (TSV(grid, index) + TSH(grid, index))
                     * WD(grid, index);
     
     // Diagonal neighbors
     new_temperature += (TSV(grid, index_left) + TSV(grid, index_right))
-=======
-    new_temperature += (T(grid, index_left) + T(grid, index - m) + T(grid, index_right) + T(grid, index + m))
-                    * WD(grid, index);
-    
-    // Diagonal neighbors
-    new_temperature += (T(grid, index_left - m) + T(grid, index_right - m) + T(grid, index_left + m) + T(grid, index_right + m))
->>>>>>> main
                     * WI(grid, index);
 
     TN(grid, index) = new_temperature;
@@ -135,13 +122,7 @@ void do_compute(const struct parameters* p, struct results *r)
         tmax = p->io_tmin;
         // Check convergence every timestep
         converged = 1;
-<<<<<<< HEAD
         for (int index = p->N; index < p->N * (p->M + 1); ++ index){
-=======
-
-
-        for (int index = p->M; index < p->M * (p->N + 1); ++ index){
->>>>>>> main
             double new_temperature = update(index, &grid);
 
             double diff = fabs(T(&grid, index) - new_temperature);
@@ -183,16 +164,9 @@ void do_compute(const struct parameters* p, struct results *r)
 
         // Flip old and new values
         grid.old ^= 1;
-<<<<<<< HEAD
         update_temperature_sums(&grid);
         ++ it;
     } while ((it < p->maxiter) && (!converged));
-}
-=======
-
-        ++ it; 
-    } while ((it <= p->maxiter) && (!converged));
->>>>>>> main
 
     free(grid.points);
 }
