@@ -34,24 +34,20 @@ struct grid initialize(const struct parameters* p)
 {
     struct grid cylinder_grid;
 
-    const int M = p->M;
-    const int N = p->N;
-
-    cylinder_grid.M = M;
-    cylinder_grid.N = N;
+    cylinder_grid.M = p->M;
+    cylinder_grid.N = p->N;
+    int MN = p->N * p-> M; 
 
     cylinder_grid.points = (struct pointType *) malloc((N + 2) * M * sizeof(struct pointType));
 
     // Halo rows
-    const int lower_halo_row_offset = (N + 1) * M;
+    const int lower_halo_row_offset = MN + p->M;
     for (int index = 0; index < M; index++)
     {
-        const double temperature_upper_halo = p->tinit[index];
-        const double temperature_lower_halo = p->tinit[(N - 1) * M + index];
-        T(&cylinder_grid, index) = temperature_upper_halo;
-        TN(&cylinder_grid, index) = temperature_upper_halo;
-        T(&cylinder_grid, lower_halo_row_offset + index) = temperature_lower_halo;
-        TN(&cylinder_grid, lower_halo_row_offset + index) = temperature_lower_halo;
+        T(&cylinder_grid, index) = p->tinit[index];
+        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
+        T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
+        TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
     
         // Temperature sums
         int index_left =  index - 1;
@@ -93,7 +89,7 @@ struct grid initialize(const struct parameters* p)
     return cylinder_grid;
 }
 
-double update(int index, struct grid * grid)
+double update(int index, struct grid * restrict grid)
 {
     const int m = grid->M;
 
@@ -136,11 +132,15 @@ void do_compute(const struct parameters* p, struct results *r)
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     int it = 1;
+    int grid_start = p->M;
+    int grid_end = p->M  * (p->N + 1);
+    int grid_size = (p->N * p->M);
     int converged;
     double maxdiff;
     double tmin;
     double tmax;
     double tsum;
+    int called = 0;
 
     do {
         maxdiff = 0.0;
@@ -149,7 +149,8 @@ void do_compute(const struct parameters* p, struct results *r)
         tmax = p->io_tmin;
         // Check convergence every timestep
         converged = 1;
-        for (int index = p->M; index < p->M * (p->N + 1); ++ index){
+
+        for (int index = grid_start; index < grid_end; ++ index){
             double new_temperature = update(index, &grid);
 
             double diff = fabs(T(&grid, index) - new_temperature);
@@ -160,6 +161,7 @@ void do_compute(const struct parameters* p, struct results *r)
             }
             
             if (it % p->period == 0){
+                called ++;
                 // Update results 
                 tsum += new_temperature;
 
@@ -181,12 +183,16 @@ void do_compute(const struct parameters* p, struct results *r)
             r->niter = it;
             r->tmin = tmin;
             r->tmax = tmax;
-            r->tavg = tsum/(p->N * p->M);
+            r->tavg = tsum/grid_size;
             r->maxdiff = maxdiff;
             clock_gettime(CLOCK_MONOTONIC, &after);
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-            report_results(p,r);
+            
+            if (it < p->maxiter && !converged){
+                // Only call print if it's not the last iteration
+                report_results(p,r);
+            }
         }
 
         // Flip old and new values
@@ -194,6 +200,8 @@ void do_compute(const struct parameters* p, struct results *r)
         update_temperature_sums(&grid);
         ++ it;
     } while ((it < p->maxiter) && (!converged));
+
+    printf("Called inner update: %d \n", called);
 
     free(grid.points);
 }
