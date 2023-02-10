@@ -42,7 +42,7 @@ struct grid initialize(const struct parameters* p)
     return cylinder_grid;
 }
 
-double update(int index, struct grid * grid)
+double update(int index, struct grid * restrict grid)
 {
     const int m = grid->M;
 
@@ -88,11 +88,15 @@ void do_compute(const struct parameters* p, struct results *r)
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     int it = 1;
+    int grid_start = p->M;
+    int grid_end = p->M  * (p->N + 1);
+    int grid_size = (p->N * p->M);
     int converged;
     double maxdiff;
     double tmin;
     double tmax;
     double tsum;
+    int called = 0;
 
     do {
         maxdiff = 0.0;
@@ -103,7 +107,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
 
 
-        for (int index = p->M; index < p->M * (p->N + 1); ++ index){
+        for (int index = grid_start; index < grid_end; ++ index){
             double new_temperature = update(index, &grid);
 
             double diff = fabs(T(&grid, index) - new_temperature);
@@ -113,7 +117,8 @@ void do_compute(const struct parameters* p, struct results *r)
                 converged = 0;
             }
             
-            if (it % p->period == 0 || converged || it == p->maxiter){
+            if (it % p->period == 0){
+                called ++;
                 // Update results 
                 tsum += new_temperature;
 
@@ -131,11 +136,11 @@ void do_compute(const struct parameters* p, struct results *r)
         }
 
         // Update results
-        if (it % p->period == 0  || converged || it == p->maxiter){
+        if (it % p->period == 0){
             r->niter = it;
             r->tmin = tmin;
             r->tmax = tmax;
-            r->tavg = tsum/(p->N * p->M);
+            r->tavg = tsum/grid_size;
             r->maxdiff = maxdiff;
             clock_gettime(CLOCK_MONOTONIC, &after);
             r->time = (double)(after.tv_sec - before.tv_sec) +
@@ -152,6 +157,8 @@ void do_compute(const struct parameters* p, struct results *r)
 
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
+
+    printf("Called inner update: %d \n", called);
 
     free(grid.points);
 }
