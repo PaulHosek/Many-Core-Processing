@@ -112,7 +112,7 @@ void do_compute(const struct parameters* p, struct results *r)
                 converged = 0;
             }
             
-            if (it % p->period == 0){
+            if (it % p->period == 0 || converged || it == p->maxiter){
                 // Update results 
                 tsum += new_temperature;
 
@@ -130,7 +130,7 @@ void do_compute(const struct parameters* p, struct results *r)
         }
 
         // Update results
-        if (it % p->period == 0){
+        if (it % p->period == 0  || converged || it == p->maxiter){
             r->niter = it;
             r->tmin = tmin;
             r->tmax = tmax;
@@ -139,7 +139,11 @@ void do_compute(const struct parameters* p, struct results *r)
             clock_gettime(CLOCK_MONOTONIC, &after);
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-            report_results(p,r);
+            
+            if (it < p->maxiter && !converged){
+                // Only call print if it's not the last iteration
+                report_results(p,r);
+            }
         }
 
         // Flip old and new values
