@@ -12,6 +12,7 @@ struct grid initialize(const struct parameters* p)
 
     cylinder_grid.M = p->M;
     cylinder_grid.N = p->N;
+    int MN = p->N * p-> M; 
 
     cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
 
@@ -20,8 +21,8 @@ struct grid initialize(const struct parameters* p)
     {
         T(&cylinder_grid, index) = p->tinit[index];
         TN(&cylinder_grid, index) = T(&cylinder_grid, index);
-        T(&cylinder_grid, (p->N + 1) * p->M + index) = p->tinit[(p->N - 1) * p->M + index];
-        TN(&cylinder_grid, (p->N + 1) * p->M + index) = T(&cylinder_grid, (p->N + 1) * p->M + index);
+        T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
+        TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
     }
 
     // Fill the temperature values into the grid cells
