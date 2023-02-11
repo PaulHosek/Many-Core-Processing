@@ -80,12 +80,12 @@ double update(int index, struct grid * restrict grid)
 
 void do_compute(const struct parameters* p, struct results *r)
 {
-    // Initialize grid 
-    struct grid grid = initialize(p);
-
     // Measure time
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
+
+    // Initialize grid 
+    struct grid grid = initialize(p);
 
     int it = 1;
     int grid_start = p->M;
