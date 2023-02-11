@@ -220,7 +220,7 @@ void do_compute(const struct parameters* p, struct results *r)
             update_temperature_sums(&grid);
         }
         ++ it;
-    } while ((it < p->maxiter) && (!converged));
+    } while ((it <= p->maxiter) && (!converged));
 
     free(grid.points);
 }
