@@ -9,8 +9,9 @@ void update_temperature_sums(struct grid * grid)
 {
     const int M = grid->M;
     const int N = grid->N;
+    const int MN = M*N;
 
-    for (int index = M; index < M * (N + 1); ++ index)
+    for (int index = M; index < MN + M; ++ index)
     {
         int index_left =  index - 1;
         int index_right = index + 1;
@@ -36,45 +37,45 @@ struct grid initialize(const struct parameters* p)
 
     cylinder_grid.M = p->M;
     cylinder_grid.N = p->N;
+    cylinder_grid.old = 0;
     int MN = p->N * p-> M; 
 
-    cylinder_grid.points = (struct pointType *) malloc((N + 2) * M * sizeof(struct pointType));
+    cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
 
     // Halo rows
-    const int lower_halo_row_offset = MN + p->M;
-    for (int index = 0; index < M; index++)
+    for (int index = 0; index < p->M; index++)
     {
         T(&cylinder_grid, index) = p->tinit[index];
-        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
+        TN(&cylinder_grid, index) = p->tinit[index];
         T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
-        TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
-    
+        TN(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
+    }
+
+    for (int index = 0; index < p->M; index++)
+    {
+        const int lower_halo_row_offset = MN + p->M;
         // Temperature sums
         int index_left =  index - 1;
         int index_right = index + 1;
-
-        if (index % M == 0)
+        if (index % p->M == 0)
         {
-            index_left = index + M - 1;
+            index_left = index + p->M - 1;
         }
-
-        if (index % M == M - 1)
+        if (index % p->M == p->M - 1)
         {
-            index_right = index - M + 1;
+            index_right = index - p->M + 1;
         }
-
         // Upper halo
         TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left) + T(&cylinder_grid, index_right);
-
         // Lower halo
         TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + lower_halo_row_offset) + T(&cylinder_grid, index_right + lower_halo_row_offset);
     }
 
     // Fill the temperature values into the grid cells
     const double denominator = sqrt(2.0) + 1;
-    for (int index = 0; index < N * M; index++)
+    for (int index = 0; index < MN; index++)
     {
-        T(&cylinder_grid, M + index) = p->tinit[index];
+        T(&cylinder_grid, p->M + index) = p->tinit[index];
 
         const double conductivity = p->conductivity[index];
         const double joint_weight_diagonal_neighbors = (1 - conductivity) / denominator;
@@ -86,6 +87,7 @@ struct grid initialize(const struct parameters* p)
     }
 
     update_temperature_sums(&cylinder_grid);
+
     return cylinder_grid;
 }
 
@@ -112,10 +114,10 @@ double update(int index, struct grid * restrict grid)
     // Adjacent neighbors
     new_temperature += (TSV(grid, index) + TSH(grid, index))
                     * WD(grid, index);
-    
     // Diagonal neighbors
     new_temperature += (TSV(grid, index_left) + TSV(grid, index_right))
                     * WI(grid, index);
+
 
     TN(grid, index) = new_temperature;
 
@@ -152,7 +154,6 @@ void do_compute(const struct parameters* p, struct results *r)
 
         for (int index = grid_start; index < grid_end; ++ index){
             double new_temperature = update(index, &grid);
-
             double diff = fabs(T(&grid, index) - new_temperature);
 
             // Continue loop if one difference > threshold
@@ -199,9 +200,7 @@ void do_compute(const struct parameters* p, struct results *r)
         grid.old ^= 1;
         update_temperature_sums(&grid);
         ++ it;
-    } while ((it < p->maxiter) && (!converged));
-
-    printf("Called inner update: %d \n", called);
+    } while ((it <= p->maxiter) && (!converged));
 
     free(grid.points);
 }
