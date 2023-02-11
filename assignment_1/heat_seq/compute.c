@@ -80,12 +80,12 @@ double update(int index, struct grid * restrict grid)
 
 void do_compute(const struct parameters* p, struct results *r)
 {
+    // Initialize grid 
+    struct grid grid = initialize(p);
+
     // Measure time
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
-
-    // Initialize grid 
-    struct grid grid = initialize(p);
 
     int it = 1;
     int grid_start = p->M;
@@ -144,7 +144,7 @@ void do_compute(const struct parameters* p, struct results *r)
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
             
-            if (it < p->maxiter && !converged){
+            if (it < p->maxiter && !converged && p->printreports){
                 // Only call print if it's not the last iteration and the print-parameter is set 
                 report_results(p,r);
             }
@@ -157,14 +157,14 @@ void do_compute(const struct parameters* p, struct results *r)
     } while ((it <= p->maxiter) && (!converged));
 
     // Print to csv file for measuring 
-    /*double flops_per_it = 12.0;
+    double flops_per_it = 12.0;
     double Flops = (double)p->N * (double)p->M * 
                     (double)(r->niter * flops_per_it +
                     (double)r->niter / p->period) / r->time;
     FILE *fpt;
-    fpt = fopen("data.csv", "w+");
+    fpt = fopen("data.csv", "a+");
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
-    fclose(fpt);*/
+    fclose(fpt);
 
     free(grid.points);
 }

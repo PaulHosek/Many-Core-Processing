@@ -17,10 +17,8 @@ do
         do
             echo -n "${comp}, ${optl}, ${arch}, 1, " >> data.csv;
             prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -r 1 -k 1 -L 0 -H 100;
-            echo "runtime" >> data.csv;
             echo -n "${comp}, ${optl}, ${arch}, 50000, " >> data.csv;
             prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -k 1 -L 0 -H 100;
-            echo "runtime" >> data.csv;
         done 
         make clean 
     done 
