@@ -1,22 +1,16 @@
-make heat_seq
 
-for nbodies in 500 1000 2000 
+make clean 
+rm data.out
+
+for comp in gcc  
 do
-    for i in 1 2 3 4 5
+    for optl in O0 O1 O2 O3 
     do 
-        echo "Run sequential with $nbodies in iteration $i"
-        prun -v 1 -np 1 -script $PRUN_ETC/prun-openmpi nbody-seq $nbodies 0 ../nbody.ppm 100 1 >> seq-data.csv;
-    done
-    for nnodes in 1 2 4 8
-    do 
-        for nprocs in 1 4 16
-        do 
-            for i in 1 2 3 4 5
-            do
-                echo "Running with $nbodies bodies, $nnodes nodes, $nprocs proc/node, it $i"
-                echo -n "${nnodes}, " >> par-data.csv;           
-                prun -v -$nnodes -np $nprocs -script $PRUN_ETC/prun-openmpi nbody-par $nbodies 0 ../nbody.ppm 100 1 >> par-data.csv;
-            done
-        done
-    done
+        make compiler=$comp optlevel=$optl heat_seq
+        for i in 1 2 3 4 5
+        do
+            prun -np 1 -v heat_seq -n 150 -m 100 -i 30000 -e 0.0001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -r 1 -k 3000 -L 0 -H 100 >> data.out
+        done 
+        make clean 
+    done 
 done

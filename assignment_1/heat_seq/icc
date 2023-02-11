@@ -1,0 +1,99 @@
+
+---------------------------- /cm/local/modulefiles -----------------------------
+cluster-tools/8.0 dot               ipmitool/1.8.18   openldap
+cmd               etcd/3.1.5        lua/5.3.4         shared
+cmsh              flannel/0.7.0     module-git
+cm-upgrade/7.2    freeipmi/1.5.5    module-info
+cm-upgrade/8.0    gcc/6.3.0         null
+
+---------------------------- /cm/shared/modulefiles ----------------------------
+acml/gcc/64/5.3.1                      intel/mkl/64/11.2/2015.5.223
+acml/gcc/fma4/5.3.1                    intel/tbb/32/4.3/2015.5.223
+acml/gcc/mp/64/5.3.1                   intel/tbb/64/4.3/2015.5.223
+acml/gcc/mp/fma4/5.3.1                 intel-cluster-checker/2.2.2
+acml/gcc-int64/64/5.3.1                intel-cluster-runtime/ia32/2017.8
+acml/gcc-int64/fma4/5.3.1              intel-cluster-runtime/intel64/2017.8
+acml/gcc-int64/mp/64/5.3.1             intel-cluster-runtime/mic/2017.8
+acml/gcc-int64/mp/fma4/5.3.1           intel-tbb-oss/ia32/2019_20191006oss
+acml/open64/64/5.3.1                   intel-tbb-oss/intel64/2019_20191006oss
+acml/open64/fma4/5.3.1                 iozone/3_465
+acml/open64/mp/64/5.3.1                iperf/3.1.7
+acml/open64/mp/fma4/5.3.1              java/jdk-11
+acml/open64-int64/64/5.3.1             java/jdk-17
+acml/open64-int64/fma4/5.3.1           java/jdk-1.7.0
+acml/open64-int64/mp/64/5.3.1          java/jdk-1.8.0(default)
+acml/open64-int64/mp/fma4/5.3.1        java/jdk-19
+blacs/openmpi/gcc/64/1.1patch03        java/jre-11
+blacs/openmpi/open64/64/1.1patch03     java/jre-1.7.0
+blas/gcc/64/3.7.0                      java/jre-1.8.0
+blas/open64/64/3.7.0                   julia/1.7.3
+bonnie++/1.97.1                        keras/python2.7/r2.0.2
+caffe/caffe2/python2.7/gpu/git-7263bc4 keras/python3.5/r2.0.2
+cmake/2.8.11                           lapack/gcc/64/3.7.0
+cmake/2.8.12.2                         lapack/open64/64/3.7.0
+cmake/3.15.4                           mpich/ge/gcc/64/3.2
+cuda10.0/blas/10.0.130                 mpich/ge/open64/64/3.2
+cuda10.0/fft/10.0.130                  mpiexec/0.84_432
+cuda10.0/nsight/10.0.130               mvapich2/gcc/64/2.2rc1
+cuda10.0/profiler/10.0.130             mvapich2/open64/64/2.2rc1
+cuda10.0/toolkit/10.0.130              mxnet/0.10.0/r0.10.0-py2.py3
+cuda10.1/blas/10.1.243                 mxnet/cpu/r1.0.0-git
+cuda10.1/fft/10.1.243                  mxnet/gpu/r1.0.0-git
+cuda10.1/nsight/10.1.243               nccl/cuda80/2.1.2
+cuda10.1/profiler/10.1.243             nccl/cuda90/2.1.2
+cuda10.1/toolkit/10.1.243              netcdf/gcc/64/4.4.0
+cuda11.0/toolkit/11.0.2                netcdf/intel/64/4.4.0
+cuda11.0/toolkit/11.0.3                netcdf/open64/64/4.4.0
+cuda11.1/toolkit/11.1.1                netperf/2.7.0
+cuda80/blas/8.0.61                     open64/4.5.2.1
+cuda80/fft/8.0.61                      openblas/dynamic/0.2.18
+cuda80/nsight/8.0.61                   opencl-amd/2.9.1
+cuda80/profiler/8.0.61                 opencl-amd/3.0.0-beta
+cuda80/toolkit/8.0.61                  opencl-intel/16.4
+cuda90/blas/9.0.176                    opencl-intel/4.5-mic
+cuda90/fft/9.0.176                     opencl-intel/5.0
+cuda90/nsight/9.0.176                  opencl-nvidia/10.0
+cuda90/profiler/9.0.176                opencl-nvidia/6.5
+cuda90/toolkit/9.0.176                 opencl-nvidia/7.0
+cuda91/blas/9.1.85                     opencl-nvidia/7.5
+cuda91/fft/9.1.85                      opencl-nvidia/8.0
+cuda91/nsight/9.1.85                   opencl-nvidia/9.0
+cuda91/profiler/9.1.85                 openmpi/cuda/64/3.1.1
+cuda91/toolkit/9.1.85                  openmpi/cuda/64/3.1.6
+cudnn/7.4.2                            openmpi/gcc/64/1.10.3
+cuDNN/cuda10.0/7.4                     openmpi/gcc/64/1.8.1
+cuDNN/cuda10.0/7.6.4                   openmpi/gcc/64/3.1.6
+cuDNN/cuda10.1/7.6.4                   openmpi/gcc/64/4.0.2
+cuDNN/cuda10.1/8.0.5                   openmpi/intel/64/1.10.3
+cuDNN/cuda11.0/8.0.5                   openmpi/open64/64/1.10.3
+cuDNN/cuda11.1/8.0.5                   prun/default
+cuDNN/cuda75/5.1.3                     prun-slurm/default
+cuDNN/cuda75/6.0.21                    python/2.7.13(default)
+cuDNN/cuda80/5.1.5                     python/3.5.2
+cuDNN/cuda80/6.0.21                    python/3.6.0
+cuDNN/cuda80/7.0                       python-extra/python2.7/r0.5.0
+cuDNN/cuda90/7.1                       python-extra/python3.5/r0.5.0
+cuDNN/cuda90rc/7.0                     scalapack/mvapich2/gcc/64/2.0.2
+default-environment                    scalapack/openmpi/gcc/64/2.0.2
+fftw2/openmpi/gcc/64/double/2.1.5      slurm/17.02.2
+fftw2/openmpi/gcc/64/float/2.1.5       tensorflow/python2.7/cpu/r0.12.1-cp27
+fftw2/openmpi/open64/64/double/2.1.5   tensorflow/python2.7/cpu/r1.0.0-py2
+fftw2/openmpi/open64/64/float/2.1.5    tensorflow/python2.7/cpu/r1.1.0-py2
+fftw3/openmpi/gcc/64/3.3.6             tensorflow/python2.7/cpu/r1.4.0-py2
+fftw3/openmpi/open64/64/3.3.6          tensorflow/python2.7/gpu/r0.12.1-cp27
+gcc/4.8.3(default)                     tensorflow/python2.7/gpu/r1.0.0-py2
+gcc/4.9.2                              tensorflow/python2.7/gpu/r1.1.0-py2
+gcc/4.9.3                              tensorflow/python2.7/gpu/r1.4.0-py2
+gcc/6.4.0                              tensorflow/python3.x/cpu/r0.12.1-cp35
+gcc/8.4.0                              tensorflow/python3.x/cpu/r1.0.0-py3
+gcc/9.3.0                              tensorflow/python3.x/cpu/r1.1.0-py3
+gdb/7.12.1                             tensorflow/python3.x/cpu/r1.4.0-py3
+globalarrays/openmpi/gcc/64/5.5        tensorflow/python3.x/gpu/r0.12.1-cp35
+globalarrays/openmpi/open64/64/5.5     tensorflow/python3.x/gpu/r1.0.0-py3
+hdf5/1.10.0                            tensorflow/python3.x/gpu/r1.1.0-py3
+hdf5_18/1.8.18                         tensorflow/python3.x/gpu/r1.4.0-py3
+hpcx/2.0.0                             TensorRT/cuda10.0/6.0.1.5
+hpl/2.2                                TensorRT/cuda10.1/6.0.1.5
+hwloc/1.11.6                           theano/python2.7/r0.9.0
+intel/compiler/64/15.0/2015.5.223      theano/python3.5/r0.9.0
+intel/ipp/64/8.2/2015.5.223            torque/6.1.1
