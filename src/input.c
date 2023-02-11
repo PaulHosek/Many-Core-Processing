@@ -29,6 +29,7 @@ static void usage(const char *pname)
            "  -H NUM     Warmest temperature in input/output images.\n"
            "  -p NUM     Number of threads to use (when applicable).\n"
            "  -r         Print a report every reduction cycle.\n"
+           "  -s         Use precomputed sums of the neighboring cells.\n"
            "  -h         Print this help.\n"
            ,pname);
     exit(0);
@@ -85,10 +86,11 @@ void read_parameters(struct parameters* p, int argc, char **argv)
     p->io_tmax = 100.0;
     p->nthreads = 1;
     p->printreports = 0;
+    p->use_precomputed_sums = 0;
     conductivity_fname = "../../images/pat1_100x150.pgm";
     tinit_fname = "../../images/pat1_100x150.pgm";
 
-    while ((ch = getopt(argc, argv, "c:e:hH:i:k:L:m:M:n:N:p:t:r:")) != -1)
+    while ((ch = getopt(argc, argv, "c:e:hH:i:k:L:m:M:n:N:p:t:r:s:")) != -1)
     {
         switch(ch) {
         case 'c': conductivity_fname = optarg; break;
@@ -102,6 +104,7 @@ void read_parameters(struct parameters* p, int argc, char **argv)
         case 'H': p->io_tmax = strtod(optarg, 0); break;
         case 'p': p->nthreads = strtol(optarg, 0, 10); break;
         case 'r': p->printreports = 1; break;
+        case 's': p->use_precomputed_sums = 1; break;
         case 'h': default: usage(argv[0]);
         }
     }
@@ -117,12 +120,13 @@ void read_parameters(struct parameters* p, int argc, char **argv)
            "  -L %e # coolest temperature in input/output\n"
            "  -H %e # highest temperature in input/output\n"
            "  -p %zu # number of threads (if applicable)\n"
-           "  -r %zu # print intermediate reports every reduction cycle\n",
+           "  -r %zu # print intermediate reports every reduction cycle\n"
+           "  -s %zu # use precomputed sums of the neighboring cells.\n",
            p->N, p->M, p->maxiter, p->period, p->threshold,
            conductivity_fname ? conductivity_fname : "(none)",
            tinit_fname ? tinit_fname : "(none)",
            p->io_tmin, p->io_tmax,
-           p->nthreads, p->printreports);
+           p->nthreads, p->printreports, p->use_precomputed_sums);
 
     if (!p->N || !p->M) die("empty grid");
 

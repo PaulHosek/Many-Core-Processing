@@ -38,43 +38,45 @@ struct grid initialize(const struct parameters* p)
     cylinder_grid.N = p->N;
     int MN = p->N * p-> M; 
 
-    cylinder_grid.points = (struct pointType *) malloc((N + 2) * M * sizeof(struct pointType));
+    cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
 
     // Halo rows
-    const int lower_halo_row_offset = MN + p->M;
-    for (int index = 0; index < M; index++)
+    for (int index = 0; index < p->M; index++)
     {
         T(&cylinder_grid, index) = p->tinit[index];
         TN(&cylinder_grid, index) = T(&cylinder_grid, index);
         T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
         TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
-    
-        // Temperature sums
-        int index_left =  index - 1;
-        int index_right = index + 1;
+    }
 
-        if (index % M == 0)
+    if (p->use_precomputed_sums)
+    {
+        for (int index = 0; index < p->M; index++)
         {
-            index_left = index + M - 1;
+            const int lower_halo_row_offset = MN + p->M;
+            // Temperature sums
+            int index_left =  index - 1;
+            int index_right = index + 1;
+            if (index % p->M == 0)
+            {
+                index_left = index + p->M - 1;
+            }
+            if (index % p->M == p->M - 1)
+            {
+                index_right = index - p->M + 1;
+            }
+            // Upper halo
+            TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left) + T(&cylinder_grid, index_right);
+            // Lower halo
+            TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + lower_halo_row_offset) + T(&cylinder_grid, index_right + lower_halo_row_offset);
         }
-
-        if (index % M == M - 1)
-        {
-            index_right = index - M + 1;
-        }
-
-        // Upper halo
-        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left) + T(&cylinder_grid, index_right);
-
-        // Lower halo
-        TSH(&cylinder_grid, index) = T(&cylinder_grid, index_left + lower_halo_row_offset) + T(&cylinder_grid, index_right + lower_halo_row_offset);
     }
 
     // Fill the temperature values into the grid cells
     const double denominator = sqrt(2.0) + 1;
-    for (int index = 0; index < N * M; index++)
+    for (int index = 0; index < MN; index++)
     {
-        T(&cylinder_grid, M + index) = p->tinit[index];
+        T(&cylinder_grid, p->M + index) = p->tinit[index];
 
         const double conductivity = p->conductivity[index];
         const double joint_weight_diagonal_neighbors = (1 - conductivity) / denominator;
@@ -85,11 +87,14 @@ struct grid initialize(const struct parameters* p)
         WI(&cylinder_grid, p->M + index) = joint_weight_diagonal_neighbors / 4.0;
     }
 
-    update_temperature_sums(&cylinder_grid);
+    if (p->use_precomputed_sums) 
+    {
+        update_temperature_sums(&cylinder_grid);
+    }
     return cylinder_grid;
 }
 
-double update(int index, struct grid * restrict grid)
+double update(int index, struct grid * restrict grid, int use_precomputed_sums)
 {
     const int m = grid->M;
 
@@ -108,14 +113,26 @@ double update(int index, struct grid * restrict grid)
 
     // Scaled old temperature at the cell
     double new_temperature = T(grid, index) * C(grid, index);
+    if (use_precomputed_sums)
+    {
+        // Adjacent neighbors
+        new_temperature += (TSV(grid, index) + TSH(grid, index))
+                        * WD(grid, index);
 
-    // Adjacent neighbors
-    new_temperature += (TSV(grid, index) + TSH(grid, index))
+        // Diagonal neighbors
+        new_temperature += (TSV(grid, index_left) + TSV(grid, index_right))
+                        * WI(grid, index);
+    }
+    else
+    {
+        // Adjacent neighbors
+        new_temperature += (T(grid, index_left) + T(grid, index - m) + T(grid, index_right) + T(grid, index + m))
                     * WD(grid, index);
-    
-    // Diagonal neighbors
-    new_temperature += (TSV(grid, index_left) + TSV(grid, index_right))
+
+        // Diagonal neighbors
+        new_temperature += (T(grid, index_left - m) + T(grid, index_right - m) + T(grid, index_left + m) + T(grid, index_right + m))
                     * WI(grid, index);
+    }
 
     TN(grid, index) = new_temperature;
 
@@ -151,8 +168,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
 
         for (int index = grid_start; index < grid_end; ++ index){
-            double new_temperature = update(index, &grid);
-
+            double new_temperature = update(index, &grid, p->use_precomputed_sums);
             double diff = fabs(T(&grid, index) - new_temperature);
 
             // Continue loop if one difference > threshold
@@ -197,7 +213,10 @@ void do_compute(const struct parameters* p, struct results *r)
 
         // Flip old and new values
         grid.old ^= 1;
-        update_temperature_sums(&grid);
+        if (p->use_precomputed_sums) 
+        {
+            update_temperature_sums(&grid);
+        }
         ++ it;
     } while ((it < p->maxiter) && (!converged));
 
