@@ -5,12 +5,25 @@ OBJ=$(patsubst %.c,%.o,$(SRC))
 
 CC=gcc
 INCLUDES=-I../../include
+OPT=
 ifndef DEBUG
 CFLAGS=-O2 -std=gnu99
 LIB=
 else
-CFLAGS=-O0 -g3 -std=gnu99
+CFLAGS=-Wall -std=gnu99 -O0
 LIB=
+endif
+ifdef compiler
+CC= $(compiler)
+CFLAGS:=$(CFLAGS) $(OPT)
+endif
+ifdef optlevel
+OPT= -$(optlevel)
+CFLAGS:=$(CFLAGS) $(OPT)
+endif
+ifdef arch
+ARCH=-march=$(arch)
+CFLAGS:=$(CFLAGS) $(ARCH)
 endif
 
 all: $(PRJ)

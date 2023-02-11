@@ -96,7 +96,6 @@ void do_compute(const struct parameters* p, struct results *r)
     double tmin;
     double tmax;
     double tsum;
-    int called = 0;
 
     do {
         maxdiff = 0.0;
@@ -118,7 +117,6 @@ void do_compute(const struct parameters* p, struct results *r)
             }
             
             if (it % p->period == 0){
-                called ++;
                 // Update results 
                 tsum += new_temperature;
 
@@ -158,7 +156,6 @@ void do_compute(const struct parameters* p, struct results *r)
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
 
-    printf("Called inner update: %d \n", called);
 
     free(grid.points);
 }
