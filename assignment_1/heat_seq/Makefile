@@ -4,26 +4,22 @@ SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
 OBJ=$(patsubst %.c,%.o,$(SRC))
 
 CC=gcc
+CFLAGS= -Wall -std=gnu99
+LIB=
 INCLUDES=-I../../include
 OPT=
-ifndef DEBUG
-CFLAGS=-O2 -std=gnu99
-LIB=
-else
-CFLAGS=-Wall -std=gnu99 -O0
-LIB=
-endif
+ARCH=
+# Set compiler and optimizations if specified in command line
 ifdef compiler
-CC= $(compiler)
-CFLAGS:=$(CFLAGS) $(OPT)
+CC=$(compiler)
 endif
 ifdef optlevel
-OPT= -$(optlevel)
-CFLAGS:=$(CFLAGS) $(OPT)
+OPT=-$(optlevel)
+CFLAGS:= $(CFLAGS) $(OPT) 
 endif
 ifdef arch
 ARCH=-march=$(arch)
-CFLAGS:=$(CFLAGS) $(ARCH)
+CFLAGS:= $(CFLAGS) $(ARCH)
 endif
 
 all: $(PRJ)
