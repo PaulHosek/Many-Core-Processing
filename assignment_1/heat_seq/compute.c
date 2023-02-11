@@ -144,7 +144,7 @@ void do_compute(const struct parameters* p, struct results *r)
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
             
-            if (it < p->maxiter && !converged && p->printreports){
+            if (it < p->maxiter && !converged){
                 // Only call print if it's not the last iteration and the print-parameter is set 
                 report_results(p,r);
             }
@@ -155,6 +155,16 @@ void do_compute(const struct parameters* p, struct results *r)
 
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
+
+    // Print to csv file for measuring 
+    /*double flops_per_it = 12.0;
+    double Flops = (double)p->N * (double)p->M * 
+                    (double)(r->niter * flops_per_it +
+                    (double)r->niter / p->period) / r->time;
+    FILE *fpt;
+    fpt = fopen("data.csv", "w+");
+    fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
+    fclose(fpt);*/
 
     free(grid.points);
 }
