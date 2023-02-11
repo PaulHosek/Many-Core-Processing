@@ -35,6 +35,9 @@ struct parameters {
 
     /* use precomputed sums of neighbor cells (1) or not (0) */
     size_t use_precomputed_sums;
+
+    /* output file */
+    char * output_file;
 };
  
 void read_parameters(struct parameters* p, int argc, char **argv);

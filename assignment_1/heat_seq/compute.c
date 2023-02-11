@@ -9,8 +9,9 @@ void update_temperature_sums(struct grid * grid)
 {
     const int M = grid->M;
     const int N = grid->N;
+    const int MN = M*N;
 
-    for (int index = M; index < M * (N + 1); ++ index)
+    for (int index = M; index < MN + M; ++ index)
     {
         int index_left =  index - 1;
         int index_right = index + 1;
@@ -36,6 +37,7 @@ struct grid initialize(const struct parameters* p)
 
     cylinder_grid.M = p->M;
     cylinder_grid.N = p->N;
+    cylinder_grid.old = 0;
     int MN = p->N * p-> M; 
 
     cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
@@ -44,9 +46,9 @@ struct grid initialize(const struct parameters* p)
     for (int index = 0; index < p->M; index++)
     {
         T(&cylinder_grid, index) = p->tinit[index];
-        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
+        TN(&cylinder_grid, index) = p->tinit[index];
         T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
-        TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
+        TN(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
     }
 
     if (p->use_precomputed_sums)
@@ -219,8 +221,6 @@ void do_compute(const struct parameters* p, struct results *r)
         }
         ++ it;
     } while ((it < p->maxiter) && (!converged));
-
-    printf("Called inner update: %d \n", called);
 
     free(grid.points);
 }
