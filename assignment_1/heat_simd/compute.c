@@ -6,7 +6,7 @@
 
 #include <immintrin.h>
 
-double * update4(int index, int M,int N, double * temps_new,
+double * update_4(int index, int M,int N, double * temps_new,
  double * temps_old, double * conductivity, double * direct, double * indirect);
 void initialise(const struct parameters* p);
 
@@ -31,12 +31,20 @@ void do_compute(const struct parameters* p, struct results *r){
     initialise(p);
     // print_grid(indirect, p->M, p->N);
 
-    double * new_res = update4(p->M, p->M,p->N, temps_old,temps_new, conductivity, direct,indirect);
+    double * new_res = update_4(p->M, p->M,p->N, temps_old,temps_new, conductivity, direct,indirect);
     printf("%f %f %f %f\n",
         new_res[0], new_res[1], new_res[2], new_res[3]);
 
 
     // TODO: loop etc here
+
+    // Free memory space 
+    _mm_free(new_res);
+    _mm_free(temps_new);
+    _mm_free(temps_old);
+    _mm_free(conductivity);
+    _mm_free(direct);
+    _mm_free(indirect);
 }
 
 
@@ -45,8 +53,6 @@ void initialise(const struct parameters* p){
     int M = p->M;
     int N = p->N;
     int MN = M*N; 
-
-
 
 
     temps_old = (double *) _mm_malloc((N + 2) * M * sizeof(double), 32);
@@ -134,8 +140,8 @@ double* update_4(int index, int M,int N, double * temps_new,
     __m256d cur_direct_top = _mm256_load_pd(&temps_old[index-M]);
     __m256d cur_direct_below = _mm256_load_pd(&temps_old[index+M]);
     
-    __m256d indirect_weight = __mm256_load_pd(&indirect[index-M]);
-    __m256d direct_weight = __mm256_load_pd(&direct[index-M]);
+    __m256d indirect_weight = _mm256_load_pd(&indirect[index-M]);
+    __m256d direct_weight = _mm256_load_pd(&direct[index-M]);
 
     // Compute stuff
     __m256d cur_temp_res = _mm256_mul_pd(cur_old_temps,cur_conduct);
@@ -143,13 +149,17 @@ double* update_4(int index, int M,int N, double * temps_new,
     __m256d indirect_temp_res = _mm256_add_pd(_mm256_add_pd(left_indirect_top,left_indirect_below), _mm256_add_pd(right_indirect_top,right_indirect_below));
     indirect_temp_res = _mm256_mul_pd(indirect_temp_res, indirect_weight);
     
-    __m256d direct_temp_res = _mm256_add_pd(_mm256_add_pd(left_direct_top,left_direct_below), _mm256_add_pd(right_direct_top,right_direct_below));
+    __m256d direct_temp_res = _mm256_add_pd(_mm256_add_pd(cur_direct_top,cur_direct_below), _mm256_add_pd(right_direct,left_direct));
     direct_temp_res = _mm256_mul_pd(direct_temp_res, direct_weight);
 
     // add to final sum and store
     __m256d final_sum = _mm256_add_pd(_mm256_add_pd(indirect_temp_res, direct_temp_res), cur_temp_res);
 
-    _mm256_store_pd(return_temperatures, res4);
+    printf("%f %f %f %f\n",
+        direct_temp_res[0], direct_temp_res[1], direct_temp_res[2], direct_temp_res[3]);
+
+
+    _mm256_store_pd(return_temperatures, final_sum);
 
 
     return return_temperatures; 
