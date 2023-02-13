@@ -15,11 +15,10 @@ do
     for n in 10 100 1000
     do
         test_subdir="${dir}/test_m${m}_n${n}"
-        echo "${test_subdir}"
         mkdir $test_subdir
 
-        python ../../test/pgm_generator.py -m ${m} -n ${n} -v 65535 -o "${test_subdir}/temperature.pgm"
-        python ../../test/pgm_generator.py -m ${m} -n ${n} -v 65535 -o "${test_subdir}/conductivity.pgm"
+        prun -np 1 -v python ../../test/pgm_generator.py -m ${m} -n ${n} -v 65535 -o "${test_subdir}/temperature.pgm"
+        prun -np 1 -v python ../../test/pgm_generator.py -m ${m} -n ${n} -v 65535 -o "${test_subdir}/conductivity.pgm"
         
         # without precomputed sums
         prun -np 1 -v heat_seq -n ${n} -m ${m} -i 1000 -e 0.0001 -c "${test_subdir}/conductivity.pgm" -t "${test_subdir}/temperature.pgm" -r 1 -k 100 -L 0 -H 100 -o "${test_subdir}/out_not_precomputed.txt"
