@@ -124,7 +124,7 @@ __m256d update_4(int index, int M,int N, double * temps_new,
 
     __m256d cur_old_temps = _mm256_load_pd(&(temps_old[index]));
     __m256d cur_conduct = _mm256_load_pd(&conductivity[index]);
-/*
+
     __m256d left_direct = _mm256_set_pd(temps_old[indices_left[0]],temps_old[indices_left[1]],temps_old[indices_left[2]],temps_old[indices_left[3]]);
     __m256d left_indirect_top = _mm256_set_pd(temps_old[indices_left[0]-M],temps_old[indices_left[1]-M],temps_old[indices_left[2]-M],temps_old[indices_left[3]-M]);
     __m256d left_indirect_below = _mm256_set_pd(temps_old[indices_left[0]+M],temps_old[indices_left[1]+M],temps_old[indices_left[2]+M],temps_old[indices_left[3]+M]);
@@ -136,8 +136,8 @@ __m256d update_4(int index, int M,int N, double * temps_new,
     __m256d cur_direct_top = _mm256_load_pd(&temps_old[index-M]);
     __m256d cur_direct_below = _mm256_load_pd(&temps_old[index+M]);
     
-    __m256d indirect_weight = __mm256_load_pd(&indirect[index-M]);
-    __m256d direct_weight = __mm256_load_pd(&direct[index-M]);
+    __m256d indirect_weight = _mm256_load_pd(&indirect[index-M]);
+    __m256d direct_weight = _mm256_load_pd(&direct[index-M]);
 
     // Compute stuff
     __m256d cur_temp_res = _mm256_mul_pd(cur_old_temps,cur_conduct);
@@ -145,13 +145,11 @@ __m256d update_4(int index, int M,int N, double * temps_new,
     __m256d indirect_temp_res = _mm256_add_pd(_mm256_add_pd(left_indirect_top,left_indirect_below), _mm256_add_pd(right_indirect_top,right_indirect_below));
     indirect_temp_res = _mm256_mul_pd(indirect_temp_res, indirect_weight);
     
-    __m256d direct_temp_res = _mm256_add_pd(_mm256_add_pd(left_direct_top,left_direct_below), _mm256_add_pd(right_direct_top,right_direct_below));
+    __m256d direct_temp_res = _mm256_add_pd(_mm256_add_pd(cur_direct_top,cur_direct_below), _mm256_add_pd(right_direct,left_direct));
     direct_temp_res = _mm256_mul_pd(direct_temp_res, direct_weight);
 
     // add to final sum and store
     __m256d final_sum = _mm256_add_pd(_mm256_add_pd(indirect_temp_res, direct_temp_res), cur_temp_res);
 
-    _mm256_store_pd(return_temperatures, res4);
-*/
-    return return_temperatures; 
+    return final_sum; 
 }
