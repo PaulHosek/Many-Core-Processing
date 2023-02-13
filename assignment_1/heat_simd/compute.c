@@ -6,7 +6,7 @@
 
 #include <immintrin.h>
 
-double * update4(int index, int M,int N, double * temps_new,
+__m256d update_4(int index, int M,int N, double * temps_new,
  double * temps_old, double * conductivity, double * direct, double * indirect);
 void initialise(const struct parameters* p);
 
@@ -31,12 +31,16 @@ void do_compute(const struct parameters* p, struct results *r){
     initialise(p);
     // print_grid(indirect, p->M, p->N);
 
-    double * new_res = update4(p->M, p->M,p->N, temps_old,temps_new, conductivity, direct,indirect);
-    printf("%f %f %f %f\n",
-        new_res[0], new_res[1], new_res[2], new_res[3]);
-
+    __m256d new_res = update_4(p->M, p->M,p->N, temps_old,temps_new, conductivity, direct,indirect);
+    //printf("%f %f %f %f\n",
+    //    new_res[0], new_res[1], new_res[2], new_res[3]);
 
     // TODO: loop etc here
+    _mm_free(temps_old);
+    _mm_free(temps_new);
+    _mm_free(conductivity);
+    _mm_free(direct);
+    _mm_free(indirect);
 }
 
 
@@ -45,9 +49,6 @@ void initialise(const struct parameters* p){
     int M = p->M;
     int N = p->N;
     int MN = M*N; 
-
-
-
 
     temps_old = (double *) _mm_malloc((N + 2) * M * sizeof(double), 32);
     temps_new = (double *) _mm_malloc((N + 2) * M * sizeof(double), 32);
@@ -75,9 +76,9 @@ void initialise(const struct parameters* p){
 
         // T(&cylinder_grid, M + index) = p->tinit[index];
 
-        conductivity[M+index] = cur_conduct;
-        direct[M+index] = joint_weight_direct_neighbors / 4.0;
-        indirect[M+index] = joint_weight_diagonal_neighbors / 4.0;
+        conductivity[index] = cur_conduct;
+        direct[index] = joint_weight_direct_neighbors / 4.0;
+        indirect[index] = joint_weight_diagonal_neighbors / 4.0;
     }
 }
 // printf("hallo\n");
@@ -92,12 +93,12 @@ void initialise(const struct parameters* p){
 // printf("%f %f %f %f\n",
 //         output[0], output[1], output[2], output[3]);
 
-double* update_4(int index, int M,int N, double * temps_new,
+__m256d update_4(int index, int M,int N, double * temps_new,
  double * temps_old, double * conductivity, double * direct, double * indirect)
 {
-
+    printf("ENTER UPDATE FUCNTION, index=%d\n", index);
     // generate index arrays
-    int indices[] = {index, index+1, index+2,index+3};
+    int indices[4] = {index, index+1, index+2,index+3};
     int indices_left[4];
     int indices_right[4];
     int i;
@@ -116,13 +117,14 @@ double* update_4(int index, int M,int N, double * temps_new,
         }
     }
 
-    double * return_temperatures = (double *) _mm_malloc(4*sizeof(double), 32);
-
+    __m256d return_temperatures;
+    
     // TODO: fix the aweful indexing there 
     // Load temperatures and condictivity
+
     __m256d cur_old_temps = _mm256_load_pd(&(temps_old[index]));
     __m256d cur_conduct = _mm256_load_pd(&conductivity[index]);
-
+/*
     __m256d left_direct = _mm256_set_pd(temps_old[indices_left[0]],temps_old[indices_left[1]],temps_old[indices_left[2]],temps_old[indices_left[3]]);
     __m256d left_indirect_top = _mm256_set_pd(temps_old[indices_left[0]-M],temps_old[indices_left[1]-M],temps_old[indices_left[2]-M],temps_old[indices_left[3]-M]);
     __m256d left_indirect_below = _mm256_set_pd(temps_old[indices_left[0]+M],temps_old[indices_left[1]+M],temps_old[indices_left[2]+M],temps_old[indices_left[3]+M]);
@@ -150,7 +152,6 @@ double* update_4(int index, int M,int N, double * temps_new,
     __m256d final_sum = _mm256_add_pd(_mm256_add_pd(indirect_temp_res, direct_temp_res), cur_temp_res);
 
     _mm256_store_pd(return_temperatures, res4);
-
-
+*/
     return return_temperatures; 
 }
