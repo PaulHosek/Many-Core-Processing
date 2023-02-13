@@ -1,4 +1,3 @@
-DEBUG=1
 CURR_DIR=$(notdir $(basename $(shell pwd)))
 PRJ=$(CURR_DIR)
 SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
@@ -7,10 +6,10 @@ OBJ=$(patsubst %.c,%.o,$(SRC))
 CC=gcc
 INCLUDES=-I../../include
 ifndef DEBUG
-CFLAGS=-O2 -std=gnu99 -march=haswell -Wall
+CFLAGS=-O2 -std=gnu99 -march=haswell -Wall -lm
 LIB=
 else
-CFLAGS=-O0 -g3 -std=gnu99 -march=haswell
+CFLAGS=-O0 -g3 -std=gnu99 -march=haswell -lm
 LIB=
 endif
 
