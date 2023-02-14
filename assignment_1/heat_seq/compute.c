@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "compute.h"
 #include <stdio.h>
-#include "grid.h"
-
 
 void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, 
 double* conductivity, double * weight_direct, double * weight_indirect, int* indices_left, int * indices_right)

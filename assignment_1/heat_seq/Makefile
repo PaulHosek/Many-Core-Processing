@@ -22,14 +22,9 @@ ARCH=-march=$(arch)
 CFLAGS:= $(CFLAGS) $(ARCH)
 endif
 ifdef autovec
-<<<<<<< HEAD:assignment_1/heat_seq/Makefile
 CFLAGS:= -O3 -Wall -march=haswell -ffast-math -fopt-info-vec 
 endif
 
-=======
-CFLAGS := -O3 -march=haswell -ffast-math 
-endif
->>>>>>> main:assignment_1/heat_seq_orig/Makefile
 
 all: $(PRJ)
 
