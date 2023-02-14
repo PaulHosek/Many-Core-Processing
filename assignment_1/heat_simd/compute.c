@@ -34,7 +34,6 @@ void do_compute(const struct parameters* p, struct results *r){
     double * indirect = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32);
 
     initialise(p, temps_old, temps_new, conductivity, direct, indirect);
-    // print_grid(indirect, p->M, p->N);
     // Measure time
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
@@ -58,10 +57,7 @@ void do_compute(const struct parameters* p, struct results *r){
         converged = 1;
         for (int index = grid_start; index < grid_end; index += 4){
              __m256d new_res = update_4(index, M,N, temps_old,temps_new,conductivity, direct,indirect);
-            double temperatures[4] __attribute__ ((aligned (32)));
-            _mm256_store_pd(temperatures, new_res);
-            //printf("%f %f %f %f\n", temperatures[0], temperatures[1], temperatures[2], temperatures[3]);
- 
+
             double difference[4] __attribute__ ((aligned (32)));
             __m256d cur_old_temperatures = _mm256_load_pd(&temps_old[index]);
             _mm256_store_pd(difference, _mm256_sub_pd(cur_old_temperatures, new_res));
@@ -89,7 +85,7 @@ void do_compute(const struct parameters* p, struct results *r){
                 // Update results 
                 tsum = _mm256_add_pd(tsum, new_res);
 
-                double new_temperatures_arr[4];
+                double new_temperatures_arr[4] __attribute__ ((aligned (32)));
                 _mm256_store_pd(new_temperatures_arr, new_res);
                 // TODO: Avoid fmax, fmin because math libraries have to be linked in Makefile (gcc -lm)
                 const double cur_max_temp = fmax(fmax(fmax(new_temperatures_arr[0], new_temperatures_arr[1]), new_temperatures_arr[2]), new_temperatures_arr[3]);
@@ -138,7 +134,6 @@ void do_compute(const struct parameters* p, struct results *r){
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
 
-    // TODO: loop etc here
     _mm_free(temps_old);
     _mm_free(temps_new);
     _mm_free(conductivity);
@@ -188,17 +183,6 @@ void initialise(const struct parameters* p, double * temps_old, double * temps_n
         temps_new[M + index] = 0.0;
     }
 }
-// printf("hallo\n");
-// __m256d gelieza = _mm256_load_pd(temps_old);
-// __m256d paul = _mm256_load_pd(temps_old+4);
-// __m256d my_vector = _mm256_add_pd(gelieza,paul);
-// __attribute__ ((aligned (32))) double output[4];
-// _mm256_store_pd(output, my_vector);
-
-
-
-// printf("%f %f %f %f\n",
-//         output[0], output[1], output[2], output[3]);
 
 __m256d update_4(int index, int M,int N, double * temps_old,
  double * temps_new, double * conductivity, double * direct, double * indirect)
