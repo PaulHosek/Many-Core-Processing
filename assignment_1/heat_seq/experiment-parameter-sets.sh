@@ -28,6 +28,6 @@ for m in ${M[@]}; do
   #Wide rectangles k = 1, k = maxiter
   echo -n "${m}, 100, 1, " >> ${data};
   prun -np 1 -v heat_seq -n ${m} -m 100 -i ${maxiter} -e ${e} -c ../../test/wide_rect/${file_name_wide_rect} -t ../../test/wide_rect/${file_name_wide_rect} -r 1 -k 1 -L ${L} -H ${H};
-  echo -n "100, ${m}, ${maxiter}, " >> ${data};
+  echo -n "${m}, 100, ${maxiter}, " >> ${data};
   prun -np 1 -v heat_seq -n ${m} -m 100 -i ${maxiter} -e ${e} -c ../../test/wide_rect/${file_name_wide_rect} -t ../../test/wide_rect/${file_name_wide_rect} -r 1 -k ${maxiter} -L ${L} -H ${H};
 done
