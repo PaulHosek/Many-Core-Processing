@@ -54,7 +54,6 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
     }
 }
 
-
 void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 

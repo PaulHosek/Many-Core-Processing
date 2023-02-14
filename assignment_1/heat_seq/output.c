@@ -12,9 +12,15 @@
 
 void report_results(const struct parameters *p, const struct results *r)
 {
+    FILE * output;
+    output = fopen(p->output_file, "a");
+    if (!output)
+    {
+        die("invalid output file");
+    }
     static volatile int init = 0;
     if (!init) {
-        printf("Output:\n\n"
+        fprintf(output, "Output:\n\n"
                "%13s %13s %13s %13s %13s %13s %13s\n",
                //PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_BUGREPORT,
                "Iterations",
@@ -22,7 +28,7 @@ void report_results(const struct parameters *p, const struct results *r)
         init = 1;
     }
 
-    printf("%-13zu % .6e % .6e % .6e % .6e % .6e % .6e\n",
+    fprintf(output, "%-13zu % .6e % .6e % .6e % .6e % .6e % .6e\n",
            r->niter,
            r->tmin,
            r->tmax,
@@ -32,5 +38,7 @@ void report_results(const struct parameters *p, const struct results *r)
            (double)p->N * (double)p->M * 
            (double)(r->niter * FPOPS_PER_POINT_PER_ITERATION +
                     (double)r->niter / p->period) / r->time);
+    
+    fclose(output);
 }
 
