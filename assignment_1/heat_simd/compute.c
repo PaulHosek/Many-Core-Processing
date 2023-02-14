@@ -36,9 +36,13 @@ void do_compute(const struct parameters* p, struct results *r){
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     int it = 1;
-    int grid_start = p->M;
-    int grid_end = p->M  * (p->N + 1);
-    int grid_size = (p->N * p->M);
+    int M = p->M;
+    int N = p->N;
+    int MN = M*N; 
+    int NM_multiple4 = (MN + 3) & ~0x03;
+    int grid_start = M;
+    int grid_end = M + NM_multiple4;
+    int grid_size = NM_multiple4;
     int converged;
     double maxdiff;
     double tmin;
@@ -57,7 +61,7 @@ void do_compute(const struct parameters* p, struct results *r){
              __m256d new_res = update_4(p->M, p->M,p->N, temps_old,temps_new, conductivity, direct,indirect);
             double temperatures[4] __attribute__ ((aligned (32)));
             _mm256_store_pd(temperatures, new_res);
-            printf("%f %f %f %f\n", temperatures[0], temperatures[1], temperatures[2], temperatures[3]);
+            //printf("%f %f %f %f\n", temperatures[0], temperatures[1], temperatures[2], temperatures[3]);
  
             double difference[4] __attribute__ ((aligned (32)));
             __m256d cur_old_temperatures = _mm256_load_pd(&temps_old[index]);
@@ -150,12 +154,15 @@ void initialise(const struct parameters* p){
     int M = p->M;
     int N = p->N;
     int MN = M*N; 
+    printf("MN=%d\n",MN);
+    int NM_multiple4 = (MN + 3) & ~0x03;
+    printf("NM_multiple4=%d\n", NM_multiple4);
 
-    temps_old = (double *) _mm_malloc((N + 2) * M * sizeof(double), 32);
-    temps_new = (double *) _mm_malloc((N + 2) * M * sizeof(double), 32);
-    conductivity = (double *) _mm_malloc((N) * M * sizeof(double), 32); // TODO: check if right size
-    direct = (double *) _mm_malloc((N) * M * sizeof(double), 32);
-    indirect = (double *) _mm_malloc((N) * M * sizeof(double), 32);
+    temps_old = (double *) _mm_malloc(NM_multiple4 + 2*M * sizeof(double), 32);
+    temps_new = (double *) _mm_malloc(NM_multiple4 + 2*M * sizeof(double), 32);
+    conductivity = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32); // TODO: check if right size
+    direct = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32);
+    indirect = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32);
 
 
     // Halo rows
@@ -163,12 +170,12 @@ void initialise(const struct parameters* p){
     {
         temps_old[index] = p->tinit[index];
         temps_new[index] = temps_old[index];
-        temps_old[MN + M + index] = p->tinit[MN - M + index];
-        temps_new[MN + M + index] = temps_old[MN + M + index];
+        temps_old[NM_multiple4 + M + index] = p->tinit[MN - M + index];
+        temps_new[NM_multiple4 + M + index] = temps_old[MN + M + index];
     }
     
      // Fill the temperature values into the grid cells
-    for (int index = 0; index < M * N; index++)
+    for (int index = 0; index < MN; index++)
     {   
         temps_new[M+index] = p->tinit[index];
         double cur_conduct = p->conductivity[index];
@@ -180,6 +187,15 @@ void initialise(const struct parameters* p){
         conductivity[index] = cur_conduct;
         direct[index] = joint_weight_direct_neighbors / 4.0;
         indirect[index] = joint_weight_diagonal_neighbors / 4.0;
+    }
+
+    for (int index = MN; index < NM_multiple4; index ++)
+    {
+        conductivity[index] = 0.0;
+        direct[index] = 0.0;
+        indirect[index] = 0.0;
+        temps_old[M + index] = 0.0;
+        temps_new[M + index] = 0.0;
     }
 }
 // printf("hallo\n");
