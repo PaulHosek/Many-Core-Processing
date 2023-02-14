@@ -160,5 +160,15 @@ void do_compute(const struct parameters* p, struct results *r)
 
     printf("Called inner update: %d \n", called);
 
+    // Print to csv file for measuring 
+    double flops_per_it = 12.0;
+    double Flops = (double)p->N * (double)p->M * 
+                    (double)(r->niter * flops_per_it +
+                    (double)r->niter / p->period) / r->time;
+    FILE *fpt;
+    fpt = fopen("data.csv", "a+");
+    fprintf(fpt,"% .6e \n", Flops);
+    fclose(fpt);
+
     free(grid.points);
 }
