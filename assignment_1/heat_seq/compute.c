@@ -6,82 +6,68 @@
 #include "grid.h"
 
 
-struct grid initialize(const struct parameters* p)
+void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, 
+double* conductivity, double * weight_direct, double * weight_indirect, int* indices_left, int * indices_right)
 {
-    struct grid cylinder_grid;
-
-    cylinder_grid.M = p->M;
-    cylinder_grid.N = p->N;
     int MN = p->N * p-> M; 
-
-    cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
+    int m = p->M;
 
     // Halo rows
-    for (int index = 0; index < p->M; index++)
+    #pragma GCC ivdep
+    for (int index = 0; index < m; index++)
     {
-        T(&cylinder_grid, index) = p->tinit[index];
-        TN(&cylinder_grid, index) = T(&cylinder_grid, index);
-        T(&cylinder_grid, MN + p->M + index) = p->tinit[MN - p->M + index];
-        TN(&cylinder_grid, MN + p->M + index) = T(&cylinder_grid, MN + p->M + index);
+        temperature_old[index] = p->tinit[index];
+        temperature_new[index] = p->tinit[index];
+        temperature_old[MN + m + index] = p->tinit[MN - m + index];
+        temperature_new[MN + m + index] = p->tinit[MN - m + index];
     }
 
     // Fill the temperature values into the grid cells
-    for (int index = 0; index < p->M * p->N; index++)
+    #pragma GCC ivdep
+    for (int index = 0; index < MN; index++)
     {
-        T(&cylinder_grid, p->M + index) = p->tinit[index];
+        temperature_old[m + index] = p->tinit[index];
+        const double cond = p->conductivity[index];
+        const double joint_weight_diagonal_neighbors = (1 - cond) / (sqrt(2.0) + 1);
+        const double joint_weight_direct_neighbors = 1 - cond - joint_weight_diagonal_neighbors;
 
-        const double conductivity = p->conductivity[index];
-        const double joint_weight_diagonal_neighbors = (1 - conductivity) / (sqrt(2.0) + 1);
-        const double joint_weight_direct_neighbors = 1 - conductivity - joint_weight_diagonal_neighbors;
-
-        C(&cylinder_grid, p->M + index) = conductivity;
-        WD(&cylinder_grid, p->M + index) = joint_weight_direct_neighbors / 4.0;
-        WI(&cylinder_grid, p->M + index) = joint_weight_diagonal_neighbors / 4.0;
+        conductivity[index] = cond;
+        weight_direct[index] = joint_weight_direct_neighbors / 4.0;
+        weight_indirect[index] = joint_weight_diagonal_neighbors / 4.0;
     }
 
-    return cylinder_grid;
-}
-
-double update(int index, struct grid * restrict grid)
-{
-    const int m = grid->M;
-
-    int index_left =  index - 1;
-    int index_right = index + 1;
-
-    if (index % m == 0)
-    {
-        index_left = index + m - 1;
+    // Initialize the indices 
+    #pragma GCC ivdep
+    for (int index = m; index < MN + m; index ++){
+        // Find indices of direct neighbors
+        int index_left =  index - 1;
+        int index_right = index + 1;
+        if (index % m == 0)
+        {
+            index_left = index + m - 1;
+        }
+          
+        if (index % m == m - 1)
+        {
+            index_right = index - m + 1;
+        }
+        indices_left[index - m] = index_left;
+        indices_right[index - m] = index_right;
     }
-    
-    if (index % m == m - 1)
-    {
-        index_right = index - m + 1;
-    }
-
-    double new_temperature = 0.0;
-
-    // Scaled old temperature at the cell
-    new_temperature += T(grid, index) * C(grid, index);
-
-    // Adjacent neighbors
-    new_temperature += (T(grid, index_left) + T(grid, index - m) + T(grid, index_right) + T(grid, index + m))
-                    * WD(grid, index);
-    
-    // Diagonal neighbors
-    new_temperature += (T(grid, index_left - m) + T(grid, index_right - m) + T(grid, index_left + m) + T(grid, index_right + m))
-                    * WI(grid, index);
-
-    TN(grid, index) = new_temperature;
-
-    return new_temperature;
 }
 
 
 void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
-    struct grid grid = initialize(p);
+    double * temperature_old = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
+    double * temperature_new = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
+    double * conductivity = (double * ) malloc((p->N) * p->M * sizeof(double));
+    double * weight_direct = (double * ) malloc((p->N) * p->M * sizeof(double));
+    double * weight_indirect = (double * ) malloc((p->N) * p->M * sizeof(double));
+    int * indices_left = (int * ) malloc ( p->N * p->M * sizeof(int));
+    int * indices_right = (int * ) malloc ( p->N * p->M * sizeof(int));
+    initialize(p, temperature_old, temperature_new, conductivity, weight_direct, weight_indirect, indices_left, indices_right);
 
     // Measure time
     struct timespec before, after;
@@ -89,9 +75,11 @@ void do_compute(const struct parameters* p, struct results *r)
 
     int it = 1;
     int grid_start = p->M;
+    int m = p->M;
     int grid_end = p->M  * (p->N + 1);
     int grid_size = (p->N * p->M);
     int converged;
+    double threshold = p->threshold;
     double maxdiff;
     double tmin;
     double tmax;
@@ -105,32 +93,48 @@ void do_compute(const struct parameters* p, struct results *r)
         // Check convergence every timestep
         converged = 1;
 
-
+        #pragma GCC ivdep
         for (int index = grid_start; index < grid_end; ++ index){
-            double new_temperature = update(index, &grid);
+            int index_left = indices_left[index - m];
+            int index_right = indices_right[index - m];
 
-            double diff = fabs(T(&grid, index) - new_temperature);
+            double new_temperature = 0.0;
 
-            // Continue loop if one difference > threshold
-            if (diff >= p->threshold){
-                converged = 0;
-            }
+            // Scaled old temperature at the cell
+            new_temperature += temperature_old[index] * conductivity[index - m];
+
+            // Adjacent neighbors
+            new_temperature += (temperature_old[index_left] + temperature_old[index - m] + temperature_old[index_right] + 
+                temperature_old[index + m]) * weight_direct[index - m];
             
-            if (it % p->period == 0 || converged || it == p->maxiter){
-                // Update results 
-                tsum += new_temperature;
+                // Diagonal neighbors
+            new_temperature += (temperature_old[index_left - m] + temperature_old[index_right - m] + 
+                temperature_old[index_left + m] + temperature_old[index_right + m])
+                    * weight_indirect[index - m];
 
+            temperature_new[index] = new_temperature;
+
+            // Only converge if all values below threshold
+            double diff = fabs(temperature_old[index] - temperature_new[index]);
+            converged = converged & (diff < threshold);
+        }
+        
+        // Go over temperatures and check minimum, maximum temperature and maximum difference
+        if (it % p->period == 0 || converged || it == p-> maxiter){
+            #pragma GCC ivdep
+            for (int index = grid_start; index < grid_end; ++ index){
+                tsum += temperature_new[index];
+                if (temperature_new[index] > tmax){
+                    tmax = temperature_new[index];
+                }
+                if (temperature_new[index] < tmin){
+                    tmin = temperature_new[index];
+                }
+                double diff = fabs(temperature_new[index] - temperature_old[index]);
                 if (diff > maxdiff){
                     maxdiff = diff;
                 }
-                if (new_temperature > tmax){
-                    tmax = new_temperature;
-                }
-                if (new_temperature < tmin){
-                    tmin = new_temperature;
-                }
             }
-            
         }
 
         // Update results
@@ -151,7 +155,9 @@ void do_compute(const struct parameters* p, struct results *r)
         }
 
         // Flip old and new values
-        grid.old ^= 1;
+        double * tmp = temperature_old;
+        temperature_old = temperature_new;
+        temperature_new = tmp; 
 
         ++ it; 
     } while ((it <= p->maxiter) && (!converged));
@@ -166,5 +172,9 @@ void do_compute(const struct parameters* p, struct results *r)
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
     fclose(fpt);
 
-    free(grid.points);
+    free(temperature_old);
+    free(temperature_new);
+    free(conductivity);
+    free(weight_direct);
+    free(weight_indirect);
 }
