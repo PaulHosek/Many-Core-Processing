@@ -1,22 +1,36 @@
-make heat_seq
+make clean 
+rm data.csv
 
-for nbodies in 500 1000 2000 
+for comp in gcc  
 do
-    for i in 1 2 3 4 5
+    for optl in O0 O1 O2 O3 Ofast
     do 
-        echo "Run sequential with $nbodies in iteration $i"
-        prun -v 1 -np 1 -script $PRUN_ETC/prun-openmpi nbody-seq $nbodies 0 ../nbody.ppm 100 1 >> seq-data.csv;
-    done
-    for nnodes in 1 2 4 8
-    do 
-        for nprocs in 1 4 16
-        do 
-            for i in 1 2 3 4 5
-            do
-                echo "Running with $nbodies bodies, $nnodes nodes, $nprocs proc/node, it $i"
-                echo -n "${nnodes}, " >> par-data.csv;           
-                prun -v -$nnodes -np $nprocs -script $PRUN_ETC/prun-openmpi nbody-par $nbodies 0 ../nbody.ppm 100 1 >> par-data.csv;
-            done
-        done
-    done
+        if $optl == O3 || $optl == Ofast
+        then 
+        make compiler=$comp optlevel=$optl arch=haswell heat_seq
+        arch=1 
+        else 
+        arch=0
+        make compiler=$comp optlevel=$optl heat_seq
+        fi
+        for i in 1 2 3 4 5
+        do
+            echo -n "${comp}, ${optl}, ${arch}, 1, " >> data.csv;
+            prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -r 1 -k 1 -L 0 -H 100;
+            echo -n "${comp}, ${optl}, ${arch}, 50000, " >> data.csv;
+            prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -k 1 -L 0 -H 100;
+        done 
+        make clean 
+    done 
 done
+
+# Run one more time with O3 but without march=haswell
+make compiler=gcc optlevel=O3 heat_seq
+for i in 1 2 3 4 5
+do 
+    echo -n "gcc, O3, 0, 1, " >> data.csv;  
+    prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -r 1 -k 1 -L 0 -H 100 
+    echo -n "gcc, O3, 0, 50000, " >> data.csv;  
+    prun -np 1 -v heat_seq -n 150 -m 100 -i 50000 -e 0.00001 -c ../../images/pat3_100x150.pgm -t ../../images/pat3_100x150.pgm -k 3000 -L 0 -H 100 
+done
+make clean 
