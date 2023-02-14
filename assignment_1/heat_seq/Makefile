@@ -22,7 +22,7 @@ ARCH=-march=$(arch)
 CFLAGS:= $(CFLAGS) $(ARCH)
 endif
 ifdef autovec
-CFLAGS:= -O3 -Wall -march=haswell -fno-trapping-math -ffast-math -fopt-info-vec #-fopt-info-vec-missed
+CFLAGS:= -Ofast -Wall -march=haswell -ffast-math -fopt-info-vec 
 endif
 
 
