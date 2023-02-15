@@ -29,7 +29,7 @@ void do_compute(const struct parameters* p, struct results *r){
 
     double * temps_old = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 8);
     double * temps_new = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 8);
-    double * conductivity = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8); // TODO: check if right size
+    double * conductivity = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8); 
     double * direct = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8);
     double * indirect = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8);
 
@@ -121,8 +121,6 @@ void do_compute(const struct parameters* p, struct results *r){
             }
             
         }
-
-        // TODO: Updates for the last elements
         
         // Update results
         if (it % p->period == 0 || converged || it == p->maxiter){
@@ -238,7 +236,6 @@ __m256d update_4(int index, int M,int N, double * temps_old,
         }
     }
 
-    // TODO: fix the aweful indexing there 
     // Load temperatures and condictivity
 
     __m256d cur_old_temps = _mm256_loadu_pd(&temps_old[index]);
