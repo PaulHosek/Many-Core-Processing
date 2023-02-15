@@ -175,4 +175,6 @@ void do_compute(const struct parameters* p, struct results *r)
     free(conductivity);
     free(weight_direct);
     free(weight_indirect);
+    free(indices_left);
+    free(indices_right);
 }
