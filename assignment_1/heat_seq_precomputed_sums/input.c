@@ -89,7 +89,7 @@ void read_parameters(struct parameters* p, int argc, char **argv)
     p->nthreads = 1;
     p->printreports = 0;
     p->use_precomputed_sums = 0;
-    p->output_file = 0;
+    p->output_file = "output.txt";
     conductivity_fname = "../../images/pat1_100x150.pgm";
     tinit_fname = "../../images/pat1_100x150.pgm";
 
