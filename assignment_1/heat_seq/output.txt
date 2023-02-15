@@ -10,16 +10,16 @@ Parameters:
   -H 1.000000e+02 # highest temperature in input/output
   -p 1 # number of threads (if applicable)
   -r 1 # print intermediate reports every reduction cycle
-  -s 0 # Use precomputed sums of neighboring temperature cells.
-  -o ./output.txt  #  File for output statistics.
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o output.txt  #  File for output statistics.
 Output:
 
    Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
-10             4.565739e+01  9.490196e+01  6.058433e-01  5.125809e+01  7.681948e-03  2.362682e+08
-20             4.613830e+01  9.490196e+01  3.106981e-01  5.136840e+01  1.555541e-02  2.333594e+08
-30             4.631763e+01  9.490195e+01  2.076053e-01  5.144141e+01  2.297130e-02  2.370349e+08
-40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  2.991154e-02  2.427157e+08
-40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  2.991154e-02  2.427157e+08
+10             5.903599e-01  9.490196e+01  3.744239e+00  5.061149e+01  2.050210e-03  8.852752e+08
+20             1.510666e-01  9.490196e+01  2.360176e+00  5.024276e+01  4.621046e-03  7.855364e+08
+30             1.008361e-01  9.490189e+01  1.847435e+00  4.983990e+01  7.054343e-03  7.718649e+08
+40             9.538955e-02  9.490149e+01  1.554417e+00  4.942295e+01  9.446528e-03  7.685363e+08
+42             9.523572e-02  9.490131e+01  1.538727e+00  4.933857e+01  1.021606e-02  7.461781e+08
 Parameters:
   -n 150 # number of rows
   -m 100 # number of columns
@@ -33,12 +33,80 @@ Parameters:
   -p 1 # number of threads (if applicable)
   -r 1 # print intermediate reports every reduction cycle
   -s 1 # Use precomputed sums of neighboring temperature cells.
-  -o ./output.txt  #  File for output statistics.
+  -o output.txt  #  File for output statistics.
 Output:
 
    Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
-10             4.565739e+01  9.490196e+01  6.058433e-01  5.125809e+01  7.703797e-03  2.355981e+08
-20             4.613830e+01  9.490196e+01  3.106981e-01  5.136840e+01  1.545103e-02  2.349358e+08
-30             4.631763e+01  9.490195e+01  2.076053e-01  5.144141e+01  2.282626e-02  2.385411e+08
-40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  2.984732e-02  2.432379e+08
-40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  2.984732e-02  2.432379e+08
+10             3.819388e+01  9.490196e+01  5.451220e+00  5.136729e+01  2.007861e-03  9.039470e+08
+Parameters:
+  -n 150 # number of rows
+  -m 100 # number of columns
+  -i 42 # maximum number of iterations
+  -k 10 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../images/pat1_100x150.pgm # input file for conductivity
+  -t ../../images/pat1_100x150.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o output.txt  #  File for output statistics.
+Parameters:
+  -n 150 # number of rows
+  -m 100 # number of columns
+  -i 42 # maximum number of iterations
+  -k 10 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../images/pat1_100x150.pgm # input file for conductivity
+  -t ../../images/pat1_100x150.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o output.txt  #  File for output statistics.
+Parameters:
+  -n 150 # number of rows
+  -m 100 # number of columns
+  -i 42 # maximum number of iterations
+  -k 10 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../images/pat1_100x150.pgm # input file for conductivity
+  -t ../../images/pat1_100x150.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o output.txt  #  File for output statistics.
+Output:
+
+   Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
+10             4.565739e+01  9.490196e+01  6.058433e-01  5.125809e+01  3.593514e-02  5.050766e+07
+20             4.613830e+01  9.490196e+01  3.106981e-01  5.136840e+01  8.028295e-02  4.521508e+07
+30             4.631763e+01  9.490195e+01  2.076053e-01  5.144141e+01  1.152193e-01  4.725773e+07
+40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  1.493911e-01  4.859727e+07
+42             4.642913e+01  9.490187e+01  1.467056e-01  5.150919e+01  1.576332e-01  4.835912e+07
+Parameters:
+  -n 150 # number of rows
+  -m 100 # number of columns
+  -i 42 # maximum number of iterations
+  -k 10 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../images/pat1_100x150.pgm # input file for conductivity
+  -t ../../images/pat1_100x150.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o output.txt  #  File for output statistics.
+Output:
+
+   Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
+10             4.565739e+01  9.490196e+01  6.058433e-01  5.125809e+01  2.345401e-03  7.738549e+08
+20             4.613830e+01  9.490196e+01  3.106981e-01  5.136840e+01  4.937845e-03  7.351385e+08
+30             4.631763e+01  9.490195e+01  2.076053e-01  5.144141e+01  7.501866e-03  7.258194e+08
+40             4.641524e+01  9.490189e+01  1.539867e-01  5.149887e+01  1.004140e-02  7.230065e+08
+42             4.642913e+01  9.490187e+01  1.467056e-01  5.150919e+01  1.091969e-02  6.980967e+08
