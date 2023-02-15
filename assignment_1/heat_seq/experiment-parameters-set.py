@@ -20,11 +20,12 @@ xs_kmaxiter = squares_kmaxiter['n']
 ys_kmaxiter = squares_kmaxiter['flops']
 
 f, ax = plt.subplots()
-ax.plot(xs_k1, ys_k1, label="k = 1")
-ax.plot(xs_kmaxiter, ys_kmaxiter, label="k = maxiter")
+ax.set_title("Square grid")
+ax.plot(xs_k1, ys_k1, label="k = 1", color='#3AD684')
+ax.plot(xs_kmaxiter, ys_kmaxiter, label="k = maxiter",color='#517075')
 ax.set(xlabel="Grid size", ylabel="Flops/s")
 ax.legend()
-f.savefig("squares.svg", dpi=300, bbox_inches='tight')
+f.savefig("squares.png", dpi=300, bbox_inches='tight')
 
 #thin rects, k = 1
 thin_rects_k1 = df[(df['m'] == 100) & (df['k'] == 1)]
@@ -38,11 +39,12 @@ ys_thin_kmaxiter = thin_rects_kmaxiter['flops']
 print(thin_rects_kmaxiter)
 
 f, ax = plt.subplots()
-ax.plot(xs_thin_k1, ys_thin_k1, label="k = 1")
-ax.plot(xs_thin_kmaxiter, ys_thin_kmaxiter, label="k = maxiter")
+ax.set_title("Thin rectangles")
+ax.plot(xs_thin_k1, ys_thin_k1, label="k = 1", color='#3AD684')
+ax.plot(xs_thin_kmaxiter, ys_thin_kmaxiter, label="k = maxiter",color='#517075')
 ax.set(xlabel="Grid size", ylabel="Flops/s")
 ax.legend()
-f.savefig("thin_rectangles.svg", dpi=300, bbox_inches='tight')
+f.savefig("thin_rectangles.png", dpi=300, bbox_inches='tight')
 
 #wide rects, k = 1
 wide_rects_k1 = df[(df['n'] == 100) & (df['k'] == 1)]
@@ -55,8 +57,9 @@ xs_wide_kmaxiter = wide_rects_kmaxiter['m']
 ys_wide_kmaxiter = wide_rects_kmaxiter['flops']
 
 f, ax = plt.subplots()
-ax.plot(xs_wide_k1, ys_wide_k1, label="k = 1")
-ax.plot(xs_wide_kmaxiter, ys_wide_kmaxiter, label="k = maxiter")
+ax.set_title("Wide rectangles")
+ax.plot(xs_wide_k1, ys_wide_k1, label="k = 1", color='#3AD684')
+ax.plot(xs_wide_kmaxiter, ys_wide_kmaxiter, label="k = maxiter",color='#517075')
 ax.set(xlabel="Grid size", ylabel="Flops/s")
 ax.legend()
-f.savefig("wide_rectangles.svg", dpi=300, bbox_inches='tight')
+f.savefig("wide_rectangles.png", dpi=300, bbox_inches='tight')
