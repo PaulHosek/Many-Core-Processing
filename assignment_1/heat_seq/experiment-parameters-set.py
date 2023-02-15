@@ -46,7 +46,6 @@ ax.set(xlabel="Grid size", ylabel="Flops/s")
 ax.legend()
 # f.show()
 f.savefig("squares_test.png", dpi=300, bbox_inches='tight')
-raise KeyboardInterrupt
 #thin rects, k = 1
 thin_rects_k1 = df[(df['m'] == 100) & (df['k'] == 1)]
 xs_thin_k1 = thin_rects_k1['n']
@@ -63,7 +62,7 @@ ax.set_title("Thin rectangles")
 ax.plot(xs_thin_k1, ys_thin_k1, label="k = 1", color='#3AD684')
 ax.plot(xs_thin_kmaxiter, ys_thin_kmaxiter, label="k = maxiter",color='#517075')
 
-plot_hi_lo(ax, ys_thin_k1, xs_thin_k1,thin_rects_kmaxiter['flops']['sem'],'#3AD684')
+plot_hi_lo(ax, ys_thin_k1, xs_thin_k1, thin_rects_k1['flops']['sem'],'#3AD684')
 plot_hi_lo(ax, ys_thin_kmaxiter, xs_thin_kmaxiter, thin_rects_kmaxiter['flops']['sem'],'#517075')
 
 ax.set(xlabel="Grid size", ylabel="Flops/s")
