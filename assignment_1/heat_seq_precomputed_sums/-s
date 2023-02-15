@@ -10,8 +10,9 @@ Parameters:
   -H 1.000000e+02 # highest temperature in input/output
   -p 1 # number of threads (if applicable)
   -r 1 # print intermediate reports every reduction cycle
+
   -s 0 # Use precomputed sums of neighboring temperature cells.
-  -o -s  #  File for output statistics.
+  -o filename  #  File for output statistics.
 Parameters:
   -n 100 # number of rows
   -m 10 # number of columns
