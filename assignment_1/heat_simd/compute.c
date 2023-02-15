@@ -27,11 +27,11 @@ void do_compute(const struct parameters* p, struct results *r){
     int MN = M*N; 
     int NM_multiple4 = (MN + 3) & ~0x03;
 
-    double * temps_old = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 32);
-    double * temps_new = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 32);
-    double * conductivity = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32); // TODO: check if right size
-    double * direct = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32);
-    double * indirect = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 32);
+    double * temps_old = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 8);
+    double * temps_new = (double *) _mm_malloc((NM_multiple4 + 2*M) * sizeof(double), 8);
+    double * conductivity = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8); // TODO: check if right size
+    double * direct = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8);
+    double * indirect = (double *) _mm_malloc(NM_multiple4 * sizeof(double), 8);
 
     initialise(p, temps_old, temps_new, conductivity, direct, indirect);
     // Measure time
@@ -57,9 +57,8 @@ void do_compute(const struct parameters* p, struct results *r){
         converged = 1;
         for (int index = grid_start; index < grid_end; index += 4){
              __m256d new_res = update_4(index, M,N, temps_old,temps_new,conductivity, direct,indirect);
-
             double difference[4] __attribute__ ((aligned (32)));
-            __m256d cur_old_temperatures = _mm256_load_pd(&temps_old[index]);
+            __m256d cur_old_temperatures = _mm256_loadu_pd(&temps_old[index]);
             _mm256_store_pd(difference, _mm256_sub_pd(cur_old_temperatures, new_res));
 
             // _mm256_abs_ph only for availabe single precision --> element-wise abs
@@ -87,9 +86,28 @@ void do_compute(const struct parameters* p, struct results *r){
 
                 double new_temperatures_arr[4] __attribute__ ((aligned (32)));
                 _mm256_store_pd(new_temperatures_arr, new_res);
-                // TODO: Avoid fmax, fmin because math libraries have to be linked in Makefile (gcc -lm)
-                const double cur_max_temp = fmax(fmax(fmax(new_temperatures_arr[0], new_temperatures_arr[1]), new_temperatures_arr[2]), new_temperatures_arr[3]);
-                const double cur_min_temp = fmin(fmin(fmin(new_temperatures_arr[0], new_temperatures_arr[1]), new_temperatures_arr[2]), new_temperatures_arr[3]);
+
+                int real_temperatures = 4;
+                if (index + 4 > MN)
+                {
+                    real_temperatures = MN - index;
+                }
+
+                double cur_max_temp = new_temperatures_arr[0];
+                double cur_min_temp = new_temperatures_arr[0];
+
+                for (int j=1; j < real_temperatures; j++)
+                {
+                    if (new_temperatures_arr[j] < cur_min_temp)
+                    {
+                        cur_min_temp = new_temperatures_arr[j];
+                    }
+
+                    if (new_temperatures_arr[j] > cur_max_temp)
+                    {
+                        cur_max_temp = new_temperatures_arr[j];
+                    }
+                }
 
                 if (cur_max_difference > maxdiff){
                     maxdiff = cur_max_difference;
@@ -120,7 +138,6 @@ void do_compute(const struct parameters* p, struct results *r){
             clock_gettime(CLOCK_MONOTONIC, &after);
             r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-            
             if (it < p->maxiter && !converged && p->printreports){
                 // Only call print if it's not the last iteration
                 report_results(p,r);
@@ -231,13 +248,13 @@ __m256d update_4(int index, int M,int N, double * temps_old,
             offset_next_row[i] = M;
         }
     }
-    
+
     // TODO: fix the aweful indexing there 
     // Load temperatures and condictivity
 
-    __m256d cur_old_temps = _mm256_load_pd(&(temps_old[index]));
-    __m256d cur_conduct = _mm256_load_pd(&conductivity[index-M]);
-   
+    __m256d cur_old_temps = _mm256_loadu_pd(&temps_old[index]);
+    __m256d cur_conduct = _mm256_loadu_pd(&conductivity[index-M]);
+
     __m256d left_direct = _mm256_set_pd(temps_old[indices_left[3]],temps_old[indices_left[2]],temps_old[indices_left[1]],temps_old[indices_left[0]]);
     __m256d left_indirect_top = _mm256_set_pd(temps_old[indices_left[3]-M],temps_old[indices_left[2]-M],temps_old[indices_left[1]-M],temps_old[indices_left[0]-M]);
     __m256d left_indirect_below = _mm256_set_pd(temps_old[indices_left[3]+offset_next_row[3]],temps_old[indices_left[2]+offset_next_row[2]],temps_old[indices_left[1]+offset_next_row[1]],temps_old[indices_left[0]+offset_next_row[0]]);
@@ -246,11 +263,11 @@ __m256d update_4(int index, int M,int N, double * temps_old,
     __m256d right_indirect_top = _mm256_set_pd(temps_old[indices_right[3]-M],temps_old[indices_right[2]-M],temps_old[indices_right[1]-M],temps_old[indices_right[0]-M]);
     __m256d right_indirect_below = _mm256_set_pd(temps_old[indices_right[3]+offset_next_row[3]],temps_old[indices_right[2]+offset_next_row[2]],temps_old[indices_right[1]+offset_next_row[1]],temps_old[indices_right[0]+offset_next_row[0]]);
 
-    __m256d cur_direct_top = _mm256_load_pd(&(temps_old[index-M]));
+    __m256d cur_direct_top = _mm256_loadu_pd(&(temps_old[index-M]));
     __m256d cur_direct_below = _mm256_set_pd(temps_old[indices[3]+offset_next_row[3]],temps_old[indices[2]+offset_next_row[2]],temps_old[indices[1]+offset_next_row[1]],temps_old[indices[0]+offset_next_row[0]]);
     
-    __m256d indirect_weight = _mm256_load_pd(&indirect[index-M]);
-    __m256d direct_weight = _mm256_load_pd(&direct[index-M]);
+    __m256d indirect_weight = _mm256_loadu_pd(&indirect[index-M]);
+    __m256d direct_weight = _mm256_loadu_pd(&direct[index-M]);
 
     // Compute stuff
     __m256d cur_temp_res = _mm256_mul_pd(cur_old_temps,cur_conduct);
@@ -263,6 +280,6 @@ __m256d update_4(int index, int M,int N, double * temps_old,
 
     // add to final sum and store
     __m256d final_sum = _mm256_add_pd(_mm256_add_pd(indirect_temp_res, direct_temp_res), cur_temp_res);
-    _mm256_store_pd(&temps_new[index],final_sum);
+    _mm256_storeu_pd(&temps_new[index],final_sum);
     return final_sum; 
 }
