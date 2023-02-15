@@ -8,7 +8,7 @@ pd.set_option('display.max_columns', 500)
 plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
-data = pd.read_csv("summary.csv")[["N", 'time_not_precomputed',"time_precomputed"]].groupby('N').agg(["mean",'sem']).reset_index()
+data = pd.read_csv("summary.csv")[["N", 'time_not_precomputed', "time_precomputed"]].groupby('N').agg(["mean", 'sem']).reset_index()
 print()
 print(data)
 
