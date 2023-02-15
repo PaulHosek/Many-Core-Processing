@@ -165,7 +165,7 @@ void do_compute(const struct parameters* p, struct results *r)
                     (double)(r->niter * flops_per_it +
                     (double)r->niter / p->period) / r->time;
     FILE *fpt;
-    fpt = fopen("data.csv", "a+");
+    fpt = fopen("../data.csv", "a+");
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
     fclose(fpt);
 

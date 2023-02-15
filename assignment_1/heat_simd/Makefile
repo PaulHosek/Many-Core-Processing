@@ -4,13 +4,14 @@ SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
 OBJ=$(patsubst %.c,%.o,$(SRC))
 
 CC=gcc
-INCLUDES=-I../../include
-ifndef DEBUG
-CFLAGS=-O2 -std=gnu99 -march=haswell -Wall -lm
-LIB=
-else
 CFLAGS=-O0 -g3 -std=gnu99 -march=haswell -lm
+INCLUDES=-I../../include
 LIB=
+ifdef DEBUG
+CFLAGS=-O2 -std=gnu99 -march=haswell -Wall -lm
+endif
+ifdef autovec
+CFLAGS:= -O3 -Wall -march=haswell -ffast-math -fopt-info-vec 
 endif
 
 all: $(PRJ)

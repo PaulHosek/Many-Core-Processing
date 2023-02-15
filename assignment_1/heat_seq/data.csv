@@ -1,1 +1,80 @@
  2.519943e-02,  3.025069e+08 
+10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 10, 1, heat_seq, 10, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 100, 1, heat_seq, 100, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 1000, 1, heat_seq, 1000, , heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq,  1.540741e-02,  1.850343e+08 
+10, 500000, heat_seq,  2.743110e-03,  9.593492e+08 
+10, 1, heat_seq,  1.667239e-02,  1.709953e+08 
+10, 500000, heat_seq,  2.737457e-03,  9.613303e+08 
+10, 1, heat_seq,  1.619118e-02,  1.760773e+08 
+10, 500000, heat_seq,  2.749947e-03,  9.569641e+08 
+10, 1, heat_seq,  1.581184e-02,  1.803016e+08 
+10, 500000, heat_seq,  2.737059e-03,  9.614701e+08 
+10, 1, heat_seq,  1.624189e-02,  1.755276e+08 
+10, 500000, heat_seq,  2.733032e-03,  9.628868e+08 
+100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq,  2.195371e-02,  1.725540e+08 
+10, 500000, heat_seq,  3.641755e-03,  9.601965e+08 
+10, 1, heat_seq,  2.070302e-02,  1.829781e+08 
+10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq,  2.384967e-02,  1.981914e+08 
+10, 500000, heat_seq,  4.445540e-03,  9.814782e+08 
+10, 1, heat_seq,  2.527308e-02,  1.870291e+08 
+10, 500000, heat_seq,  4.567730e-03,  9.552230e+08 
+10, 1, heat_seq,  2.434735e-02,  1.941403e+08 
+10, 500000, heat_seq,  4.539892e-03,  9.610803e+08 
+10, 1, heat_seq,  2.717951e-02,  1.739104e+08 
+10, 500000, heat_seq,  4.535335e-03,  9.620460e+08 
+10, 1, heat_seq,  2.689471e-02,  1.757520e+08 
+10, 500000, heat_seq,  4.546067e-03,  9.597748e+08 
+100, 1, heat_seq,  3.298885e+00,  1.970363e+09 
+100, 50000, heat_seq,  2.643713e+00,  2.269539e+09 
+100, 1, heat_seq,  3.057742e+00,  2.125752e+09 
+100, 50000, heat_seq,  2.643795e+00,  2.269469e+09 
+100, 1, heat_seq,  3.118366e+00,  2.084425e+09 
+100, 50000, heat_seq,  2.669985e+00,  2.247207e+09 
+100, 1, heat_seq,  3.245525e+00,  2.002758e+09 
+100, 50000, heat_seq,  2.647357e+00,  2.266415e+09 
+100, 1, heat_seq,  3.197439e+00,  2.032877e+09 
+100, 50000, heat_seq,  2.649293e+00,  2.264759e+09 
+1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 10, 1, heat_seq, 10, 500000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 100, 1, heat_seq, 100, 50000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, 1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+10, 1, heat_seq, 10, 500000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+100, 1, heat_seq, 100, 50000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, heat_seq
+1000, 1, heat_seq, 1000, 5000, heat_seq, 
