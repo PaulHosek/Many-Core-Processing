@@ -12,6 +12,7 @@ struct grid initialize(const struct parameters* p)
 
     cylinder_grid.M = p->M;
     cylinder_grid.N = p->N;
+    cylinder_grid.old = 0;
     int MN = p->N * p-> M; 
 
     cylinder_grid.points = (struct pointType *) malloc((p->N + 2) * p->M * sizeof(struct pointType));
