@@ -1,0 +1,27 @@
+Parameters:
+  -n 100 # number of rows
+  -m 10 # number of columns
+  -i 1000 # maximum number of iterations
+  -k 100 # reduction period
+  -e 1.000000e-04 # convergence threshold
+  -c ../../test/1676467409/test_m10_n100/conductivity.pgm # input file for conductivity
+  -t ../../test/1676467409/test_m10_n100/temperature.pgm # input file for initial temperatures
+  -L 0.000000e+00 # coolest temperature in input/output
+  -H 1.000000e+02 # highest temperature in input/output
+  -p 1 # number of threads (if applicable)
+  -r 1 # print intermediate reports every reduction cycle
+  -s 1 # Use precomputed sums of neighboring temperature cells.
+  -o ../../test/1676467409/test_m10_n100/out_precomputed.txt  #  File for output statistics.
+Output:
+
+   Iterations        T(min)        T(max)       T(diff)        T(avg)          Time        FLOP/s
+100            1.000000e+02  8.475100e+31  4.226227e+31  1.598092e+30  1.414708e-03  8.489384e+08
+200            1.000000e+02  8.228356e+61  4.103197e+61  9.772420e+59  3.245109e-03  7.401909e+08
+300            1.000000e+02  7.992025e+91  3.985366e+91  7.242710e+89  5.010683e-03  7.190636e+08
+400            1.000000e+02  7.766692e+121  3.873024e+121  6.012562e+119  6.748443e-03  7.118679e+08
+500            1.000000e+02  8.297402e+151  4.142352e+151  5.421620e+149  8.480521e-03  7.080933e+08
+600            1.000000e+02  9.022329e+181  4.504220e+181  5.200399e+179  1.024618e-02  7.032865e+08
+700            1.000000e+02  9.803588e+211  4.894221e+211  5.221722e+209  1.192435e-02  7.050278e+08
+800            1.000000e+02  1.064774e+242  5.315626e+241  5.422242e+239  1.356832e-02  7.081200e+08
+900            1.000000e+02  1.221435e+272  6.103963e+271  5.771367e+269  1.520651e-02  7.108140e+08
+1000           1.000000e+02  1.468974e+302  7.341002e+301  6.257336e+299  1.682166e-02  7.139606e+08
