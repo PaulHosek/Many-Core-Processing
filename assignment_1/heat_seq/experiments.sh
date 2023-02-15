@@ -19,7 +19,7 @@ do
         prun -np 1 -v python ../../test/pgm_generator.py -m ${m} -n ${m} -v 65535 -o "${test_subdir}/conductivity.pgm"
         
         let iterations=500000/${m}
-        for i in 1 2 3 4 5
+        for i in {1..50}
         do
         # without precomputed sums
         prun -np 1 -v heat_seq -n ${m} -m ${m} -i ${iterations} -e 0.0 -c "${test_subdir}/conductivity.pgm" -t "${test_subdir}/temperature.pgm" -r 1 -k ${iterations} -L 0 -H 100 -o "${test_subdir}/out_not_precomputed_${i}.txt"
