@@ -16,7 +16,7 @@ void update_temperature_sums(int m,int n,double * temperatures, double * tempera
 }
 
 void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, double * temperature_horizontal_sums, double * temperature_vertical_sums,
-double* conductivity, double * weight_direct, double * weight_indirect, int* indices_left, int * indices_right){
+double* conductivity, double * weight_direct, double * weight_indirect, int* indices_left, int * indices_right, int use_precomputed_sums){
     int m = p->M;
     int n = p->N;
     int MN = m*n;
@@ -30,7 +30,7 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
         temperature_new[MN + m + index] = p->tinit[MN - m + index];
     }
 
-    if (p->use_precomputed_sums)
+    if (use_precomputed_sums)
     {
         for (int index = 0; index < p->M; index++)
         {
@@ -86,7 +86,7 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
         indices_right[index - m] = index_right;
     }
 
-    if (p->use_precomputed_sums) 
+    if (use_precomputed_sums) 
     {
         update_temperature_sums(m,n,temperature_old, temperature_horizontal_sums, temperature_vertical_sums,indices_left,indices_right);
     }
@@ -104,7 +104,8 @@ void do_compute(const struct parameters* p, struct results *r)
     double * weight_indirect = (double * ) malloc((p->N) * p->M * sizeof(double));
     int * indices_left = (int * ) malloc ( p->N * p->M * sizeof(int));
     int * indices_right = (int * ) malloc ( p->N * p->M * sizeof(int));
-    initialize(p, temperature_old, temperature_new, temperature_horizontal_sums, temperature_vertical_sums, conductivity, weight_direct, weight_indirect, indices_left, indices_right);
+    const int use_precomputed_sums = 1;
+    initialize(p, temperature_old, temperature_new, temperature_horizontal_sums, temperature_vertical_sums, conductivity, weight_direct, weight_indirect, indices_left, indices_right, use_precomputed_sums);
 
     // Measure time
     struct timespec before, after;
@@ -137,7 +138,7 @@ void do_compute(const struct parameters* p, struct results *r)
             int index_right = indices_right[index - m];
 
             double new_temperature = temperature_old[index] * conductivity[index - m];
-            if (p->use_precomputed_sums)
+            if (use_precomputed_sums)
             {
                 // Adjacent neighbors
                 new_temperature += (temperature_horizontal_sums[index] + temperature_vertical_sums[index-m]) * weight_direct[index - m];
@@ -202,7 +203,7 @@ void do_compute(const struct parameters* p, struct results *r)
         temperature_old = temperature_new;
         temperature_new = tmp; 
 
-        if (p->use_precomputed_sums) 
+        if (use_precomputed_sums) 
         {
             update_temperature_sums(m,n,temperature_old,temperature_horizontal_sums,temperature_vertical_sums,indices_left,indices_right);
         }

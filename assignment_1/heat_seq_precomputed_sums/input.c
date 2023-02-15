@@ -26,7 +26,6 @@ static void usage(const char *pname)
            "  -e NUM     The the convergence threshold to NUM.\n"
            "  -c FILE    Read conductivity values from FILE.\n"
            "  -t FILE    Read initial temperature values from FILE.\n"
-           "  -o FILE    File for output statistics.\n"
            "  -L NUM     Coldest temperature in input/output images.\n"
            "  -H NUM     Warmest temperature in input/output images.\n"
            "  -p NUM     Number of threads to use (when applicable).\n"
@@ -88,8 +87,6 @@ void read_parameters(struct parameters* p, int argc, char **argv)
     p->io_tmax = 100.0;
     p->nthreads = 1;
     p->printreports = 0;
-    p->use_precomputed_sums = 0;
-    p->output_file = "output.txt";
     conductivity_fname = "../../images/pat1_100x150.pgm";
     tinit_fname = "../../images/pat1_100x150.pgm";
 
@@ -107,30 +104,11 @@ void read_parameters(struct parameters* p, int argc, char **argv)
         case 'H': p->io_tmax = strtod(optarg, 0); break;
         case 'p': p->nthreads = strtol(optarg, 0, 10); break;
         case 'r': p->printreports = 1; break;
-        case 's': p->use_precomputed_sums = 1; break;
-        case 'o':
-        {
-            const size_t str_len = strlen(optarg);
-            if (!(p->output_file = malloc((str_len + 1) * sizeof(char))))
-            {
-                die("malloc");
-            }
-            strcpy(p->output_file, optarg);
-            break;
-        }
         case 'h': default: usage(argv[0]);
         }
     }
 
-    FILE * output;
-
-    output = fopen(p->output_file, "a");
-    if (!output)
-    {
-        die("invalid output file");
-    }
-
-    fprintf(output, "Parameters:\n"
+    printf("Parameters:\n"
            "  -n %zu # number of rows\n"
            "  -m %zu # number of columns\n"
            "  -i %zu # maximum number of iterations\n"
@@ -141,16 +119,13 @@ void read_parameters(struct parameters* p, int argc, char **argv)
            "  -L %e # coolest temperature in input/output\n"
            "  -H %e # highest temperature in input/output\n"
            "  -p %zu # number of threads (if applicable)\n"
-           "  -r %zu # print intermediate reports every reduction cycle\n"
-           "  -s %zu # Use precomputed sums of neighboring temperature cells.\n"
-           "  -o %s  #  File for output statistics.\n",
+           "  -r %zu # print intermediate reports every reduction cycle\n",
            p->N, p->M, p->maxiter, p->period, p->threshold,
            conductivity_fname ? conductivity_fname : "(none)",
            tinit_fname ? tinit_fname : "(none)",
            p->io_tmin, p->io_tmax,
-           p->nthreads, p->printreports, p->use_precomputed_sums, p->output_file);
+           p->nthreads, p->printreports);
 
-    fclose(output);
     if (!p->N || !p->M) die("empty grid");
 
     atexit(cleanup);
