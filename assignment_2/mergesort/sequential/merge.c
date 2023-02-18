@@ -5,14 +5,53 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <omp.h>
+#include <string.h> /* for memcpy
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 
 int debug = 0;
 
+void TopDownMerge(int *v, long first, long mid, long last, int *cur_v);
+void TopDownSplitMerge(int *cur_v, long first, long last, int*v);
+void msort(int *v, long l);
+
+
 /* Sort vector v of l elements using mergesort */
 void msort(int *v, long l){
+    int * cur_v = (int*) malloc(l*sizeof(int));
+    memcpy(cur_v ,v, l * sizeof(int)); // TODO: replace this later with vectorised implementation
+
+    TopDownSplitMerge(cur_v,0,l,v);
+    TopDownMerge(cur_v,0, (int) l/2,l,v);
+}
+
+void TopDownSplitMerge(int *cur_v,  long first, long last,int *v){
+    if (last - first <= 1){
+        return;
+    }
+    long mid = (last + first) / 2;   // TODO: integer division?
+    // recursively sort both runs from halves and merge
+    TopDownSplitMerge(v, first,  mid, v);
+    TopDownSplitMerge(v, mid,    last, v);
+    TopDownMerge(cur_v, first, mid, last, v);
+
+}
+
+void TopDownMerge(int *cur_v, long first, long mid, long last, int *v) {
+    long i = first;
+    long j = mid;
+
+    for (long k = first; k < last; k++) {
+        if (i < mid && (j >= last || v[i] <= v[j])) {
+            cur_v[k] = v[i];
+            i++;
+        }
+        else {
+            cur_v[k] = v[j];
+            j++;
+        }
+    }
 
 }
 
@@ -129,3 +168,6 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+//
+// Created by Paul Hosek on 18.02.23.
+//

@@ -238,8 +238,8 @@ __m256d update_4(int index, int M,int N, double * temps_old,
         }
     }
 
-    // TODO: fix the aweful indexing there 
-    // Load temperatures and condictivity
+    // TODO: fix the awful indexing there
+    // Load temperatures and conductivity
 
     __m256d cur_old_temps = _mm256_loadu_pd(&temps_old[index]);
     __m256d cur_conduct = _mm256_loadu_pd(&conductivity[index-M]);
