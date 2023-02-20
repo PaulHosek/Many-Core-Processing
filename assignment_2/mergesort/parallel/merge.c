@@ -18,42 +18,66 @@ void msort(int *v, long l);
 
 
 /* Sort vector v of l elements using mergesort */
-void msort(int *v, long l){
-    int * cur_v = (int*) malloc(l*sizeof(int));
-    memcpy(cur_v ,v, l * sizeof(int));
-
-    TopDownSplitMerge(cur_v,0,l,v);
-    TopDownMerge(cur_v,0, (int) l/2,l,v);
+void msort(int *v, long l) {
+    int *cur_v = malloc(l * sizeof(int));
+    #pragma omp parallel
+    {
+    #pragma omp single
+        {
+    #pragma omp task
+            TopDownSplitMerge(cur_v, 0, l, v);
+        }
+    }
+    free(cur_v);
 }
 
-void TopDownSplitMerge(int *cur_v,  long first, long last,int *v){
-    if (last - first <= 1){
+void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
+    if (last - first <= 1) {
         return;
     }
+
     long mid = (last + first) / 2;
-    // recursively sort both runs from halves and merge
-    TopDownSplitMerge(v, first,  mid, v);
-    TopDownSplitMerge(v, mid,    last, v);
-    TopDownMerge(cur_v, first, mid, last, v);
 
+    #pragma omp task if(last-first > 1000)
+    TopDownSplitMerge(v, first, mid, v);
+
+    #pragma omp task if(last-first > 1000)
+    TopDownSplitMerge(v, mid, last, v);
+
+    #pragma omp taskwait
+
+    #pragma omp task if(last-first > 1000)
+        {
+            long i = first;
+            long j = mid;
+            for (long k = first; k < last; k++) {
+                if (i < mid && (j >= last || v[i] <= v[j])) {
+                    cur_v[k] = v[i];
+                    i++;
+                } else {
+                    cur_v[k] = v[j];
+                    j++;
+                }
+            }
+        }
+    #pragma omp taskwait
 }
 
-void TopDownMerge(int *cur_v, long first, long mid, long last, int *v) {
-    long i = first;
-    long j = mid;
-
-    for (long k = first; k < last; k++) {
-        if (i < mid && (j >= last || v[i] <= v[j])) {
-            cur_v[k] = v[i];
-            i++;
-        }
-        else {
-            cur_v[k] = v[j];
-            j++;
-        }
-    }
-
-}
+//void TopDownMerge(int *cur_v, long first, long mid, long last, int *v) {
+//    long i = first;
+//    long j = mid;
+//
+//    for (long k = first; k < last; k++) {
+//        if (i < mid && (j >= last || v[i] <= v[j])) {
+//            cur_v[k] = v[i];
+//            i++;
+//        }
+//        else {
+//            cur_v[k] = v[j];
+//            j++;
+//        }
+//    }
+//}
 
 void print_v(int *v, long l) {
     printf("\n");
