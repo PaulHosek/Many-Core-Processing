@@ -49,7 +49,6 @@ void TopDownSplitMerge(long first, long last, int *v) {
 #pragma omp taskwait
 }
 
-
 void msort(int *v, long l) {
     #pragma omp parallel
     {
@@ -60,9 +59,6 @@ void msort(int *v, long l) {
         }
     }
 }
-
-
-
 
 void print_v(int *v, long l) {
     printf("\n");
