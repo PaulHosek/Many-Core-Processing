@@ -5,14 +5,13 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <omp.h>
-#include <string.h> /* for memcpy
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 
 int debug = 0;
 
-//void TopDownMerge(int *v, long first, long mid, long last, int *cur_v);
+
 void TopDownSplitMerge(long first, long last, int*v);
 void msort(int *v, long l);
 
@@ -26,12 +25,10 @@ void TopDownSplitMerge(long first, long last, int *v) {
 
     long mid = (last + first) / 2;
 
-    #pragma omp task if(last-first > 1000)
+    #pragma omp task if(last-first > 500)
     TopDownSplitMerge(first, mid, v);
-
-    #pragma omp task if(last-first > 1000)
+    #pragma omp task if(last-first > 500)
     TopDownSplitMerge(mid, last, v);
-
     #pragma omp taskwait
 
     #pragma omp task if(last-first > 1000)
@@ -183,7 +180,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-//
-// Created by Paul Hosek on 18.02.23.
-//

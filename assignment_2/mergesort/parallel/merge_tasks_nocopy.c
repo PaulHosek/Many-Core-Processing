@@ -54,7 +54,6 @@
 //
 //
 //void msort(int *v, long l) {
-////    int *cur_v = malloc(l * sizeof(int));
 //#pragma omp parallel
 //    {
 //#pragma omp master
@@ -63,7 +62,6 @@
 //            TopDownSplitMerge(0, l, v);
 //        }
 //    }
-////    free(cur_v);
 //}
 //
 //
