@@ -13,23 +13,24 @@ typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 int debug = 0;
 
 //void TopDownMerge(int *v, long first, long mid, long last, int *cur_v);
-void TopDownSplitMerge(int *cur_v, long first, long last, int*v);
+void TopDownSplitMerge(long first, long last, int*v);
 void msort(int *v, long l);
 
 
 
-void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
+void TopDownSplitMerge(long first, long last, int *v) {
     if (last - first <= 1) {
         return;
     }
 
+
     long mid = (last + first) / 2;
 
     #pragma omp task if(last-first > 1000)
-    TopDownSplitMerge(v, first, mid, v);
+    TopDownSplitMerge(first, mid, v);
 
     #pragma omp task if(last-first > 1000)
-    TopDownSplitMerge(v, mid, last, v);
+    TopDownSplitMerge(mid, last, v);
 
     #pragma omp taskwait
 
@@ -39,10 +40,10 @@ void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
         long j = mid;
         for (long k = first; k < last; k++) {
             if (i < mid && (j >= last || v[i] <= v[j])) {
-                cur_v[k] = v[i];
+                v[k] = v[i];
                 i++;
             } else {
-                cur_v[k] = v[j];
+                v[k] = v[j];
                 j++;
             }
         }
@@ -52,17 +53,15 @@ void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
 }
 
 
-void msort(int *v, long n) {
-    int *cur_v = malloc(n * sizeof(int));
+void msort(int *v, long l) {
     #pragma omp parallel
     {
-        #pragma omp single
+        #pragma omp master
         {
         #pragma omp task
-            TopDownSplitMerge(cur_v, 0, n, v);
+            TopDownSplitMerge(0, l, v);
         }
     }
-    free(cur_v);
 }
 
 
