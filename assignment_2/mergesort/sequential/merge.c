@@ -160,6 +160,10 @@ int main(int argc, char **argv) {
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Mergesort took: % .6e seconds \n", time);
+//
+//    for (long myi =0;myi < length/2;myi++) {
+//        printf("%d ",vector[myi]);
+//    }
 
     if(debug) {
         print_v(vector, length);

@@ -12,24 +12,11 @@ typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 
 int debug = 0;
 
-void TopDownMerge(int *v, long first, long mid, long last, int *cur_v);
+//void TopDownMerge(int *v, long first, long mid, long last, int *cur_v);
 void TopDownSplitMerge(int *cur_v, long first, long last, int*v);
 void msort(int *v, long l);
 
 
-/* Sort vector v of l elements using mergesort */
-void msort(int *v, long l) {
-    int *cur_v = malloc(l * sizeof(int));
-    #pragma omp parallel
-    {
-    #pragma omp single
-        {
-    #pragma omp task
-            TopDownSplitMerge(cur_v, 0, l, v);
-        }
-    }
-    free(cur_v);
-}
 
 void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
     if (last - first <= 1) {
@@ -47,37 +34,39 @@ void TopDownSplitMerge(int *cur_v, long first, long last, int *v) {
     #pragma omp taskwait
 
     #pragma omp task if(last-first > 1000)
-        {
-            long i = first;
-            long j = mid;
-            for (long k = first; k < last; k++) {
-                if (i < mid && (j >= last || v[i] <= v[j])) {
-                    cur_v[k] = v[i];
-                    i++;
-                } else {
-                    cur_v[k] = v[j];
-                    j++;
-                }
+    {
+        long i = first;
+        long j = mid;
+        for (long k = first; k < last; k++) {
+            if (i < mid && (j >= last || v[i] <= v[j])) {
+                cur_v[k] = v[i];
+                i++;
+            } else {
+                cur_v[k] = v[j];
+                j++;
             }
         }
-    #pragma omp taskwait
+    }
+
+#pragma omp taskwait
 }
 
-//void TopDownMerge(int *cur_v, long first, long mid, long last, int *v) {
-//    long i = first;
-//    long j = mid;
-//
-//    for (long k = first; k < last; k++) {
-//        if (i < mid && (j >= last || v[i] <= v[j])) {
-//            cur_v[k] = v[i];
-//            i++;
-//        }
-//        else {
-//            cur_v[k] = v[j];
-//            j++;
-//        }
-//    }
-//}
+
+void msort(int *v, long n) {
+    int *cur_v = malloc(n * sizeof(int));
+    #pragma omp parallel
+    {
+        #pragma omp single
+        {
+        #pragma omp task
+            TopDownSplitMerge(cur_v, 0, n, v);
+        }
+    }
+    free(cur_v);
+}
+
+
+
 
 void print_v(int *v, long l) {
     printf("\n");
@@ -178,6 +167,10 @@ int main(int argc, char **argv) {
 
     /* Sort */
     msort(vector, length);
+    // test if successful sorting
+    for (long i =0; i<length; i++){
+        printf("%d ", vector[i]);
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
