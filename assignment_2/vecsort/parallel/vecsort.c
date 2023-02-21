@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
             case 'p':
                 num_threads = atoi(optarg);
                 break;
-            case 'ot':
+            case 't':
                 outer_threads = (short) atoi(optarg);
                 break;
             case '?':
