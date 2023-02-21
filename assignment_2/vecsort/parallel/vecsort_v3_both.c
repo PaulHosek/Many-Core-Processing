@@ -26,7 +26,7 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
                nest_threads,outer_threads );
         exit(EXIT_FAILURE);
     }
-    #pragma omp parallel shared(vector_vectors) firstprivate(i) num_threads(outer_threads)
+#pragma omp parallel shared(vector_vectors) firstprivate(i) num_threads(outer_threads)
     {
         for (long i =0; i<length_outer; i++)
         {
@@ -35,12 +35,12 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
     }
 }
 
-void msort(int *v, long l, short nest_threads) { // TODO why does it not see it as a used variable?
-    #pragma omp parallel num_threads(nest_threads)
+void msort(int *v, long l, short nest_threads) { 
+#pragma omp parallel num_threads(nest_threads)
     {
-        #pragma omp single
+#pragma omp single
         {
-            #pragma omp task
+#pragma omp task
             TopDownSplitMerge(0, l, v);
         }
     }
@@ -54,13 +54,13 @@ void TopDownSplitMerge(long first, long last, int *v) {
 
     long mid = (last + first) / 2;
 
-    #pragma omp task if(last-first > 500)
+#pragma omp task if(last-first > 500)
     TopDownSplitMerge(first, mid, v);
-    #pragma omp task if(last-first > 500)
+#pragma omp task if(last-first > 500)
     TopDownSplitMerge(mid, last, v);
-    #pragma omp taskwait
+#pragma omp taskwait
 
-    #pragma omp task if(last-first > 1000)
+#pragma omp task if(last-first > 1000)
     {
         long i = first;
         long j = mid;
