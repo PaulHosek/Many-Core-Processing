@@ -12,8 +12,6 @@ struct merge_data{
    long  first;
    long  last;
    int *v;
-   int * available_threads;
-   pthread_mutex_t * available_threads_lock;
 };
 
 /* Ordering of the vector */
@@ -25,13 +23,32 @@ int debug = 0;
 void *TopDownSplitMerge(void * data);
 void msort(int *v, long l);
 
+int getIndexOfNextZero(int * bitmask, int length)
+{
+    int index = -1;
+
+    for (int i=0; i < length; i++)
+    {
+        if (bitmask[i] == 0)
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
 void *TopDownSplitMerge(void * data) {
     struct merge_data * merge_parameters = (struct merge_data *)data;
+    static pthread_t p_threads[NUM_THREADS];
+    static int threads_in_use[NUM_THREADS] = { 0 };
+    static pthread_mutex_t threads_in_use_lock = PTHREAD_MUTEX_INITIALIZER;
     pthread_attr_t attr;
-    pthread_t p_thread[2];
+    int local_threads[2];
+    int index;
+    
     pthread_attr_init(&attr); pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-    pthread_mutex_t * lock = (pthread_mutex_t *) merge_parameters->available_threads_lock;
-    int * available_threads = merge_parameters->available_threads;
+    
     long first = merge_parameters->first;
     long last = merge_parameters->last;
     long mid = (first + last) / 2;
@@ -47,46 +64,52 @@ void *TopDownSplitMerge(void * data) {
     child1_merge_parameters.first = first;
     child1_merge_parameters.last = mid;
     child1_merge_parameters.v = v;
-    child1_merge_parameters.available_threads = available_threads;
-    child1_merge_parameters.available_threads_lock = lock;
 
     child2_merge_parameters.first = mid;
     child2_merge_parameters.last = last;
     child2_merge_parameters.v = v;
-    child2_merge_parameters.available_threads = available_threads;
-    child2_merge_parameters.available_threads_lock = lock;
 
-    pthread_mutex_lock(lock);
-    if (*available_threads > 1)
+    local_threads[0] = -1;
+    local_threads[1] = -1;
+
+    pthread_mutex_lock(&threads_in_use_lock);
+    if ((index=getIndexOfNextZero(threads_in_use,NUM_THREADS)) != -1)
     {
-        *available_threads--;
-        pthread_mutex_unlock(lock);
-        pthread_create(&p_thread[0], &attr, TopDownSplitMerge, (void *)&child1_merge_parameters);
+        local_threads[0] = index;
+        threads_in_use[index] = 1;
+        pthread_mutex_unlock(&threads_in_use_lock);
+        pthread_create(&p_threads[index], &attr, TopDownSplitMerge, (void *)&child1_merge_parameters);
     }
     else
     {
-        pthread_mutex_unlock(lock);
+        pthread_mutex_unlock(&threads_in_use_lock);
         TopDownSplitMerge((void *)&child1_merge_parameters);
     }
 
-    pthread_mutex_lock(lock);
-    if (*available_threads > 1)
+    pthread_mutex_lock(&threads_in_use_lock);
+    if ((index=getIndexOfNextZero(threads_in_use,NUM_THREADS)) != -1)
     {
-        *available_threads--;
-        pthread_mutex_unlock(lock);
-        pthread_create(&p_thread[1], &attr, TopDownSplitMerge, (void *)&child1_merge_parameters);
+        local_threads[1] = index;
+        threads_in_use[index] = 1;
+        pthread_mutex_unlock(&threads_in_use_lock);
+        pthread_create(&p_threads[index], &attr, TopDownSplitMerge, (void *)&child2_merge_parameters);
     }
     else
     {
-        pthread_mutex_unlock(lock);
-        TopDownSplitMerge((void *)&child1_merge_parameters);
+        pthread_mutex_unlock(&threads_in_use_lock);
+        TopDownSplitMerge((void *)&child2_merge_parameters);
     }
-    pthread_join(p_thread[0], NULL);
-    pthread_join(p_thread[1], NULL);
 
-    pthread_mutex_lock(lock);
-    *available_threads +=2;
-    pthread_mutex_unlock(lock);
+    // Join threads
+    for (int i=0; i < 2; i++)
+    {
+        if (local_threads[i] != -1){
+            pthread_join(p_threads[local_threads[i]], NULL);
+            pthread_mutex_lock(&threads_in_use_lock);
+            threads_in_use[local_threads[i]] = 0;
+            pthread_mutex_unlock(&threads_in_use_lock);
+        }
+    }
 
     long i = first;
     long j = mid;
@@ -104,15 +127,11 @@ void *TopDownSplitMerge(void * data) {
 
 
 void msort(int *v, long l) {
-    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
     struct merge_data merge_parameters;
-    int available_threads = NUM_THREADS;
 
     merge_parameters.first = 0;
     merge_parameters.last = l;
     merge_parameters.v = v;
-    merge_parameters.available_threads = &available_threads;
-    merge_parameters.available_threads_lock = &lock;
 
     TopDownSplitMerge((void *) &merge_parameters);
 }
