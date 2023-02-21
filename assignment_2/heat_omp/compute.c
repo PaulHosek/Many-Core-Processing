@@ -95,16 +95,15 @@ void do_compute(const struct parameters* p, struct results *r)
         tmax = p->io_tmin;
         // Check convergence every timestep
         converged = 1;
+        int index;
 
-        #pragma GCC ivdep
-        for (int index = grid_start; index < grid_end; ++ index){
+        #pragma omp parallel for if (grid_size > 1000) // TODO: tweak this number
+        for (index = grid_start; index < grid_end; ++ index){
             int index_left = indices_left[index - m];
             int index_right = indices_right[index - m];
 
-            double new_temperature = 0.0;
-
             // Scaled old temperature at the cell
-            new_temperature += temperature_old[index] * conductivity[index - m];
+            double new_temperature = temperature_old[index] * conductivity[index - m];
 
             // Adjacent neighbors
             new_temperature += (temperature_old[index_left] + temperature_old[index - m] + temperature_old[index_right] + 
