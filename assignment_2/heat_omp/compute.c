@@ -97,7 +97,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
         int index;
 
-        #pragma omp parallel for if (grid_size > 1000) reduction(+: tsum) reduction(&: converged) reduction(max: tmax) reduction(min: tmin) reduction(max: maxdiff)// TODO: tweak if condition
+        #pragma omp parallel for num_threads (NUM_THREADS) reduction(+: tsum) reduction(&: converged) reduction(max: tmax) reduction(min: tmin) reduction(max: maxdiff)
         for (index = grid_start; index < grid_end; ++ index){
             int index_left = indices_left[index - m];
             int index_right = indices_right[index - m];
