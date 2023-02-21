@@ -15,8 +15,6 @@ int debug = 0;
 void TopDownSplitMerge(long first, long last, int*v);
 void msort(int *v, long l);
 
-
-
 void TopDownSplitMerge(long first, long last, int *v) {
     if (last - first <= 1) {
         return;
