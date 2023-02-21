@@ -10,24 +10,34 @@
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
+short max_threads = (short) omp_get_max_threads();
+short outer_threads = 4
 
 int debug = 0;
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer);
-void msort(int *v, long l);
+void msort(int *v, long l, short nest_threads);
 void TopDownSplitMerge(long first, long last, int*v);
 
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
-    for (long i =0; i<length_outer; i++){
-        msort(vector_vectors[i], vector_lengths[i]);
+    int nest_threads = max_threads-outer_threads;
+    if (nest_threads < 0 || outer_threads <0){
+        printf("nested_threads = %d, outer_threads = %d nr threads < 0! Exiting...\n",
+               nest_threads,outer_threads );
+        exit(EXIT_FAILURE);
+    }
+    #pragma omp parallel shared(vector_vectors, )num_threads(outer_threads){
+        for (long i =0; i<length_outer; i++){
+            msort(vector_vectors[i], vector_lengths[i], nest_threads);
+        }
     }
 }
 
-void msort(int *v, long l) {
-#pragma omp parallel
+void msort(int *v, long l, short nest_threads) {
+    #pragma omp parallel num_threads(nest_threads)
     {
-#pragma omp single
+        #pragma omp single
         {
-#pragma omp task
+            #pragma omp task
             TopDownSplitMerge(0, l, v);
         }
     }
@@ -41,13 +51,13 @@ void TopDownSplitMerge(long first, long last, int *v) {
 
     long mid = (last + first) / 2;
 
-#pragma omp task if(last-first > 500)
+    #pragma omp task if(last-first > 500)
     TopDownSplitMerge(first, mid, v);
-#pragma omp task if(last-first > 500)
+    #pragma omp task if(last-first > 500)
     TopDownSplitMerge(mid, last, v);
-#pragma omp taskwait
+    #pragma omp taskwait
 
-#pragma omp task if(last-first > 1000)
+    #pragma omp task if(last-first > 1000)
     {
         long i = first;
         long j = mid;
