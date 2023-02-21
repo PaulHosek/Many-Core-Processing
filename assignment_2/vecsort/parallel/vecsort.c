@@ -10,8 +10,9 @@
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
-short max_threads = (short) omp_get_max_threads();
-short outer_threads = 4
+//short max_threads = (short) omp_get_max_threads();
+short max_threads = 16;
+short outer_threads = 4;
 
 int debug = 0;
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer);
@@ -25,14 +26,14 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
                nest_threads,outer_threads );
         exit(EXIT_FAILURE);
     }
-    #pragma omp parallel shared(vector_vectors, )num_threads(outer_threads){
+    #pragma omp parallel shared(vector_vectors) firstprivate(i) num_threads(outer_threads){
         for (long i =0; i<length_outer; i++){
             msort(vector_vectors[i], vector_lengths[i], nest_threads);
         }
     }
 }
 
-void msort(int *v, long l, short nest_threads) {
+void msort(int *v, long l, short nest_threads) { // TODO why does it not see it as a used variable?
     #pragma omp parallel num_threads(nest_threads)
     {
         #pragma omp single
