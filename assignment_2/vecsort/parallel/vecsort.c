@@ -12,14 +12,13 @@
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 //short max_threads = (short) omp_get_max_threads();
 short max_threads = 16;
-short outer_threads = 4;
 
 int debug = 0;
-void vecsort(int **vector_vectors, int *vector_lengths, long length_outer);
+void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short outer_threads);
 void msort(int *v, long l, short nest_threads);
 void TopDownSplitMerge(long first, long last, int*v);
 
-void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
+void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short outer_threads){
     int nest_threads = max_threads-outer_threads;
     if (nest_threads < 0 || outer_threads <0){
         printf("nested_threads = %d, outer_threads = %d nr threads < 0! Exiting...\n",
@@ -112,6 +111,7 @@ int main(int argc, char **argv) {
     Order order = ASCENDING;
     int length_inner_min = 100;
     int length_inner_max = 1000;
+    short outer_threads = 1;
 
     int **vector_vectors;
     int *vector_lengths;
@@ -148,6 +148,9 @@ int main(int argc, char **argv) {
                 break;
             case 'p':
                 num_threads = atoi(optarg);
+                break;
+            case 'ot':
+                outer_threads = (short) atoi(optarg);
                 break;
             case '?':
                 if (optopt == 'l' || optopt == 's') {
@@ -209,7 +212,7 @@ int main(int argc, char **argv) {
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     /* Sort */
-    vecsort(vector_vectors, vector_lengths, length_outer);
+    vecsort(vector_vectors, vector_lengths, length_outer, outer_threads);
 
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
