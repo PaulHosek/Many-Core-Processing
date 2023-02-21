@@ -4,9 +4,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <omp.h>
 #include <assert.h>
-#include <limits.h>
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
@@ -17,28 +15,15 @@ void msort(int *v, long l);
 void TopDownSplitMerge(long first, long last, int*v);
 
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
-    // iterate over list of vectors
-    // call mergesort on all
-
-//    if (length_outer >= INT_MIN && length_outer <= INT_MAX) {
-//        printf("length_outer is longer than largest possible size for **vector_vectors");
-//        exit(EXIT_FAILURE);
-//    }
     for (long i =0; i<length_outer; i++){
         msort(vector_vectors[i], vector_lengths[i]);
     }
 }
 
 void msort(int *v, long l) {
-#pragma omp parallel
-    {
-#pragma omp single
-        {
-#pragma omp task
-            TopDownSplitMerge(0, l, v);
-        }
-    }
+    TopDownSplitMerge(0, l, v);
 }
+
 
 void TopDownSplitMerge(long first, long last, int *v) {
     if (last - first <= 1) {
@@ -48,28 +33,19 @@ void TopDownSplitMerge(long first, long last, int *v) {
 
     long mid = (last + first) / 2;
 
-#pragma omp task if(last-first > 500)
     TopDownSplitMerge(first, mid, v);
-#pragma omp task if(last-first > 500)
     TopDownSplitMerge(mid, last, v);
-#pragma omp taskwait
-
-#pragma omp task if(last-first > 1000)
-    {
-        long i = first;
-        long j = mid;
-        for (long k = first; k < last; k++) {
-            if (i < mid && (j >= last || v[i] <= v[j])) {
-                v[k] = v[i];
-                i++;
-            } else {
-                v[k] = v[j];
-                j++;
-            }
+    long i = first;
+    long j = mid;
+    for (long k = first; k < last; k++) {
+        if (i < mid && (j >= last || v[i] <= v[j])) {
+            v[k] = v[i];
+            i++;
+        } else {
+            v[k] = v[j];
+            j++;
         }
     }
-
-#pragma omp taskwait
 }
 
 
