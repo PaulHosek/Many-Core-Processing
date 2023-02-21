@@ -4,50 +4,117 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <omp.h>
-#include <string.h> /* for memcpy
+#include <pthread.h>
+
+#define NUM_THREADS 16
+
+struct merge_data{
+   long  first;
+   long  last;
+   int *v;
+   int * available_threads;
+   pthread_mutex_t * available_threads_lock;
+};
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 
 int debug = 0;
 
-void TopDownMerge(int *v, long first, long mid, long last);
-void TopDownSplitMerge(int *v, long first, long last);
+
+void *TopDownSplitMerge(void * data);
 void msort(int *v, long l);
 
+void *TopDownSplitMerge(void * data) {
+    struct merge_data * merge_parameters = (struct merge_data *)data;
+    pthread_attr_t attr;
+    pthread_t p_thread[2];
+    pthread_attr_init(&attr); pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    pthread_mutex_t * lock = (pthread_mutex_t *) merge_parameters->available_threads_lock;
+    int * available_threads = merge_parameters->available_threads;
+    long first = merge_parameters->first;
+    long last = merge_parameters->last;
+    long mid = (first + last) / 2;
+    int * v = merge_parameters->v;
 
-void msort(int *v, long l){
-    TopDownSplitMerge(v,0,l);
-    TopDownMerge(v,0, (int) l/2,l);
-}
-
-void TopDownSplitMerge(int *v,  long first, long last){
-    if (last - first <= 1){
-        return;
+    struct merge_data child1_merge_parameters;
+    struct merge_data child2_merge_parameters;
+    
+    if (last - first <= 1) {
+        return NULL;
     }
-    long mid = (last + first) / 2;
-    TopDownSplitMerge(v, first, mid);
-    TopDownSplitMerge(v, mid,last);
-    TopDownMerge(v, first, mid, last);
 
-}
+    child1_merge_parameters.first = first;
+    child1_merge_parameters.last = mid;
+    child1_merge_parameters.v = v;
+    child1_merge_parameters.available_threads = available_threads;
+    child1_merge_parameters.available_threads_lock = lock;
 
-void TopDownMerge(int *v, long first, long mid, long last) {
+    child2_merge_parameters.first = mid;
+    child2_merge_parameters.last = last;
+    child2_merge_parameters.v = v;
+    child2_merge_parameters.available_threads = available_threads;
+    child2_merge_parameters.available_threads_lock = lock;
+
+    pthread_mutex_lock(lock);
+    if (*available_threads > 1)
+    {
+        *available_threads--;
+        pthread_mutex_unlock(lock);
+        pthread_create(&p_thread[0], &attr, TopDownSplitMerge, (void *)&child1_merge_parameters);
+    }
+    else
+    {
+        pthread_mutex_unlock(lock);
+        TopDownSplitMerge((void *)&child1_merge_parameters);
+    }
+
+    pthread_mutex_lock(lock);
+    if (*available_threads > 1)
+    {
+        *available_threads--;
+        pthread_mutex_unlock(lock);
+        pthread_create(&p_thread[1], &attr, TopDownSplitMerge, (void *)&child1_merge_parameters);
+    }
+    else
+    {
+        pthread_mutex_unlock(lock);
+        TopDownSplitMerge((void *)&child1_merge_parameters);
+    }
+    pthread_join(p_thread[0], NULL);
+    pthread_join(p_thread[1], NULL);
+
+    pthread_mutex_lock(lock);
+    *available_threads +=2;
+    pthread_mutex_unlock(lock);
+
     long i = first;
     long j = mid;
-
     for (long k = first; k < last; k++) {
         if (i < mid && (j >= last || v[i] <= v[j])) {
             v[k] = v[i];
             i++;
-        }
-        else {
+        } else {
             v[k] = v[j];
             j++;
         }
     }
+    return NULL;
+}
 
+
+void msort(int *v, long l) {
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    struct merge_data merge_parameters;
+    int available_threads = NUM_THREADS;
+
+    merge_parameters.first = 0;
+    merge_parameters.last = l;
+    merge_parameters.v = v;
+    merge_parameters.available_threads = &available_threads;
+    merge_parameters.available_threads_lock = &lock;
+
+    TopDownSplitMerge((void *) &merge_parameters);
 }
 
 void print_v(int *v, long l) {
@@ -149,16 +216,16 @@ int main(int argc, char **argv) {
 
     /* Sort */
     msort(vector, length);
+    // test if successful sorting
+    for (long i =0; i<length; i++){
+        printf("%d ", vector[i]);
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Mergesort took: % .6e seconds \n", time);
-//
-//    for (long myi =0;myi < length/2;myi++) {
-//        printf("%d ",vector[myi]);
-//    }
 
     if(debug) {
         print_v(vector, length);
@@ -166,10 +233,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-//
-// Created by Paul Hosek on 18.02.23.
-//
-//
-// Created by Paul Hosek on 21.02.23.
-//

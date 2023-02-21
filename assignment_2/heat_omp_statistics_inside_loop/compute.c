@@ -97,7 +97,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
         int index;
 
-        #pragma omp parallel for num_threads (NUM_THREADS) reduction(&: converged)
+        #pragma omp parallel for num_threads (NUM_THREADS) reduction(+: tsum) reduction(&: converged) reduction(max: tmax) reduction(min: tmin) reduction(max: maxdiff)
         for (index = grid_start; index < grid_end; ++ index){
             int index_left = indices_left[index - m];
             int index_right = indices_right[index - m];
@@ -118,26 +118,16 @@ void do_compute(const struct parameters* p, struct results *r)
 
             // Only converge if all values below threshold
             double diff = fabs(temperature_old[index] - temperature_new[index]);
+
+            tsum += new_temperature;
+            tmax = new_temperature>tmax?new_temperature:tmax;
+            tmin = new_temperature<tmin?new_temperature:tmin;
+            maxdiff = diff>maxdiff?diff:maxdiff;
             converged = converged & (diff < threshold);
         }
 
-        // Go over temperatures and check minimum, maximum temperature and maximum difference
+        // Update results
         if (it % p->period == 0 || converged || it == p-> maxiter){
-            #pragma omp parallel for num_threads (NUM_THREADS) reduction(+: tsum) reduction(max: tmax) reduction(min: tmin) reduction(max: maxdiff)
-            for (index = grid_start; index < grid_end; ++ index){
-                tsum += temperature_new[index];
-                if (temperature_new[index] > tmax){
-                    tmax = temperature_new[index];
-                }
-                if (temperature_new[index] < tmin){
-                    tmin = temperature_new[index];
-                }
-                double diff = fabs(temperature_new[index] - temperature_old[index]);
-                if (diff > maxdiff){
-                    maxdiff = diff;
-                }
-            }
-
             r->niter = it;
             r->tmin = tmin;
             r->tmax = tmax;
