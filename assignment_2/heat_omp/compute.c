@@ -1,7 +1,8 @@
 #include <time.h>
 #include <math.h>
 #include <stdlib.h>
-#include <openmp.h>
+#include <omp.h>
+#include <stdio.h>
 
 #include "compute.h"
 
@@ -16,37 +17,31 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
     #pragma parallel num_threads (NUM_THREADS)
     {
         #pragma omp for nowait
-        {
         // Halo rows
-        for (int index = 0; index < m; index++)
+        for (index = 0; index < m; index++)
         {
             temperature_old[index] = p->tinit[index];
             temperature_new[index] = p->tinit[index];
             temperature_old[MN + m + index] = p->tinit[MN - m + index];
             temperature_new[MN + m + index] = p->tinit[MN - m + index];
         }
-        }
 
         // Fill the temperature values into the grid cells
-        #pragma omp parallel for nowait
+        #pragma omp for nowait
+        for (index = 0; index < MN; index++)
         {
-            for (index = 0; index < MN; index++)
-            {
-                temperature_old[m + index] = p->tinit[index];
-                const double cond = p->conductivity[index];
-                const double joint_weight_diagonal_neighbors = (1 - cond) / (sqrt(2.0) + 1);
-                const double joint_weight_direct_neighbors = 1 - cond - joint_weight_diagonal_neighbors;
-
-                conductivity[index] = cond;
-                weight_direct[index] = joint_weight_direct_neighbors / 4.0;
-                weight_indirect[index] = joint_weight_diagonal_neighbors / 4.0;
-            }
+            temperature_old[m + index] = p->tinit[index];
+            const double cond = p->conductivity[index];
+            const double joint_weight_diagonal_neighbors = (1 - cond) / (sqrt(2.0) + 1);
+            const double joint_weight_direct_neighbors = 1 - cond - joint_weight_diagonal_neighbors;
+            conductivity[index] = cond;
+            weight_direct[index] = joint_weight_direct_neighbors / 4.0;
+            weight_indirect[index] = joint_weight_diagonal_neighbors / 4.0;
         }
 
         // Initialize the indices 
-        #pragma omp parallel for
-        {
-            for (index = m; index < MN + m; index ++){
+        #pragma omp for
+        for (index = m; index < MN + m; index ++){
             // Find indices of direct neighbors
             int index_left =  index - 1;
             int index_right = index + 1;
@@ -61,8 +56,8 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
             }
             indices_left[index - m] = index_left;
             indices_right[index - m] = index_right;
-            }
         }
+        
     }
 }
 
