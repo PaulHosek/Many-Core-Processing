@@ -21,10 +21,6 @@ ifdef arch
 ARCH=-march=$(arch)
 CFLAGS:= $(CFLAGS) $(ARCH)
 endif
-ifdef autovec
-CFLAGS:= -O3 -Wall -march=haswell -ffast-math -fopt-info-vec 
-endif
-
 
 all: $(PRJ)
 
