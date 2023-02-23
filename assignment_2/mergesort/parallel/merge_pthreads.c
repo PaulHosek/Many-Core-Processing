@@ -56,8 +56,10 @@ void *TopDownSplitMerge(void * data) {
 
     struct merge_data child1_merge_parameters;
     struct merge_data child2_merge_parameters;
+
+    const int size = last - first;
     
-    if (last - first <= 1) {
+    if (size <= 1) {
         return NULL;
     }
 
