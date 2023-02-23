@@ -9,7 +9,7 @@ ifndef DEBUG
 CFLAGS=-O2 -std=gnu99 -fopenmp
 LIB=
 else
-CFLAGS=-O0 -g3 -std=gnu99
+CFLAGS=-O0 -g3 -std=gnu99 -fopenmp -S
 LIB=
 endif
 
