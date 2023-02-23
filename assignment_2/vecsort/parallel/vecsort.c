@@ -25,14 +25,12 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short
                nest_threads,outer_threads );
         exit(EXIT_FAILURE);
     }
-    long i=0;
-#pragma omp parallel shared(vector_vectors) firstprivate(i) num_threads(outer_threads)
-    {
-        for (; i<length_outer; i++)
+    long i;
+#pragma omp parallel for schedule(runtime) shared(vector_vectors) num_threads(outer_threads)
+        for (i=0; i<length_outer; i++)
         {
             msort(vector_vectors[i], vector_lengths[i], nest_threads);
         }
-    }
 }
 
 void msort(int *v, long l, short nest_threads) {

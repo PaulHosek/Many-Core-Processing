@@ -26,7 +26,7 @@
 //               nest_threads,outer_threads );
 //        exit(EXIT_FAILURE);
 //    }
-//#pragma omp parallel shared(vector_vectors) firstprivate(i) num_threads(outer_threads)
+//#pragma omp parallel for shared(vector_vectors) num_threads(outer_threads)
 //    {
 //        for (long i =0; i<length_outer; i++)
 //        {
