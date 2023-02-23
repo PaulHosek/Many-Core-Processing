@@ -15,7 +15,7 @@ for ((t=1;t<=max_threads;t++)); do
   make
   for ((i=1;i<=repetitions;i++)); do
 
-  time=$(prun -np 1 -v -t "$t" parallel_v3_both | grep -oP 'Vecsort took:\s*\K[\d.]+')
-  echo "$dir,$time" >> exp_outer_thread.csv
+  time=$(prun -np 1 -v parallel_v3_both -t "$t" | grep -oP 'Vecsort took:\s*\K[\d.]+')
+  echo "$t,$time" >> exp_outer_thread.csv
   done
 done

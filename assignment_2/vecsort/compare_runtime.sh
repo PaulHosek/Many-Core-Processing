@@ -1,8 +1,8 @@
-rm data.csv
+#rm data.csv
 module load prun
 
 directories=(parallel parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline)
-repetitions=2
+repetitions=60
 
 if [ ! -f data.csv ]; then
   touch data.csv
