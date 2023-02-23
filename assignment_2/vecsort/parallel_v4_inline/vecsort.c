@@ -29,19 +29,19 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short
 #pragma omp parallel for schedule(runtime) shared(vector_vectors) num_threads(outer_threads)
         for (i=0; i<length_outer; i++)
         {
-            msort(vector_vectors[i], vector_lengths[i], nest_threads);
+#pragma omp parallel num_threads(nest_threads)
+            {
+#pragma omp single
+                {
+#pragma omp task
+                    TopDownSplitMerge(0, vector_lengths[i], vector_vectors[i]);
+                }
+            }
         }
 }
 
 void msort(int *v, long l, short nest_threads) {
-    #pragma omp parallel num_threads(nest_threads)
-    {
-        #pragma omp single
-        {
-            #pragma omp task
-            TopDownSplitMerge(0, l, v);
-        }
-    }
+
 }
 
 void TopDownSplitMerge(long first, long last, int *v) {
