@@ -1,8 +1,7 @@
 rm data.csv
 module load prun
 
-#directories=(parallel parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline)
-directories=(parallel)
+directories=(parallel parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline)
 repetitions=2
 
 if [ ! -f data.csv ]; then
