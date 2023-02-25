@@ -16,6 +16,7 @@ mean = df["runtime_mean"]
 upper = mean+1.96*df["runtime_sem"]
 lower = mean-1.96*df["runtime_sem"]
 plt.figure()
+plt.title("Outer loop threading runtime comparison")
 plt.fill_between(x_vals, upper, lower, alpha =0.5, color = "#8FA993")
 
 plt.plot(x_vals, mean, color= "#526F75", alpha=0.8)
