@@ -23,7 +23,7 @@ ax.bar(versions, means, yerr=1.96*sems, capsize=5, color="#8FA993")
 ax.set_xticks(versions, labels=names)
 ax.set_title("Vecsort runtime comparison", fontsize=16)
 ax.set_xlabel("Version", fontsize=14)
-ax.set_ylabel("Runtime", fontsize=14)
+ax.set_ylabel("Runtime (seconds)", fontsize=14)
 
 plt.xticks(rotation=0)
 
