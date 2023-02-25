@@ -1,7 +1,7 @@
 rm exp_outer_thread.csv
 module load prun
 
-directories=(parallel parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline)
+#directories=(parallel parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline)
 repetitions=2
 max_threads=16
 
