@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <omp.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
@@ -13,7 +15,7 @@ int debug = 0;
 
 
 void TopDownSplitMerge(long first, long last, int*v);
-void msort(int *v, long l);
+void msort(int *v, long l, int threads);
 
 void TopDownSplitMerge(long first, long last, int *v) {
     if (last - first <= 1) {
@@ -47,8 +49,8 @@ void TopDownSplitMerge(long first, long last, int *v) {
 #pragma omp taskwait
 }
 
-void msort(int *v, long l) {
-    #pragma omp parallel
+void msort(int *v, long l, int threads) {
+    #pragma omp parallel num_threads(threads)
     {
         #pragma omp master
         {
@@ -77,11 +79,12 @@ int main(int argc, char **argv) {
     int num_threads = 1;
     Order order = ASCENDING;
     int *vector;
+    char *output_file = "data.csv";
 
     struct timespec before, after;
 
     /* Read command-line options. */
-    while((c = getopt(argc, argv, "adrgp:l:s:")) != -1) {
+    while((c = getopt(argc, argv, "adrgp:l:s:o:")) != -1) {
         switch(c) {
             case 'a':
                 order = ASCENDING;
@@ -104,6 +107,17 @@ int main(int argc, char **argv) {
             case 'p':
                 num_threads = atoi(optarg);
                 break;
+            case 'o':
+            {
+                const size_t str_len = strlen(optarg);
+                if (!(output_file = malloc((str_len + 1) * sizeof(char))))
+                {
+                    fprintf(stderr, "Malloc failed...\n");
+                    return -1;
+                }
+                strcpy(output_file, optarg);
+                break;
+            }
             case '?':
                 if(optopt == 'l' || optopt == 's') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
@@ -156,21 +170,30 @@ int main(int argc, char **argv) {
     clock_gettime(CLOCK_MONOTONIC, &before);
 
     /* Sort */
-    msort(vector, length);
+    msort(vector, length, num_threads);
     // test if successful sorting
-    for (long i =0; i<length; i++){
-        printf("%d ", vector[i]);
-    }
+    // for (long i =0; i<length; i++){
+    //     printf("%d ", vector[i]);
+    // }
 
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Mergesort took: % .6e seconds \n", time);
+    FILE * output;
+    output = fopen(output_file, "a");
+    if (!output)
+    {
+        fprintf(stderr, "invalid output file\n");
+    }
 
+    fprintf(output, "% .6e\n", time);
+    fclose(output);
     if(debug) {
         print_v(vector, length);
     }
 
+    if (output_file) free(output_file);
     return 0;
 }

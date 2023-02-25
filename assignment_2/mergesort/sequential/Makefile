@@ -3,12 +3,10 @@ PRJ=$(CURR_DIR)
 SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
 OBJ=$(patsubst %.c,%.o,$(SRC))
 
-DEBUG = 1
-
 CC=gcc
 INCLUDES=-I../../include
 ifndef DEBUG
-CFLAGS=-O2 -std=gnu99 -S
+CFLAGS=-O2 -std=gnu99
 LIB=
 else
 CFLAGS=-O0 -g3 -std=gnu99
