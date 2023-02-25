@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
 
     /* Read command-line options. */
-    while ((c = getopt(argc, argv, "adrgn:x:l:p:s:")) != -1) {
+    while ((c = getopt(argc, argv, "adrgn:x:l:p:t:")) != -1) {
         switch (c) {
             case 'a':
                 order = ASCENDING;
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
                 num_threads = atoi(optarg);
                 break;
             case 't':
-                outer_threads = (short) atoi(optarg);
+                outer_threads = atoi(optarg);
                 break;
             case '?':
                 if (optopt == 'l' || optopt == 's') {
