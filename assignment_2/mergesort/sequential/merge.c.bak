@@ -18,6 +18,8 @@ void msort(int *v, long l);
 
 
 void msort(int *v, long l){
+    int *v_temp = (int*) malloc(l*sizeof(int));
+    memcpy(v_temp, v, l*sizeof(int))
     TopDownSplitMerge(v,0,l);
     TopDownMerge(v,0, (int) l/2,l);
 }
@@ -34,6 +36,7 @@ void TopDownSplitMerge(int *v,  long first, long last){
 }
 
 void TopDownMerge(int *v, long first, long mid, long last) {
+
     long i = first;
     long j = mid;
 
