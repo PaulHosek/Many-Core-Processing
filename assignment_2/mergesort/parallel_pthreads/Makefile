@@ -1,4 +1,3 @@
-DEBUG=1
 CURR_DIR=$(notdir $(basename $(shell pwd)))
 PRJ=$(CURR_DIR)
 SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))

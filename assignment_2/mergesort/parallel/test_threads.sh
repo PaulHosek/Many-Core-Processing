@@ -3,7 +3,8 @@
 module load prun
 module load python
 
-make -B
+make clean
+make
 
 dir="../../test/merge_parallel_threads"
 output_file="${dir}/data.csv"
