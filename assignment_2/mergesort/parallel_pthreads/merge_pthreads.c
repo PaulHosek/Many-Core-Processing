@@ -10,7 +10,8 @@
 struct merge_data{
    long  first;
    long  last;
-   int *v;
+   int *v_source;
+   int *v_dest;
    int number_threads;
    pthread_t *p_threads;
    int *threads_in_use;
@@ -64,7 +65,8 @@ void *TopDownSplitMerge(void * data) {
     int index;
     
     const long mid = (first + last) / 2;
-    int * const v = merge_parameters->v;
+    int * const v_source = merge_parameters->v_source;
+    int * const v_dest = merge_parameters->v_dest;
     const int num_threads = merge_parameters->number_threads;
     int * const threads_in_use = merge_parameters->threads_in_use;
     pthread_t * const p_threads = merge_parameters->p_threads;
@@ -75,9 +77,13 @@ void *TopDownSplitMerge(void * data) {
 
     child1_merge_parameters.first = first;
     child1_merge_parameters.last = mid;
+    child1_merge_parameters.v_source = v_dest;
+    child1_merge_parameters.v_dest = v_source;
 
     child2_merge_parameters.first = mid;
     child2_merge_parameters.last = last;
+    child1_merge_parameters.v_source = v_dest;
+    child1_merge_parameters.v_dest = v_source;
 
     pthread_mutex_lock(&threads_in_use_lock);
     if ((mid - first >= thread_min_input_size) && ((index=getIndexOfNextZero(threads_in_use,num_threads)) != -1))
@@ -120,23 +126,23 @@ void *TopDownSplitMerge(void * data) {
 
     long i = first;
     long j = mid;
-    int v_new[size];
     for (long k = 0; k < size; k++) {
-        if (i < mid && (j >= last || v[i] <= v[j])) {
-            v_new[k] = v[i];
+        if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
+            v_dest[k] = v_source[i];
             i++;
         } else {
-            v_new[k] = v[j];
+            v_dest[k] = v_source[j];
             j++;
         }
     }
-    memcpy((void*)&v[first], (void*)v_new, size * sizeof(int));
     return NULL;
 }
 
 
 void msort(int *v, long l, int num_threads, long thread_input_size) {
     struct merge_data merge_parameters;
+    int v_temp[l];
+    memcpy(v_temp, v, l * sizeof(int));
 
     pthread_t p_threads[num_threads];
     int threads_in_use[num_threads];
@@ -144,7 +150,8 @@ void msort(int *v, long l, int num_threads, long thread_input_size) {
 
     merge_parameters.first = 0;
     merge_parameters.last = l;
-    merge_parameters.v = v;
+    merge_parameters.v_source = v_temp;
+    merge_parameters.v_dest = v;
     merge_parameters.p_threads = p_threads;
     merge_parameters.number_threads = num_threads;
     merge_parameters.threads_in_use = threads_in_use;
@@ -275,6 +282,7 @@ int main(int argc, char **argv) {
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
     printf("Mergesort took: % .6e seconds \n", time);
+    print_v(vector,length);
     FILE * output;
     output = fopen(output_file, "a");
     if (!output)

@@ -50,7 +50,7 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest, long
 }
 
 void msort(int *v, long l, int threads, long thread_input_size) {
-    int v_temp[l];
+    int * v_temp = malloc(l*sizeof(int));
     memcpy(v_temp, v, l * sizeof(int));
     #pragma omp parallel num_threads(threads)
     {
@@ -60,6 +60,7 @@ void msort(int *v, long l, int threads, long thread_input_size) {
             TopDownSplitMerge(v_temp, 0, l, v, thread_input_size);
         }
     }
+    free(v_temp);
 }
 
 void print_v(int *v, long l) {
@@ -183,7 +184,6 @@ int main(int argc, char **argv) {
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-    print_v(vector,length);
     printf("Mergesort took: % .6e seconds \n", time);
     FILE * output;
     output = fopen(output_file, "a");
@@ -198,5 +198,6 @@ int main(int argc, char **argv) {
     }
 
     if (output_file) free(output_file);
+    if (vector) free(vector);
     return 0;
 }
