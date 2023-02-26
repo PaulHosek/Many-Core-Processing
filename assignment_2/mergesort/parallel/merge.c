@@ -26,13 +26,13 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest, long
 
     const long mid = (last + first) / 2;
 
-    #pragma omp task shared(v_source, v_dest) if(mid-first > thread_input_size)
+    #pragma omp task shared(v_source, v_dest) if(mid-first >= thread_input_size)
     TopDownSplitMerge(v_dest, first, mid, v_source, thread_input_size);
-    #pragma omp task shared(v_source, v_dest)  if(last-mid > thread_input_size)
+    #pragma omp task shared(v_source, v_dest) if(last-mid >= thread_input_size)
     TopDownSplitMerge(v_dest, mid, last, v_source, thread_input_size);
     #pragma omp taskwait
 
-    #pragma omp task if(size > thread_input_size) shared(v_source, v_dest)
+    #pragma omp task shared(v_source, v_dest) if(size >= thread_input_size)
     {
         long i = first;
         long j = mid;
@@ -52,7 +52,7 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest, long
 void msort(int *v, long l, int threads, long thread_input_size) {
     int * v_temp = malloc(l*sizeof(int));
     memcpy(v_temp, v, l * sizeof(int));
-    #pragma omp parallel num_threads(threads)
+    #pragma omp parallel num_threads(threads) if(l >= thread_input_size)
     {
         #pragma omp master
         {
