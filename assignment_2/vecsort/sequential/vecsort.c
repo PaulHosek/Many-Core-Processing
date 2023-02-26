@@ -5,14 +5,15 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
+#include <string.h>
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 
 int debug = 0;
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer);
+void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest);
 void msort(int *v, long l);
-void TopDownSplitMerge(long first, long last, int*v);
 
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
     for (long i =0; i<length_outer; i++){
@@ -20,33 +21,69 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
     }
 }
 
+//void msort(int *v, long l) {
+//    TopDownSplitMerge(0, l, v);
+//}
+//
+//
+//void TopDownSplitMerge(long first, long last, int *v) {
+//    if (last - first <= 1) {
+//        return;
+//    }
+//
+//
+//    long mid = (last + first) / 2;
+//
+//    TopDownSplitMerge(first, mid, v);
+//    TopDownSplitMerge(mid, last, v);
+//    long i = first;
+//    long j = mid;
+//    for (long k = first; k < last; k++) {
+//        if (i < mid && (j >= last || v[i] <= v[j])) {
+//            v[k] = v[i];
+//            i++;
+//        } else {
+//            v[k] = v[j];
+//            j++;
+//        }
+//    }
+//}
+//
+//// new
+
 void msort(int *v, long l) {
-    TopDownSplitMerge(0, l, v);
+    int * v_temp = malloc(l*sizeof(int));
+    memcpy(v_temp, v, l * sizeof(int));
+    TopDownSplitMerge(v_temp, 0, l, v);
+    free(v_temp);
 }
 
-
-void TopDownSplitMerge(long first, long last, int *v) {
-    if (last - first <= 1) {
+void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest) {
+    const long size = last - first;
+    if (size <= 1) {
         return;
     }
 
+    const long mid = (last + first) / 2;
 
-    long mid = (last + first) / 2;
-
-    TopDownSplitMerge(first, mid, v);
-    TopDownSplitMerge(mid, last, v);
+    TopDownSplitMerge(v_dest, first, mid, v_source);
+    TopDownSplitMerge(v_dest, mid, last, v_source);
     long i = first;
     long j = mid;
-    for (long k = first; k < last; k++) {
-        if (i < mid && (j >= last || v[i] <= v[j])) {
-            v[k] = v[i];
-            i++;
-        } else {
-            v[k] = v[j];
-            j++;
+    for (long k = first; k < last; k++){
+        for (long k = first; k < last; k++) {
+            if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
+                v_dest[k] = v_source[i];
+                i++;
+            } else {
+                v_dest[k] = v_source[j];
+                j++;
+            }
         }
     }
 }
+
+
 
 
 
