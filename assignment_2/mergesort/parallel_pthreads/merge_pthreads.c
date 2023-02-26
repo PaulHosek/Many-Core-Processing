@@ -82,8 +82,8 @@ void *TopDownSplitMerge(void * data) {
 
     child2_merge_parameters.first = mid;
     child2_merge_parameters.last = last;
-    child1_merge_parameters.v_source = v_dest;
-    child1_merge_parameters.v_dest = v_source;
+    child2_merge_parameters.v_source = v_dest;
+    child2_merge_parameters.v_dest = v_source;
 
     pthread_mutex_lock(&threads_in_use_lock);
     if ((mid - first >= thread_min_input_size) && ((index=getIndexOfNextZero(threads_in_use,num_threads)) != -1))
@@ -126,7 +126,7 @@ void *TopDownSplitMerge(void * data) {
 
     long i = first;
     long j = mid;
-    for (long k = 0; k < size; k++) {
+    for (long k = first; k < last; k++) {
         if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
             v_dest[k] = v_source[i];
             i++;
@@ -141,7 +141,7 @@ void *TopDownSplitMerge(void * data) {
 
 void msort(int *v, long l, int num_threads, long thread_input_size) {
     struct merge_data merge_parameters;
-    int v_temp[l];
+    int * v_temp = malloc(l * sizeof(int));
     memcpy(v_temp, v, l * sizeof(int));
 
     pthread_t p_threads[num_threads];
@@ -158,6 +158,7 @@ void msort(int *v, long l, int num_threads, long thread_input_size) {
     merge_parameters.thread_input_size = thread_input_size;
 
     TopDownSplitMerge((void *) &merge_parameters);
+    free(v_temp);
 }
 
 void print_v(int *v, long l) {
@@ -282,7 +283,6 @@ int main(int argc, char **argv) {
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
     printf("Mergesort took: % .6e seconds \n", time);
-    print_v(vector,length);
     FILE * output;
     output = fopen(output_file, "a");
     if (!output)
@@ -295,6 +295,7 @@ int main(int argc, char **argv) {
     if(debug) {
         print_v(vector, length);
     }
-
+    if (output_file) free(output_file);
+    if (vector) free(vector);
     return 0;
 }

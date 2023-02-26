@@ -1,3 +1,4 @@
+DEBUG=1
 CURR_DIR=$(notdir $(basename $(shell pwd)))
 PRJ=$(CURR_DIR)
 SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
@@ -6,10 +7,10 @@ OBJ=$(patsubst %.c,%.o,$(SRC))
 CC=gcc
 INCLUDES=-I../../include
 ifndef DEBUG
-CFLAGS=-O2 -std=gnu99 -fopenmp
+CFLAGS=-O2 -std=gnu99 -pthread
 LIB=
 else
-CFLAGS=-O0 -g3 -std=gnu99
+CFLAGS=-O0 -g3 -std=gnu99 -pthread
 LIB=
 endif
 
