@@ -14,48 +14,49 @@ typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
 int debug = 0;
 
 
-void TopDownSplitMerge(long first, long last, int*v);
-void msort(int *v, long l, int threads);
+void TopDownSplitMerge(long first, long last, int*v, long thread_input_size);
+void msort(int *v, long l, int threads, long thread_input_size);
 
-void TopDownSplitMerge(long first, long last, int *v) {
-    if (last - first <= 1) {
+void TopDownSplitMerge(long first, long last, int *v, long thread_input_size) {
+    const long size = last - first;
+    if (size <= 1) {
         return;
     }
 
+    const long mid = (last + first) / 2;
 
-    long mid = (last + first) / 2;
-
-    #pragma omp task firstprivate(first,mid) shared(v)  if(last-first > 500)
-    TopDownSplitMerge(first, mid, v);
-    #pragma omp task firstprivate(first,mid) shared(v)  if(last-first > 500)
-    TopDownSplitMerge(mid, last, v);
+    #pragma omp task shared(v) if(mid-first > thread_input_size)
+    TopDownSplitMerge(first, mid, v, thread_input_size);
+    #pragma omp task shared(v)  if(last-mid > thread_input_size)
+    TopDownSplitMerge(mid, last, v, thread_input_size);
     #pragma omp taskwait
 
-    #pragma omp task if(last-first > 1000)
+    #pragma omp task if(size > thread_input_size) shared(v)
     {
+        int v_new[size];
         long i = first;
         long j = mid;
-        for (long k = first; k < last; k++) {
+        for (long k = 0; k < size; k++) {
             if (i < mid && (j >= last || v[i] <= v[j])) {
-                v[k] = v[i];
+                v_new[k] = v[i];
                 i++;
             } else {
-                v[k] = v[j];
+                v_new[k] = v[j];
                 j++;
             }
         }
+        memcpy((void*)&v[first], (void*)v_new, size * sizeof(int));
     }
-
-#pragma omp taskwait
+    #pragma omp taskwait
 }
 
-void msort(int *v, long l, int threads) {
+void msort(int *v, long l, int threads, long thread_input_size) {
     #pragma omp parallel num_threads(threads)
     {
         #pragma omp master
         {
         #pragma omp task
-            TopDownSplitMerge(0, l, v);
+            TopDownSplitMerge(0, l, v, thread_input_size);
         }
     }
 }
@@ -76,6 +77,7 @@ int main(int argc, char **argv) {
     int c;
     int seed = 42;
     long length = 1e4;
+    long thread_min_input_size = 1000;
     int num_threads = 1;
     Order order = ASCENDING;
     int *vector;
@@ -84,7 +86,7 @@ int main(int argc, char **argv) {
     struct timespec before, after;
 
     /* Read command-line options. */
-    while((c = getopt(argc, argv, "adrgp:l:s:o:")) != -1) {
+    while((c = getopt(argc, argv, "adrgp:l:s:o:m:")) != -1) {
         switch(c) {
             case 'a':
                 order = ASCENDING;
@@ -97,6 +99,9 @@ int main(int argc, char **argv) {
                 break;
             case 'l':
                 length = atol(optarg);
+                break;
+            case 'm':
+                thread_min_input_size = atol(optarg);
                 break;
             case 'g':
                 debug = 1;
@@ -168,14 +173,12 @@ int main(int argc, char **argv) {
     }
 
     clock_gettime(CLOCK_MONOTONIC, &before);
-
     /* Sort */
-    msort(vector, length, num_threads);
+    msort(vector, length, num_threads, thread_min_input_size);
     // test if successful sorting
     // for (long i =0; i<length; i++){
     //     printf("%d ", vector[i]);
     // }
-
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;

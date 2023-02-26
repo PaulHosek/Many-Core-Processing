@@ -19,6 +19,7 @@ do
     for iteration in {1..50} 
     do
         echo -n "${threads},${iteration}," >> $output_file
+        echo "prun -np 1 -v parallel -p ${threads} -o ${output_file} -l ${length} -r"
         prun -np 1 -v parallel -p ${threads} -o ${output_file} -l ${length} -r
     done
 done
