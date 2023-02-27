@@ -7,14 +7,6 @@ pd.set_option('display.max_columns', None)
 plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
-df = pd.read_csv("exp_outer_thread_old.csv")
-
-# df.reset_index(inplace=True)
-# df.columns = ["nr_outer_threads", "runtime_mean", "runtime_sem"]
-# print(df)
-
-
-
 # load data
 df = pd.read_csv("exp_outer_thread_old.csv")
 # convert to speedup
