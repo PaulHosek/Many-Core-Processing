@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <assert.h>
 #include <limits.h>
+#include <string.h>
 
 /* Ordering of the vector */
 typedef enum Ordering {ASCENDING, DESCENDING, RANDOM} Order;
@@ -16,7 +17,7 @@ short max_threads = 16;
 int debug = 0;
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short outer_threads);
 void msort(int *v, long l, short nest_threads);
-void TopDownSplitMerge(long first, long last, int*v);
+void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest);
 
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short outer_threads){
     int nest_threads = max_threads-outer_threads;
@@ -33,19 +34,25 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer, short
         }
 }
 
+
 void msort(int *v, long l, short nest_threads) {
+    int * v_temp = malloc(l*sizeof(int));
+    memcpy(v_temp, v, l * sizeof(int));
     #pragma omp parallel num_threads(nest_threads)
     {
         #pragma omp single
         {
             #pragma omp task
-            TopDownSplitMerge(0, l, v);
+            TopDownSplitMerge(v_temp,0, l, v);
         }
     }
+    free(v_temp);
 }
 
-void TopDownSplitMerge(long first, long last, int *v) {
-    if (last - first <= 1) {
+
+void TopDownSplitMerge(int *v_source, long first, long last, int *v_dest) {
+    const long size = last - first;
+    if (size <= 1) {
         return;
     }
 
@@ -53,28 +60,41 @@ void TopDownSplitMerge(long first, long last, int *v) {
     long mid = (last + first) / 2;
 
 #pragma omp task if(last-first > 500)
-    TopDownSplitMerge(first, mid, v);
+    TopDownSplitMerge(v_dest, first, mid, v_source);
 #pragma omp task if(last-first > 500)
-    TopDownSplitMerge(mid, last, v);
+    TopDownSplitMerge(v_dest, mid, last, v_source);
 #pragma omp taskwait
 
-#pragma omp task if(last-first > 1000)
+#pragma omp task shared(v_source, v_dest) if(size >= 1000)
     {
         long i = first;
         long j = mid;
         for (long k = first; k < last; k++) {
-            if (i < mid && (j >= last || v[i] <= v[j])) {
-                v[k] = v[i];
+            if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
+                v_dest[k] = v_source[i];
                 i++;
             } else {
-                v[k] = v[j];
+                v_dest[k] = v_source[j];
                 j++;
             }
         }
     }
-
 #pragma omp taskwait
 }
+
+//void msort(int *v, long l, int threads, long thread_input_size) {
+//    int * v_temp = malloc(l*sizeof(int));
+//    memcpy(v_temp, v, l * sizeof(int));
+//#pragma omp parallel num_threads(threads) if(l >= thread_input_size)
+//    {
+//#pragma omp master
+//        {
+//#pragma omp task
+//            TopDownSplitMerge(v_temp, 0, l, v, thread_input_size);
+//        }
+//    }
+//    free(v_temp);
+//}
 
 
 

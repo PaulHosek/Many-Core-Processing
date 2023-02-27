@@ -24,34 +24,6 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
         msort(vector_vectors[i], vector_lengths[i]);
     }
 }
-//
-//void msort(int *v, long l) {
-//    TopDownSplitMerge(0, l, v);
-//}
-//
-//
-//void TopDownSplitMerge(long first, long last, int *v) {
-//    if (last - first <= 1) {
-//        return;
-//    }
-//
-//
-//    long mid = (last + first) / 2;
-//
-//    TopDownSplitMerge(first, mid, v);
-//    TopDownSplitMerge(mid, last, v);
-//    long i = first;
-//    long j = mid;
-//    for (long k = first; k < last; k++) {
-//        if (i < mid && (j >= last || v[i] <= v[j])) {
-//            v[k] = v[i];
-//            i++;
-//        } else {
-//            v[k] = v[j];
-//            j++;
-//        }
-//    }
-//}
 
 void msort(int *v, long l) {
     int * v_temp = malloc(l*sizeof(int));
