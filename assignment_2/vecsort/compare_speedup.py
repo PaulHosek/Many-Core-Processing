@@ -6,30 +6,36 @@ pd.set_option('display.max_columns', None)
 plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
-df = pd.read_csv("data/final_run.csv").groupby("version").agg(["mean", "sem"])
-print(df)
+# load data
+df = pd.read_csv("data/27_100.csv")
+
+# convert to speedup
+seq_mean = df[df["version"] == "sequential"]["runtime"].mean()
+df["speedup"] = seq_mean/df["runtime"]
+
+# aggregate data for bar plot
+df = df.groupby("version").agg(["mean", "sem"])
 df.reset_index(inplace=True)
-df.columns = ['Implementation', 'runtime_mean', 'runtime_sem']
+df.columns = ['Implementation', 'runtime_mean', 'runtime_sem', 'speedup_mean', 'speedup_sem']
 
 
-names = ["sequential", "only nested", "only outer", "both", "inline"]
-versions = df.index.values
-names = df["Implementation"]
-seq_baseline = df[df["Implementation"]=="sequential"]["runtime_mean"].values[0]
-# seq_baseline_sem = df[df["Implementation"]=="sequential"]["runtime_sem"].values[0]
+# select values for plotting
+df = df.replace({"parallel_v1_onlynested":"nested only",
+                 "parallel_v2_onlyouter":"outer only",
+                 "parallel_v3_both":"both",
+                 "parallel_v4_both_o3":"O3",})
 
-
-means = seq_baseline/df['runtime_mean'].values
-means = df['runtime_mean'].values
-sems = df['runtime_sem'].values
+versions = df["Implementation"]
+means = df['speedup_mean'].values
+sems = df['speedup_sem'].values
 
 
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.bar(versions, means, yerr=1.96*sems, capsize=5, color="#8FA993")
-ax.set_xticks(versions, labels=names)
+ax.set_xticks(versions, labels=versions)
 ax.set_title("Vecsort runtime comparison", fontsize=16)
 ax.set_xlabel("Version", fontsize=14)
-ax.set_ylabel("Runtime (seconds)", fontsize=14)
+ax.set_ylabel("Speedup", fontsize=14)
 
 plt.xticks(rotation=0)
 
