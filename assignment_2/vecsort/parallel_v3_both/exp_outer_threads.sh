@@ -1,7 +1,7 @@
 rm exp_outer_thread.csv
 module load prun
 
-repetitions=1
+repetitions=3
 max_threads=16
 
 if [ ! -f exp_outer_thread.csv ]; then

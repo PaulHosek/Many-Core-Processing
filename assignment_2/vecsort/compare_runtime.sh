@@ -2,8 +2,7 @@ rm data.csv
 module load prun
 
 directories=(sequential parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_both_o3)
-#directories=(parallel_v2_onlyouter)
-repetitions=1 # 100
+repetitions=10 # 100
 
 if [ ! -f data.csv ]; then
   touch data.csv
@@ -25,7 +24,7 @@ for dir in "${directories[@]}"; do
 done
 
 # run in background
-#nohub ./compare_runtime.sh &
+#nohup ./compare_runtime.sh &
 
 # get info
 # ps aux | grep compare_runtime.sh
