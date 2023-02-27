@@ -7,8 +7,8 @@ plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
 # load data
-df_seq = pd.read_csv("merge_sequential_length_rand/data.csv")
-df_par = pd.read_csv("merge_parallel_threads/data.csv")
+df_seq = pd.read_csv("../merge_sequential_length_rand/data.csv")
+df_par = pd.read_csv("data.csv")
 
 # convert to speedup
 seq_mean = df_seq[df_seq["length"] == 1000000]["time"].mean()
