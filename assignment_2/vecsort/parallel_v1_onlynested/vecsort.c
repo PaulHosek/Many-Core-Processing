@@ -117,7 +117,6 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest, long
 
 
 
-
 void print_v(int **vector_vectors, int *vector_lengths, long length_outer) {
     printf("\n");
     for(long i = 0; i < length_outer; i++) {
