@@ -24,7 +24,7 @@ df = df.replace({"parallel_v1_onlynested":"nested only",
                  "parallel_v2_onlyouter":"outer only",
                  "parallel_v3_both":"both",
                  "parallel_v4_both_o3":"both+O3",})
-print(df
+print(df)
 versions = df["Implementation"]
 means = df['speedup_mean'].values
 sems = df['speedup_sem'].values
