@@ -39,12 +39,13 @@ means = df['speedup_mean'].values
 sems = df['speedup_sem'].values
 
 
-fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(12, 6))
 ax.bar(versions, means, yerr=1.96*sems, capsize=5, color="#8FA993")
 ax.set_xticks(versions, labels=versions)
 ax.set_title("Vecsort speedup comparison", fontsize=16)
 ax.set_xlabel("Version", fontsize=14)
 ax.set_ylabel("Speedup", fontsize=14)
+ax.set_ylim(1)
 
 plt.xticks(rotation=0)
 
