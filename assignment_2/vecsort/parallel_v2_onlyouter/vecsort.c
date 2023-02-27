@@ -16,10 +16,9 @@ void vecsort(int **vector_vectors, int *vector_lengths, long length_outer);
 void msort(int *v, long l);
 void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest);
 
-
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
     long i;
-    #pragma parallel for shared(v) firstprivate(i) numthreads(16)
+    #pragma parallel for shared(v) firstprivate(i)  numthreads(16)
     for (i =0; i<length_outer; i++){
         msort(vector_vectors[i], vector_lengths[i]);
     }
@@ -46,15 +45,13 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest) {
     TopDownSplitMerge(v_dest, mid, last, v_source);
     long i = first;
     long j = mid;
-    for (long k = first; k < last; k++){
-        for (long k = first; k < last; k++) {
-            if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
-                v_dest[k] = v_source[i];
-                i++;
-            } else {
-                v_dest[k] = v_source[j];
-                j++;
-            }
+    for (long k = first; k < last; k++) {
+        if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
+            v_dest[k] = v_source[i];
+            i++;
+        } else {
+            v_dest[k] = v_source[j];
+            j++;
         }
     }
 }

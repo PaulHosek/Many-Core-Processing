@@ -133,6 +133,7 @@ void print_v(int **vector_vectors, int *vector_lengths, long length_outer) {
 
 int main(int argc, char **argv) {
 
+
     int c;
     int seed = 42;
     long length_outer = 1e4;
