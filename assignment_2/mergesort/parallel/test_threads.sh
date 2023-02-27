@@ -3,8 +3,8 @@
 module load prun
 module load python
 
-make clean
-make
+#make clean
+#make
 
 dir="../../test/merge_parallel_threads"
 output_file="${dir}/data.csv"
@@ -15,7 +15,7 @@ rm ${output_file} 2> /dev/null
 
 echo "threads,iterations,time" > $output_file
 
-for threads in 1 4 16
+for threads in 1 2 4 8 16
 do
     for iteration in {1..50} 
     do
