@@ -7,7 +7,7 @@ plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
 # load data
-df = pd.read_csv("data/27_short_1.csv")
+df = pd.read_csv("data/27_short_1_2.csv")
 
 # convert to speedup
 seq_mean = df[df["version"] == "sequential"]["runtime"].mean()

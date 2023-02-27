@@ -6,7 +6,7 @@ pd.set_option('display.max_columns', None)
 plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
-df = pd.read_csv("data/final_run.csv").groupby("version").agg(["mean", "sem"])
+df = pd.read_csv("data/27_short_1_2.csv").groupby("version").agg(["mean", "sem"])
 df.reset_index(inplace=True)
 df.columns = ['Implementation', 'runtime_mean', 'runtime_sem']
 

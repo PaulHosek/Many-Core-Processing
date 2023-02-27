@@ -18,7 +18,7 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest);
 
 void vecsort(int **vector_vectors, int *vector_lengths, long length_outer){
     long i;
-    #pragma parallel for shared(vector_vectors, vector_lengths) num_threads(16)
+    #pragma omp parallel for schedule(runtime) shared(vector_vectors, vector_lengths)  num_threads(16)
     for (i =0; i<length_outer; i++){
         msort(vector_vectors[i], vector_lengths[i]);
     }
