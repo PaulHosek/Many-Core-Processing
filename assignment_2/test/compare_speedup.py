@@ -13,7 +13,7 @@ df_par = pd.read_csv("merge_parallel_threads/data.csv")
 # convert to speedup
 seq_mean = df_seq[df_seq["length"] == 1000000]["time"].mean()
 df_par["speedup"] = seq_mean/df_par["time"]
-
+df_par.drop(columns=["iterations"])
 # aggregate data for bar plot
 df_par = df_par.groupby("threads").agg(["mean", "sem"])
 print(df_par)
