@@ -5,7 +5,8 @@ threads=16
 module load prun
 module load python
 
-make -B
+make clean
+make
 
 dir_asc="../../test/merge_parallel_length_asc"
 dir_desc="../../test/merge_parallel_length_desc"

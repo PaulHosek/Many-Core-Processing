@@ -28,15 +28,13 @@ void TopDownSplitMerge(int * v_source, long first, long last, int * v_dest) {
     TopDownSplitMerge(v_dest, mid, last, v_source);
     long i = first;
     long j = mid;
-    for (long k = first; k < last; k++){
-        for (long k = first; k < last; k++) {
-            if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
-                v_dest[k] = v_source[i];
-                i++;
-            } else {
-                v_dest[k] = v_source[j];
-                j++;
-            }
+    for (long k = first; k < last; k++) {
+        if (i < mid && (j >= last || v_source[i] <= v_source[j])) {
+            v_dest[k] = v_source[i];
+            i++;
+        } else {
+            v_dest[k] = v_source[j];
+            j++;
         }
     }
 }

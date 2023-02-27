@@ -26,7 +26,7 @@ done
 
 cd "../parallel"
 
-# p_threads
+# openMP
 for iteration in {1..50} 
 do
     echo -n "omp,${iteration}," >> $output_file
