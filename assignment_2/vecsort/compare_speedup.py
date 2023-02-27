@@ -15,15 +15,24 @@ df["speedup"] = seq_mean/df["runtime"]
 
 # aggregate data for bar plot
 df = df.groupby("version").agg(["mean", "sem"])
+print(df)
 df.reset_index(inplace=True)
 df.columns = ['Implementation', 'runtime_mean', 'runtime_sem', 'speedup_mean', 'speedup_sem']
 
 
-# select values for plotting
-df = df.replace({"parallel_v1_onlynested":"nested only",
-                 "parallel_v2_onlyouter":"outer only",
+
+# rename and order bars
+df = df.replace({"parallel_v1_onlynested":"nested",
+                 "parallel_v2_onlyouter":"outer",
                  "parallel_v3_both":"both",
                  "parallel_v4_both_o3":"both+O3",})
+category_order = ['sequential', 'nested', 'outer', 'both', 'both+O3']
+df['Implementation'] = pd.Categorical(df['Implementation'], categories=category_order, ordered=True)
+df = df.sort_values('Implementation')
+
+
+
+
 print(df)
 versions = df["Implementation"]
 means = df['speedup_mean'].values
