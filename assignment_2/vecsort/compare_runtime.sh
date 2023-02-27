@@ -1,12 +1,12 @@
 rm data.csv
 module load prun
 
-directories=(sequential parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_inline parallel_v5_o3)
-repetitions=100
+directories=(sequential parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_both_o3)
+repetitions=1
 
 if [ ! -f data.csv ]; then
   touch data.csv
-  echo "version, runtime" > data.csv
+  echo "version,runtime" > data.csv
 fi
 
 for dir in "${directories[@]}"; do
@@ -22,3 +22,9 @@ for dir in "${directories[@]}"; do
   cd ..
 
 done
+
+# run in background
+#nohub ./compare_runtime.sh &
+
+# get info
+# ps aux | grep compare_runtime.sh
