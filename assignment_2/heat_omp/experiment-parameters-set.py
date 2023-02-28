@@ -25,12 +25,14 @@ def plot_varying_threads(ax1, ax2, n, m, df):
     ax1.plot(xs, ys, label="n = " + str(n) + " m = " + str(m))
     plot_hi_lo(ax1, xs, ys, points_to_plot['flops']['sem'])
     ax1.legend(prop={'size': 6})
+    ax1.set(xlabel = "Threads", ylabel = "Flops")
 
     #time graph
     ys = points_to_plot['time']['mean']
     ax2.plot(xs, ys, label="n = " + str(n) + " m = " + str(m))
     plot_hi_lo(ax2, xs, ys, points_to_plot['time']['sem'])
     ax2.legend(prop={'size': 6})
+    ax2.set(xlabel = "Threads", ylabel = "Time")
 
 def fix_df():
     df = pd.read_csv('data_assignment2.csv')
