@@ -6,11 +6,12 @@
 
 #include "compute.h"
 
-#define NUM_THREADS 16
+int NUM_THREADS = 0;
 
 void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, 
 double* conductivity, double * weight_direct, double * weight_indirect, int* indices_left, int * indices_right)
 {
+    NUM_THREADS = p->nthreads;
     int MN = p->N * p-> M; 
     int m = p->M;
     int index;
@@ -167,7 +168,7 @@ void do_compute(const struct parameters* p, struct results *r)
                     (double)(r->niter * flops_per_it +
                     (double)r->niter / p->period) / r->time;
     FILE *fpt;
-    fpt = fopen("data.csv", "a+");
+    fpt = fopen("data_assignment2.csv", "a+");
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
     fclose(fpt);
 
