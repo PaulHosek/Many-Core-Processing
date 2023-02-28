@@ -7,13 +7,13 @@ plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
 # load data
-df_seq = pd.read_csv("merge_sequential_length_rand/data.csv")
-df_par = pd.read_csv("merge_parallel_threads/data.csv")
+df_seq = pd.read_csv("../merge_sequential_length_rand/data.csv")
+df_par = pd.read_csv("data.csv")
 
 # convert to speedup
 seq_mean = df_seq[df_seq["length"] == 1000000]["time"].mean()
 df_par["speedup"] = seq_mean/df_par["time"]
-
+df_par.drop(columns=["iterations"], inplace=True)
 # aggregate data for bar plot
 df_par = df_par.groupby("threads").agg(["mean", "sem"])
 print(df_par)
@@ -27,9 +27,9 @@ df_par.columns = ['threads', 'runtime_mean', 'runtime_sem', 'speedup_mean', 'spe
 #                  "parallel_v2_onlyouter":"outer",
 #                  "parallel_v3_both":"both",
 #                  "parallel_v4_both_o3":"both+O3",})
-category_order = ['1', '2', '4', '8', '16']
-df_par['threads'] = pd.Categorical(df['threads'], categories=category_order, ordered=True)
-df_par = df_par.sort_values('threads')
+#category_order = ['1', '2', '4', '8', '16']
+#df_par['threads'] = pd.Categorical(df_par['threads'], categories=category_order, ordered=True)
+#df_par = df_par.sort_values('threads')
 
 
 print(df_par)
