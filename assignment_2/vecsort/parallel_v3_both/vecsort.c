@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
     Order order = ASCENDING;
     int length_inner_min = 100;
     int length_inner_max = 1000;
-    short outer_threads = 1;
+    short outer_threads = 2;
 
     int **vector_vectors;
     int *vector_lengths;
