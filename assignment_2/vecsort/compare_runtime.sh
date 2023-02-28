@@ -2,7 +2,7 @@ rm data.csv
 module load prun
 
 directories=(sequential parallel_v1_onlynested parallel_v2_onlyouter parallel_v3_both parallel_v4_both_o3)
-repetitions=10 # 100
+repetitions=100
 
 if [ ! -f data.csv ]; then
   touch data.csv
