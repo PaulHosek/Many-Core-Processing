@@ -37,14 +37,23 @@ threads = df_par["threads"]
 means = df_par['speedup_mean'].values
 sems = df_par['speedup_sem'].values
 
-
 fig, ax = plt.subplots(figsize=(12, 6))
-ax.bar(threads, means, yerr=1.96*sems, capsize=5, color="#8FA993")
+# ax.bar(threads, means, yerr=1.96*sems, capsize=5, color="#8FA993")
+ax.set_yscale("log",base=2)
+ax.set_xscale("log",base=2)
 ax.set_xticks(threads, labels=threads)
-ax.set_title("Threads speedup comparison", fontsize=16)
+ax.set_yticks(threads, labels=threads)
+#ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
+#ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
+ax.scatter(threads, means, color="red")
+ax.plot(threads, means, color="red", label="parallel implementation")
+ax.scatter(threads, threads, color="green")
+ax.plot(threads, threads, color="green", label="linear") # linear
+ax.legend(loc="upper left")
+ax.set_title("Threads Speed-up", fontsize=16)
 ax.set_xlabel("Number of Threads", fontsize=14)
-ax.set_ylabel("Speedup", fontsize=14)
-ax.set_ylim(1)
+ax.set_ylabel("Speed-up", fontsize=14)
+#ax.set_ylim(1)
 
 plt.xticks(rotation=0)
 
