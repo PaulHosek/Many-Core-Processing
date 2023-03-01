@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     int seed = 42;
     long length = 1e4;
     long thread_min_input_size = 1000;
-    int num_threads = 1;
+    int num_threads = 16;
     Order order = ASCENDING;
     int *vector;
     char *output_file = NULL;
