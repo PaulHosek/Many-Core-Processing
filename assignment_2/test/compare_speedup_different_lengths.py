@@ -81,7 +81,7 @@ x = np.arange(len(lengths))  # the label locations
 width = 0.25  # the width of the bars
 
 # Plot for speedup
-fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
+fig, ax = plt.subplots(figsize=(9, 6),constrained_layout=True)
 
 width = 0.25  # the width of the bars
 offset = 0
@@ -112,21 +112,25 @@ plt.savefig("speedup_lengths.png", dpi=300, bbox_inches="tight")
 
 #---------------------------------------------------------------
 # Plot for runtime
-fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
+fig, ax = plt.subplots(figsize=(9, 6),constrained_layout=True)
 
 width = 0.25  # the width of the bars
 offset = 0
-rects = ax.bar(x + offset, time_means_asc, yerr=1.96*time_sems_asc, width=width, label="ascending", color="red")
-    
-offset += width
-rects = ax.bar(x + offset, time_means_desc, yerr=1.96*time_sems_desc, width=width, label="descending", color="green")
+rects = ax.bar(x + offset, time_means_asc, yerr=1.96*time_sems_asc, width=width, label="ascending", color="red", alpha =0.3)
+ax.plot(x + offset, time_means_asc / (lengths), color="darkred", label="time_ascending/length")   
 
 offset += width
-rects = ax.bar(x + offset, time_means_rand, yerr=1.96*time_sems_rand, width=width, label="random", color="blue")
+rects = ax.bar(x + offset, time_means_desc, yerr=1.96*time_sems_desc, width=width, label="descending", color="green", alpha =0.3)
+ax.plot(x + offset, time_means_desc / (lengths), color="darkgreen", label="time_descending/length") 
+
+offset += width
+rects = ax.bar(x + offset, time_means_rand, yerr=1.96*time_sems_rand, width=width, label="random", color="blue", alpha =0.3)
+ax.plot(x + offset, time_means_rand / (lengths), color="darkblue", label="time_random/length") 
 
 ax.set_title("Runtime for different lengths", fontsize=16)
 
 ax.set_xticks(x + width, lengths_strings)
+
 ax.set_xlabel("Length", fontsize=14)
 ax.set_ylabel("Runtime in s", fontsize=14)
 ax.set_yscale('log', base=10)
