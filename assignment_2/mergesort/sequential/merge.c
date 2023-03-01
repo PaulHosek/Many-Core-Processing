@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     int num_threads = 1;
     Order order = ASCENDING;
     int *vector;
-    char *output_file = "data.csv";
+    char *output_file = NULL;
 
     struct timespec before, after;
 
@@ -164,16 +164,18 @@ int main(int argc, char **argv) {
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Mergesort took: % .6e seconds \n", time);
-    FILE * output;
-    output = fopen(output_file, "a");
-    if (!output)
+    if (output_file)
     {
-        fprintf(stderr, "invalid output file\n");
+        FILE * output;
+        output = fopen(output_file, "a");
+        if (!output)
+        {
+            fprintf(stderr, "invalid output file\n");
+        }
+
+        fprintf(output, "% .6e\n", time);
+        fclose(output);
     }
-
-    fprintf(output, "% .6e\n", time);
-    fclose(output);
-
 //
 //    for (long myi =0;myi < length/2;myi++) {
 //        printf("%d ",vector[myi]);
@@ -182,7 +184,8 @@ int main(int argc, char **argv) {
     if(debug) {
         print_v(vector, length);
     }
-
+    if (output_file) free(output_file);
+    if (vector) free(vector);
     return 0;
 }
 
