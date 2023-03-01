@@ -178,10 +178,10 @@ int main(int argc, char **argv) {
     int seed = 42;
     long length = 1e4;
     long thread_min_input_size = 1000;
-    int num_threads = 1;
+    int num_threads = 16;
     Order order = ASCENDING;
     int *vector;
-    char *output_file = "data.csv";
+    char *output_file = NULL;
 
     struct timespec before, after;
 
@@ -283,15 +283,19 @@ int main(int argc, char **argv) {
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
     printf("Mergesort took: % .6e seconds \n", time);
-    FILE * output;
-    output = fopen(output_file, "a");
-    if (!output)
-    {
-        fprintf(stderr, "invalid output file\n");
-    }
 
-    fprintf(output, "% .6e\n", time);
-    fclose(output);
+    if (output_file)
+    {
+        FILE * output;
+        output = fopen(output_file, "a");
+        if (!output)
+        {
+            fprintf(stderr, "invalid output file\n");
+        }
+
+        fprintf(output, "% .6e\n", time);
+        fclose(output);
+    }
     if(debug) {
         print_v(vector, length);
     }
