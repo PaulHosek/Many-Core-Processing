@@ -8,7 +8,7 @@ plt.style.use('seaborn-v0_8-darkgrid')
 mpl.rcParams['font.size'] = 16
 
 # load data
-df = pd.read_csv("exp_outer_thread_28_2.csv")
+df = pd.read_csv("data_32t.csv")
 
 
 # convert to speedup to sequential

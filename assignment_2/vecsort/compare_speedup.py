@@ -34,7 +34,7 @@ versions = df["Implementation"]
 means = df['speedup_mean'].values
 sems = df['speedup_sem'].values
 
-fig, ax = plt.subplots(figsize=(9, 9))
+fig, ax = plt.subplots(figsize=(5, 5))
 ax.bar(versions, means, yerr=1.96 * sems, capsize=5, color="#8FA993")
 ax.set_xticks(versions, labels=versions)
 ax.set_title("Vecsort speedup comparison", fontsize=16)
