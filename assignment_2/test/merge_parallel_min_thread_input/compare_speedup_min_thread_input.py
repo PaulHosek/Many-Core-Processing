@@ -44,7 +44,7 @@ x = np.arange(len(min_thread_input))  # the label locations
 width = 0.25  # the width of the bars
 
 # Plot for speedup
-fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
+fig, ax = plt.subplots(figsize=(8, 6),constrained_layout=True)
 
 width = 0.25  # the width of the bars
 rects = ax.bar(x, speedup_means, yerr=1.96*speedup_sems, width=width, color="red")
@@ -66,7 +66,7 @@ plt.savefig("speedup_min_thread_input.png", dpi=300, bbox_inches="tight")
 
 #---------------------------------------------------------------
 # Plot for runtime
-fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
+fig, ax = plt.subplots(figsize=(8, 6),constrained_layout=True)
 
 width = 0.25  # the width of the bars
 rects = ax.bar(x, time_means, yerr=1.96*time_sems, width=width, color="red")

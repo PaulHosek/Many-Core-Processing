@@ -37,7 +37,7 @@ threads = df_par["threads"]
 means = df_par['speedup_mean'].values
 sems = df_par['speedup_sem'].values
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(8, 6))
 # ax.bar(threads, means, yerr=1.96*sems, capsize=5, color="#8FA993")
 ax.set_yscale("log",base=2)
 ax.set_xscale("log",base=2)
