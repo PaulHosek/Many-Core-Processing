@@ -166,11 +166,10 @@ void do_compute(const struct parameters* p, struct results *r)
                     (double)(r->niter * flops_per_it +
                     (double)r->niter / p->period) / r->time;
     FILE *fpt;
-    fpt = fopen("data.csv", "a+");
+    fpt = fopen("data_assignment2_seq.csv", "a+");
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
     fclose(fpt);
 
-<<<<<<< HEAD
     free(temperature_old);
     free(temperature_new);
     free(conductivity);
@@ -178,17 +177,4 @@ void do_compute(const struct parameters* p, struct results *r)
     free(weight_indirect);
     free(indices_left);
     free(indices_right);
-=======
-    // Print to csv file for measuring 
-    double flops_per_it = 12.0;
-    double Flops = (double)p->N * (double)p->M * 
-                    (double)(r->niter * flops_per_it +
-                    (double)r->niter / p->period) / r->time;
-    FILE *fpt;
-    fpt = fopen("data.csv", "a+");
-    fprintf(fpt,"% .6e \n", Flops);
-    fclose(fpt);
-
-    free(grid.points);
->>>>>>> Dennis_branch
 }

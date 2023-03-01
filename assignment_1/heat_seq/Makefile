@@ -4,7 +4,7 @@ SRC=$(filter-out $(wildcard ref*.c), $(wildcard *.c))
 OBJ=$(patsubst %.c,%.o,$(SRC))
 
 CC=gcc
-CFLAGS= -Wall -std=gnu99
+CFLAGS=-O2 -std=gnu99
 LIB=
 INCLUDES=-I../../include
 OPT=
