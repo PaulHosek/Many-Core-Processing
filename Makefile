@@ -27,7 +27,7 @@ $(basename $(filter %.c,$(wildcard demo/*)) ): $(filter-out obj/main.o, $(OBJ))
 
 submission_%:
 	$(MAKE) -C assignment_$(patsubst submission_%,%,$@) clean
-	tar czfh heat_assignment_$(patsubst submission_%,%,$@)_group_$(GROUP)_$(STUDENTID1)_$(STUDENTID2).tar.gz assignment_$(patsubst submission_%,%,$@)
+	tar czfh heat_assignment_$(patsubst submission_%,%,$@)_group_$(GROUP)_$(STUDENTID1)_$(STUDENTID2)_$(STUDENTID3)_$(STUDENTID4).tar.gz assignment_$(patsubst submission_%,%,$@)
 
 clean:
 	-rm -f *.tar.gz
