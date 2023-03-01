@@ -47,7 +47,7 @@ width = 0.25  # the width of the bars
 fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
 
 width = 0.25  # the width of the bars
-rects = ax.bar(x, speedup_means, yerr=1.96*speedup_sems, width=width, color="red")
+rects = ax.bar(x, speedup_means, yerr=1.96*speedup_sems, width=width, color="red", align="center")
 ax.set_title("Speed-up with OpenMP vs. pthreads", fontsize=16)
 
 ax.set_xticks(x, methods)
@@ -63,8 +63,8 @@ plt.savefig("speedup_omp_pthreads.png", dpi=300, bbox_inches="tight")
 # Plot for runtime
 fig, ax = plt.subplots(figsize=(12, 6),constrained_layout=True)
 
-width = 0.25  # the width of the bars
-rects = ax.bar(x, time_means, yerr=1.96*time_sems, width=width, color="red")
+width = 0.1  # the width of the bars
+rects = ax.bar(x, time_means, yerr=1.96*time_sems, width=width, color="red", align="edge")
     
 ax.set_title("Runtime with OpenMP vs. pthreads", fontsize=16)
 

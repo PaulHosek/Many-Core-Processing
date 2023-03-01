@@ -32,7 +32,7 @@ df.columns = ['version', 'ratio', 'inner_max', 'len_outer', 'runtime', 'speedup'
 print(df)
 
 # Create a grouped bar chart
-plt.figure()
+plt.figure(figsize=(9,9))
 
 g = sns.scatterplot(x='ratio', y='speedup', hue='version', data=df, palette=["#809F92", "#446469"], legend=False)
 sns.lineplot(x='ratio', y='speedup',hue="version", data=df, palette=["#809F92", "#446469"])
