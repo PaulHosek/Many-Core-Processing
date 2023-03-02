@@ -15,7 +15,7 @@ for m in ${experiment_dir}; do
   for ((it=${start}; it<=${repetitions}; it++)); do
     for i in $(seq 1 ${END}); do
       array=($(sed -n '2p' ${m}));
-      echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data};
+      echo -n "${array[0]}, ${array[1]}, ${i}, " >> ${data};
       prun -np 1 -v heat_omp -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
     done
   done
