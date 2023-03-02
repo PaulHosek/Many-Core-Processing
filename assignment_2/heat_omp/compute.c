@@ -98,7 +98,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
         int index;
 
-        #pragma omp parallel for num_threads (NUM_THREADS) reduction(&: converged)
+        #pragma omp parallel for schedule(static, 100) num_threads (NUM_THREADS) reduction(&: converged)
         for (index = grid_start; index < grid_end; ++ index){
             int index_left = indices_left[index - m];
             int index_right = indices_right[index - m];
@@ -168,7 +168,7 @@ void do_compute(const struct parameters* p, struct results *r)
                     (double)(r->niter * flops_per_it +
                     (double)r->niter / p->period) / r->time;
     FILE *fpt;
-    fpt = fopen("data_assignment2.csv", "a+");
+    fpt = fopen("data_assignment2_test_schedule.csv", "a+");
     fprintf(fpt,"% .6e, % .6e \n", r->time, Flops);
     fclose(fpt);
 
