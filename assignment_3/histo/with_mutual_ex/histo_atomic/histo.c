@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <omp.h>
 
 void die(const char *msg){
     if (errno != 0) 
@@ -70,12 +71,22 @@ void print_image(int num_rows, int num_cols, int * image){
 	        index = i * num_cols + j;
 			printf("%d ", image[index]);
 		}
+	// TODO: put back print out of the loop! Just for debugging 
+    printf("\n");
 	}
-	printf("\n");
 }
 
-void histogram(int * histo, int * image){
-    //TODO: For Students
+void histogram(int * histo, int * image, int ncols){
+    int sum[256] = {0};
+    for (int j = 0; j < ncols; j ++){
+        sum[image[j]] ++;
+    }
+    for (int i = 0; i < 256; i++){
+        if (sum[i] > 0){
+            #pragma omp atomic
+            histo[i] += sum[i];
+        }
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -136,11 +147,21 @@ int main(int argc, char *argv[]){
     	read_image(image_path,num_rows, num_cols, image);
     }
 
+    //print_image(num_rows, num_cols, image);
+
     clock_gettime(CLOCK_MONOTONIC, &before);
-    /* Do your thing here */
-
-
-    histogram(histo, image);
+    
+    // Divide image in stripes and distribute to processors
+    omp_set_num_threads(num_threads);
+    #pragma omp parallel 
+    {
+        int id = omp_get_thread_num();
+        int nthreads = omp_get_num_threads();
+        // Cyclicly distribute rows to processors 
+        for (int i = id; i < num_rows; i += nthreads){
+            histogram(histo, &image[i*num_cols], num_cols);
+        }
+    }
 
     /* Do your thing here */
 
@@ -152,5 +173,14 @@ int main(int argc, char *argv[]){
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
+
     printf("Histo took: % .6e seconds \n", time);
+
+    FILE *fpt;
+    fpt = fopen("data_atomic.csv", "a+");
+    fprintf(fpt,"atomic, cyclic, updateafterloop, %d, %d, %d, %d, % .6e \n", debug, num_rows, num_cols, num_threads, time);
+    fclose(fpt);
+
+    free(histo);
+    free(image);
 }

@@ -1,0 +1,16 @@
+atomic, cyclic, innerupdate, 1, 150, 100, 2,  5.900900e-04 
+atomic, cyclic, innerupdate, 0, 150, 100, 4,  6.993520e-04 
+atomic, cyclic, innerupdate, 0, 150, 100, 8,  8.162840e-04 
+atomic, cyclic, innerupdate, 0, 150, 100, 16,  1.013319e-03 
+atomic, cyclic, innerupdate, 0, 150, 100, 2,  5.798040e-04 
+atomic, cyclic, innerupdate, 0, 150, 100, 1,  2.650480e-04 
+atomic, cyclic, updateafterloop, 0, 150, 100, 1,  1.720960e-04 
+atomic, cyclic, updateafterloop, 0, 150, 100, 2,  2.333930e-04 
+atomic, cyclic, updateafterloop, 0, 150, 100, 4,  2.238520e-04 
+atomic, cyclic, updateafterloop, 0, 150, 100, 8,  3.097610e-04 
+atomic, cyclic, updateafterloop, 0, 150, 100, 16,  5.347700e-04 
+atomic, cyclic, updateafterloop, 0, 1000, 1500, 1,  5.046500e-03 
+atomic, cyclic, updateafterloop, 0, 1000, 1500, 2,  5.357871e-03 
+atomic, cyclic, updateafterloop, 0, 1000, 1500, 4,  3.732182e-03 
+atomic, cyclic, updateafterloop, 0, 1000, 1500, 8,  4.454276e-03 
+atomic, cyclic, updateafterloop, 0, 1000, 1500, 16,  5.360251e-03 
