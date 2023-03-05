@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <omp.h>
 
 void die(const char *msg){
     if (errno != 0) 
@@ -74,9 +75,42 @@ void print_image(int num_rows, int num_cols, int * image){
 	printf("\n");
 }
 
-void histogram(int * histo, int * image){
-    //TODO: For Students
+void calculate_partition(int nrows, int nthreads, int * partition_sizes, int * offsets){
+    /*Calculate how many rows each thread gets such that the differences are minimized. Return an array of size nthreads 
+    where each entry is the number of rows assigned to this thread. Also return array of size nthreads where each entry is the 
+    offset index for this thread. */
+    int i;
+    if (nrows % nthreads == 0){
+        // rows can be evenly distributed
+        for (i = 0; i < nthreads; ++i){
+            partition_sizes[i] = nrows/nthreads;
+            offsets[i] = i * partition_sizes[i]; 
+        }
+    } else {
+        // nlower processors will get floor(nrows/nthreads) rows
+        int nlower = nthreads - (nrows % nthreads); 
+        // implicit calculation of floor(nrows/nthreads) because C truncates the decimals 
+        int floor = nrows/nthreads ;
+        for (i = 0; i < nthreads; ++i){
+            if (i < nlower){
+                partition_sizes[i] = floor;
+            } else {
+                partition_sizes[i] = floor + 1;
+            }
+            if (i > 0){
+                offsets[i] = offsets[i-1] + partition_sizes[i-1];
+            } else {
+                offsets[i] = 0;
+            }
+        }
+    }
 }
+
+void histogram(int * histo, int * image, int ndata){
+    for (int j = 0; j < ndata; j ++){
+        histo[image[j]] ++;
+    }
+} 
 
 int main(int argc, char *argv[]){
     int c;
@@ -91,8 +125,6 @@ int main(int argc, char *argv[]){
     int num_threads = 1;
 
     struct timespec before, after;
-
-    int * histo = (int *) calloc(256, sizeof(int));
 
     /* Read command-line options. */
     while((c = getopt(argc, argv, "s:i:rp:n:m:g")) != -1) {
@@ -126,6 +158,7 @@ int main(int argc, char *argv[]){
         }
     }
     
+    int * histo = (int *) calloc(256 * num_threads, sizeof(int));
     int * image = (int *) malloc(sizeof(int) * num_cols * num_rows);
 
     /* Seed such that we can always reproduce the same random vector */
@@ -135,14 +168,31 @@ int main(int argc, char *argv[]){
     }else{
     	read_image(image_path,num_rows, num_cols, image);
     }
-
+        
     clock_gettime(CLOCK_MONOTONIC, &before);
-    /* Do your thing here */
 
+    // Calculate partitioning
+    int * partition_sizes = (int * ) malloc(sizeof(int) * num_threads);
+    int * offsets = (int * ) malloc(sizeof(int) * num_threads);
+    calculate_partition(num_rows, num_threads, partition_sizes, offsets);
+    
+    omp_set_num_threads(num_threads);
+    #pragma omp parallel
+    {
+        int id = omp_get_thread_num();
+        int offset = offsets[id] * num_cols;
+        int histo_offset = id * 256;
+        histogram(&histo[histo_offset], &image[offset], partition_sizes[id] * num_cols);
+    }
 
-    histogram(histo, image);
-
-    /* Do your thing here */
+    // Add bins together and store in first histogram
+    for (int i = 0; i < 256; i++){
+        int sum = 0; 
+        for (int t = 0; t < num_threads; t++){
+            sum += histo[t * 256 + i];
+        }
+        histo[i] = sum; 
+    }
 
     if (debug){
     	print_histo(histo);
@@ -153,4 +203,12 @@ int main(int argc, char *argv[]){
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Histo took: % .6e seconds \n", time);
+    FILE *fpt;
+    fpt = fopen("data_avoid_mutual_ex.csv", "a+");
+    fprintf(fpt,"avoid_mutual_ex, sectioned, %d, %d, %d, %d, % .6e \n", debug, num_rows, num_cols, num_threads, time);
+    fclose(fpt);
+
+    free(histo);
+    free(image);
+    free(partition_sizes);
 }
