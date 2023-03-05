@@ -76,9 +76,40 @@ void print_image(int num_rows, int num_cols, int * image){
 	}
 }
 
-void histogram(int * histo, int * image, int ncols){
+void calculate_partition(int nrows, int nthreads, int * partition_sizes, int * offsets){
+    /*Calculate how many rows each thread gets such that the differences are minimized. Return an array of size nthreads 
+    where each entry is the number of rows assigned to this thread. Also return array of size nthreads where each entry is the 
+    offset index for this thread. */
+    int i;
+    if (nrows % nthreads == 0){
+        // rows can be evenly distributed
+        for (i = 0; i < nthreads; ++i){
+            partition_sizes[i] = nrows/nthreads;
+            offsets[i] = i * partition_sizes[i]; 
+        }
+    } else {
+        // nlower processors will get floor(nrows/nthreads) rows
+        int nlower = nthreads - (nrows % nthreads); 
+        // implicit calculation of floor(nrows/nthreads) because C truncates the decimals 
+        int floor = nrows/nthreads ;
+        for (i = 0; i < nthreads; ++i){
+            if (i < nlower){
+                partition_sizes[i] = floor;
+            } else {
+                partition_sizes[i] = floor + 1;
+            }
+            if (i > 0){
+                offsets[i] = offsets[i-1] + partition_sizes[i-1];
+            } else {
+                offsets[i] = 0;
+            }
+        }
+    }
+}
+
+void histogram(int * histo, int * image, int ndata){
     int sum[256] = {0};
-    for (int j = 0; j < ncols; j ++){
+    for (int j = 0; j < ndata; j ++){
         sum[image[j]] ++;
     }
     for (int i = 0; i < 256; i++){
@@ -87,7 +118,8 @@ void histogram(int * histo, int * image, int ncols){
             histo[i] += sum[i];
         }
     }
-}
+} 
+
 
 int main(int argc, char *argv[]){
     int c;
@@ -149,18 +181,18 @@ int main(int argc, char *argv[]){
 
     //print_image(num_rows, num_cols, image);
 
+    int * partition_sizes = (int * ) malloc(sizeof(int) * num_threads);
+    int * offsets = (int * ) malloc(sizeof(int) * num_threads);
+    calculate_partition(num_rows, num_threads, partition_sizes, offsets);
+
     clock_gettime(CLOCK_MONOTONIC, &before);
     
-    // Divide image in stripes and distribute to processors
     omp_set_num_threads(num_threads);
-    #pragma omp parallel 
+    #pragma omp parallel
     {
         int id = omp_get_thread_num();
-        int nthreads = omp_get_num_threads();
-        // Cyclicly distribute rows to processors 
-        for (int i = id; i < num_rows; i += nthreads){
-            histogram(histo, &image[i*num_cols], num_cols);
-        }
+        int offset = offsets[id] * num_cols;
+        histogram(histo, &image[offset], partition_sizes[id] * num_cols);
     }
 
     /* Do your thing here */
@@ -178,9 +210,11 @@ int main(int argc, char *argv[]){
 
     FILE *fpt;
     fpt = fopen("data_atomic.csv", "a+");
-    fprintf(fpt,"atomic, cyclic, updateafterloop, %d, %d, %d, %d, % .6e \n", debug, num_rows, num_cols, num_threads, time);
+    fprintf(fpt,"atomic, sectioned, updateafterloop, %d, %d, %d, %d, % .6e \n", debug, num_rows, num_cols, num_threads, time);
     fclose(fpt);
 
     free(histo);
     free(image);
+    free(partition_sizes);
+    free(offsets);
 }
