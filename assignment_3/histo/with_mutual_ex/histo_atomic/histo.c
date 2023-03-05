@@ -181,11 +181,13 @@ int main(int argc, char *argv[]){
 
     //print_image(num_rows, num_cols, image);
 
+
+    clock_gettime(CLOCK_MONOTONIC, &before);
+    
+    // Calculate partitioning
     int * partition_sizes = (int * ) malloc(sizeof(int) * num_threads);
     int * offsets = (int * ) malloc(sizeof(int) * num_threads);
     calculate_partition(num_rows, num_threads, partition_sizes, offsets);
-
-    clock_gettime(CLOCK_MONOTONIC, &before);
     
     omp_set_num_threads(num_threads);
     #pragma omp parallel

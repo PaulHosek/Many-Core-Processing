@@ -61,3 +61,9 @@ atomic, sectioned, updateafterloop, 0, 15000, 10000, 4,  7.566022e-02
 atomic, sectioned, updateafterloop, 0, 15000, 10000, 8,  5.513317e-02 
 atomic, sectioned, updateafterloop, 0, 15000, 10000, 16,  5.142728e-02 
 atomic, sectioned, updateafterloop, 0, 15000, 10000, 32,  4.995185e-02 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 1,  1.514981e-01 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 2,  1.222641e-01 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 4,  7.450896e-02 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 8,  5.444340e-02 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 16,  5.146757e-02 
+atomic, sectioned, updateafterloop, 0, 15000, 10000, 32,  4.994894e-02 
