@@ -16,7 +16,7 @@ void* gen_thread(int * data, int length, thread_node * cur_node);
 thread_node *active_threads = NULL;
 pthread_mutex_t active_threads_mutex = PTHREAD_MUTEX_INITIALIZER;
 
- thread management functions -------------------------------
+// thread management functions -------------------------------
 // Add thread-node to list of active nodes
 void add_active_thread(thread_node *node){
     pthread_mutex_lock(&active_threads_mutex);
@@ -109,7 +109,7 @@ void* HelloWorld(void *a) {
 }
 
 
- TODO: here are the old comparator thread functions, may be able to reuse a lot
+// TODO: here are the old comparator thread functions, may be able to reuse a lot
 void* comparator_thread(void* args) {
     thread_args * comp_args = (thread_args*)args;
     bounded_buffer* in_buffer = comp_args->in_buffer;

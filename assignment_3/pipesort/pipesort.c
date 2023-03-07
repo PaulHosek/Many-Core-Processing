@@ -38,6 +38,7 @@ void print_bb(bounded_buffer bb);
 
 void* gen_thread(void *t_arg);
 void* out_thread(void *o_arg);
+void * comp_thread(void *c_arg);
 
 void send_bb(bounded_buffer *buffer, int num);
 void destroy_bb(bounded_buffer* buffer);
@@ -122,6 +123,7 @@ thread_node *create_next_node(thread_node *cur_node){
     out_node->in_buffer = cur_node->out_buffer; // map buffer of prev to next
     out_node->out_buffer = create_bb(BUFFER_SIZE);
     out_node->next = NULL;
+    out_node->stored = -1;
     return out_node;
 }
 
@@ -159,7 +161,7 @@ int main(){
     // create generator node
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
-    thread_node head_node = {thread_id,NULL,out_buffer,NULL};
+    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL};
     thread_args args = {length, &head_node};
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
@@ -196,12 +198,12 @@ void* gen_thread(void *g_arg){
 
     // If there is no downstream thread, create an output node/thread
     if (cur_node->next == NULL) {
-        thread_node *out_node = create_next_node(cur_node);
-        thread_args *out_args = create_next_args(cur_args,out_node);
-        pthread_create(&out_node->thread_id, NULL, &out_thread, out_args);
+        thread_node *comp_node = create_next_node(cur_node);
+        thread_args *comp_args = create_next_args(cur_args,comp_node);
+        pthread_create(&comp_node->thread_id, NULL, &comp_thread, comp_args);
     }
-
     bounded_buffer *out_buffer = cur_node->out_buffer;
+
     for (int i=0; i<cur_args->length; i++){
         int value = rand() % (100 + 1 - 50) + 50; // range 50-100
         push_bb(out_buffer,value);
@@ -215,17 +217,65 @@ void* gen_thread(void *g_arg){
     return NULL;
 }
 
-//void * comp_thread(void *c_arg){
-//    add_id_global(NULL);
-//    thread_args *cur_args = (thread_args*)c_arg;
-//    thread_node *cur_node = cur_args->Node;
-//
-//}
+void * comp_thread(void *c_arg){
+    add_id_global(NULL);
+    thread_args *cur_args = (thread_args*)c_arg;
+    thread_node *cur_node = cur_args->Node;
+    bounded_buffer *in_buffer = cur_node->in_buffer;
+    bounded_buffer *out_buffer = cur_node->out_buffer;
+    int stored = cur_node->stored;
+    // TODO: pseudo code of what to do
+    //  1. wait for input as long as not END
+    //      a. if store empty -> store number
+    //      b. else
+    //          0: if node.next == NULL -> create downstream node
+    //          I. if store < new: -> send store away and save new in store
+    //          II. else (store >new): -> send new number away
+    //  2. if END
+    //      a. if no downstream node -> create downstream OUTPUT node
+    //      b. else:
+    //          I. send END && stored in that order
+    //          II. while (new != END): send away immediately without storing
+    //  3. send END
+    //  done
+
+    // 1. wait for input as long as not END
+    int num = pop_bb(in_buffer);
+
+    while (num != END_SIGNAL){
+        // a. store number if empty
+//        if (stored != -1){
+//            stored = num;
+//            num = pop_bb(in_buffer);
+//            continue;
+//        }
+        // b. create downstream comp_node if not exist
+        if (cur_node->next == NULL){
+            thread_node *comp_node = create_next_node(cur_node);
+            thread_args *comp_args = create_next_args(cur_args,comp_node);
+            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
+        }
+        printf("num %d \n", num);
+        print_bb(*out_buffer);
+        if (num <75){
+            push_bb(out_buffer,num);
+        }
+
+        num = pop_bb(in_buffer);
+
+    }
+
+    printf("outside while, num is %d\n", num);
+
+    // TODO delete in_buffer here (not outbuffer)
+    return NULL;
+}
 
 void* out_thread(void *o_arg){
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
+    print_bb(*cur_node->in_buffer);
 
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
@@ -306,31 +356,3 @@ void print_bb(bounded_buffer bb){
 //    pthread_mutex_unlock(&bb.lock);
 }
 
-// pop element from tail-1 in bb
-//int pop_bb(bounded_buffer *buffer){
-//    pthread_mutex_lock(&buffer->lock);
-//    // wait if full
-//    while (!buffer->size){
-//        printf("pop\n");
-//        pthread_cond_wait(&buffer->not_empty, &buffer->lock);
-//
-//    }
-//    // write to buffer and update parameters
-////    buffer->tail--;  // FIXME: now buffersize incorrect
-//
-//    int num = buffer->buffer[buffer->tail];
-//
-//    printf("The buffersize is: %d, tail: %d, num: %d\n",buffer->size,buffer->tail, num);
-//    print_bb(*buffer);
-//    buffer->buffer[buffer->tail] = 0; // not needed but may make debugging easier later
-//
-//    buffer->tail = (buffer->tail + buffer->capacity-1) % buffer->capacity; // decrease buffer by 1
-//
-//
-//    buffer->size--;
-//
-//    print_bb(*buffer);
-//    pthread_cond_signal(&buffer->not_full);
-//    pthread_mutex_unlock(&buffer->lock);
-//    return num;
-//}
