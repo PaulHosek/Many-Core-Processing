@@ -55,7 +55,7 @@ void join_all_threads(){
 
 // helper functions
 // send data to bounded_buffer
-void send_bb(bounded_buffer *buffer, int num){
+void write_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
     while (buffer->size == buffer->capacity){
@@ -91,11 +91,11 @@ void* gen_thread(int * data, int length, thread_node * cur_node){ // TODO assume
     // gen RAND + write to buffer
     for (int i=0; i<length; i++){
         int value = rand();
-        send_bb(out_buffer,value);
+        write_bb(out_buffer, value);
     }
     // send 2x END signal
-    send_bb(out_buffer,END_SIGNAL);
-    send_bb(out_buffer,END_SIGNAL);
+    write_bb(out_buffer, END_SIGNAL);
+    write_bb(out_buffer, END_SIGNAL);
 
 
     return NULL;

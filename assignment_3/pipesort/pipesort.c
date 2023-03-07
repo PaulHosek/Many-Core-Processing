@@ -43,7 +43,7 @@ thread_node *create_next_node(thread_node *cur_node);
 
 // helper functions -------------------------------
 // send data to bounded_buffer
-void send_bb(bounded_buffer *buffer, int num){
+void append_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
     while (buffer->size == buffer->capacity){
@@ -55,6 +55,21 @@ void send_bb(bounded_buffer *buffer, int num){
     buffer->size++;
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
+}
+int pop_bb(bounded_buffer *buffer){
+    pthread_mutex_lock(&buffer->lock);
+    // wait if full
+    while (buffer->size == 0){
+        pthread_cond_wait(&buffer->not_empty, &buffer->lock);
+    }
+    // write to buffer and update parameters
+    int num = buffer->buffer[buffer->tail];
+    buffer->buffer[buffer->tail] = 0; // not needed but may make debugging easier later
+    buffer->tail = (buffer->tail + buffer->capacity - 1) % buffer->capacity;
+    buffer->size--;
+    pthread_cond_signal(&buffer->not_full);
+    pthread_mutex_unlock(&buffer->lock);
+    return num;
 }
 // initialise bb
 bounded_buffer* create_bb(int capacity) {
@@ -163,12 +178,12 @@ void* gen_thread(void *g_arg){
     bounded_buffer *out_buffer = cur_node->out_buffer;
     for (int i=0; i<cur_args->length; i++){
         int value = rand();
-        send_bb(out_buffer,value);
+        append_bb(out_buffer,value);
     }
 
     // send 2x END signal
-    send_bb(out_buffer,END_SIGNAL);
-    send_bb(out_buffer,END_SIGNAL);
+    append_bb(out_buffer,END_SIGNAL);
+    append_bb(out_buffer,END_SIGNAL);
     return NULL;
 }
 
@@ -176,8 +191,10 @@ void* out_thread(void *o_arg){
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
-    // read from input buffer until end
 
+    // read from input buffer until end
+    // ...
+    //...
 
     out_finished_bool = 1;
     pthread_cond_signal(&out_finished_cond);
