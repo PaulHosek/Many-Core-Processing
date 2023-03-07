@@ -4,7 +4,7 @@
 
 #include <pthread.h>
 
-//Decouple pipeline stages: bounded buffer
+//Decouple pipeline stages: bounded buffer implemented as stack.
 typedef struct {
     int *buffer;        // array to hold the numbers between stages: does all the buffering :)
     int capacity;       // max numbers
@@ -16,7 +16,7 @@ typedef struct {
     pthread_cond_t not_empty;
 } bounded_buffer; // TODO change naming here to snake case
 
-// Main DS: Pipeline implemented as linked list, where each node is a thread with a pointer to the downstream thread
+// Main DS: Pipeline implemented as singly linked list, where each node is a thread with a pointer to the downstream thread
 // points to input and output buffers to move data between threads
 typedef struct Node {
     pthread_t thread_id;
@@ -25,14 +25,12 @@ typedef struct Node {
     struct Node *next;
 } thread_node;
 
-// TODO: not sure about this yet, want to avoid passing NULL but also dont want multiple DS
-//// Arguments DS.
+
 typedef struct {
     int length;
     thread_node *Node;
 } thread_args;
-//    bounded_buffer *in_buffer;
-//    bounded_buffer *out_buffer;
+
 
 
 #endif //MANY_CORE_PROCESSING_PIPESORT_H
