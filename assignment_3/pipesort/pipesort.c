@@ -33,7 +33,8 @@ int arr_thread_idx;
 
 void* test_func(void *c_arg);
 void* HelloWorld_simple(void *out_args);
-void* HelloWorld_node(void *c_arg) ;
+void* HelloWorld_node(void *c_arg);
+void print_bb(bounded_buffer bb);
 
 void* gen_thread(void *t_arg);
 void* out_thread(void *o_arg);
@@ -45,7 +46,8 @@ thread_node *create_next_node(thread_node *cur_node);
 
 
 // helper functions -------------------------------
-// send data to bounded_buffer
+
+// append element to tail position in bb
 void append_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
@@ -59,6 +61,8 @@ void append_bb(bounded_buffer *buffer, int num){
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
 }
+
+// pop element from tail-1 in bb
 int pop_bb(bounded_buffer *buffer){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
@@ -66,7 +70,7 @@ int pop_bb(bounded_buffer *buffer){
         pthread_cond_wait(&buffer->not_empty, &buffer->lock);
     }
     // write to buffer and update parameters
-    int num = buffer->buffer[buffer->tail];
+    int num = buffer->buffer[buffer->tail]-1;
     buffer->buffer[buffer->tail] = 0; // not needed but may make debugging easier later
     buffer->tail = (buffer->tail + buffer->capacity - 1) % buffer->capacity;
     buffer->size--;
@@ -74,6 +78,7 @@ int pop_bb(bounded_buffer *buffer){
     pthread_mutex_unlock(&buffer->lock);
     return num;
 }
+
 // initialise bb
 bounded_buffer* create_bb(int capacity) {
     // Allocate memory for the bounded buffer and buffer array
@@ -91,6 +96,8 @@ bounded_buffer* create_bb(int capacity) {
 
     return buffer;
 }
+
+// free memory of bb
 void destroy_bb(bounded_buffer* buffer) {
     // Destroy mutex and condition variables
     pthread_mutex_destroy(&buffer->lock);
@@ -101,6 +108,8 @@ void destroy_bb(bounded_buffer* buffer) {
     free(buffer->buffer);
     free(buffer);
 }
+
+// create downstream node, link in-and out-buffers
 thread_node *create_next_node(thread_node *cur_node){
     thread_node *out_node = (thread_node *) malloc(sizeof(thread_node));
 
@@ -109,6 +118,8 @@ thread_node *create_next_node(thread_node *cur_node){
     out_node->next = NULL;
     return out_node;
 }
+
+// copy args of node for initialisation of downstream node
 thread_args *create_next_args(thread_args *cur_args, thread_node *out_node){
     thread_args *out_args = (thread_args *) malloc(sizeof(thread_args));
     // Avoid race condition
@@ -116,7 +127,8 @@ thread_args *create_next_args(thread_args *cur_args, thread_node *out_node){
     out_args->Node = out_node;
     return out_args;
 }
-// add thread id to global array for cleanup
+
+// add thread id to global array for cleanup later
 void *add_id_global(void*args){
     pthread_mutex_lock(&arr_thread_mutex);
     pthread_t thread_id = pthread_self();
@@ -180,11 +192,14 @@ void* gen_thread(void *g_arg){
     for (int i=0; i<cur_args->length; i++){
         int value = rand() % (100 + 1 - 50) + 50; // range 50-100
         append_bb(out_buffer,value);
+        print_bb(*out_buffer);
+
     }
 
     // send 2x END signal
     append_bb(out_buffer,END_SIGNAL);
     append_bb(out_buffer,END_SIGNAL);
+    printf("gen_done\n");
     return NULL;
 }
 
@@ -200,8 +215,10 @@ void* out_thread(void *o_arg){
         printf("Num is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
+    printf("END is: %d \n",cur_num);
     // skip first END
     cur_num = pop_bb(cur_in_bb);
+    printf("between is: %d \n",cur_num);
     while(cur_num != END_SIGNAL){
         printf("Num is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
@@ -210,6 +227,7 @@ void* out_thread(void *o_arg){
 
     out_finished_bool = 1;
     pthread_cond_signal(&out_finished_cond);
+    printf("out done\n");
     return o_arg;
 }
 
@@ -369,4 +387,13 @@ void* HelloWorld_node(void *out_args) {
     out_finished_bool = 1;
     pthread_cond_signal(&out_finished_cond);
     return out_args;
+}
+
+void print_bb(bounded_buffer bb){
+    pthread_mutex_lock(&bb.lock);
+    for (int i=0; i<bb.capacity;i++){
+        printf("%d ",bb.buffer[i]);
+    }
+    printf("\n");
+    pthread_mutex_unlock(&bb.lock);
 }
