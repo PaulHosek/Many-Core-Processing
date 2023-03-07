@@ -34,3 +34,5 @@ typedef struct {
 
 
 #endif //MANY_CORE_PROCESSING_PIPESORT_H
+
+//what happens if i use pthread_join(

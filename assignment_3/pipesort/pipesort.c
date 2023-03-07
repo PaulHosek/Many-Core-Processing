@@ -154,7 +154,7 @@ int main(){
     int length = 11; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
-
+    memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
 
     // create generator node
     pthread_t thread_id;
@@ -172,9 +172,16 @@ int main(){
     pthread_mutex_unlock(&out_finished_mutex);
 
     for(int loop = 0; loop < arr_thread_size; loop++)
-        printf("Tid: %lu \n", (unsigned long)arr_thread[loop]);
+        printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
+
 
     for (int i=0; i<arr_thread_size;i++){
+        pthread_t cur_thread = arr_thread[i];
+        if (!(long unsigned)cur_thread){
+            // to account for the array being longer than there are threads assigned, but should not happen ideally
+            // because we know exactly how many threads we need to sort any number sequence
+            break;
+        }
         pthread_join(arr_thread[i],NULL);
     }
 
@@ -207,6 +214,13 @@ void* gen_thread(void *g_arg){
 //    printf("gen_done\n");
     return NULL;
 }
+
+//void * comp_thread(void *c_arg){
+//    add_id_global(NULL);
+//    thread_args *cur_args = (thread_args*)c_arg;
+//    thread_node *cur_node = cur_args->Node;
+//
+//}
 
 void* out_thread(void *o_arg){
     add_id_global(NULL);
