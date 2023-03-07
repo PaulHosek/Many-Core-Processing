@@ -1,6 +1,6 @@
 #ifndef MANY_CORE_PROCESSING_PIPESORT_H
 #define MANY_CORE_PROCESSING_PIPESORT_H
-#endif //MANY_CORE_PROCESSING_PIPESORT_H
+
 
 #include <pthread.h>
 
@@ -35,3 +35,6 @@ typedef struct {
 } thread_args;
 //    bounded_buffer *in_buffer;
 //    bounded_buffer *out_buffer;
+
+
+#endif //MANY_CORE_PROCESSING_PIPESORT_H
