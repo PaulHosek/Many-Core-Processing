@@ -29,7 +29,6 @@ typedef struct Node {
 // TODO: not sure about this yet, want to avoid passing NULL but also dont want multiple DS
 //// Arguments DS.
 typedef struct {
-    int *data;
     int length;
     thread_node *Node;
 } thread_args;

@@ -14,6 +14,7 @@
 //  1. go over and check if all bb destroyed
 //  2. check for memory leaks
 //  3. clean up nodes correctly
+//  4. make sure to only destroy the IN-buffer after ever node cleanup.
 
 
 #define END_SIGNAL -1
@@ -35,6 +36,8 @@ void* HelloWorld_simple(void *out_args);
 void* HelloWorld_node(void *c_arg) ;
 
 void* gen_thread(void *t_arg);
+void* out_thread(void *o_arg);
+
 void send_bb(bounded_buffer *buffer, int num);
 void destroy_bb(bounded_buffer* buffer);
 bounded_buffer* create_bb(int capacity);
@@ -130,18 +133,16 @@ void *add_id_global(void*args){
 // ------------------------------------------------
 int main(){
     printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int data[] = {4, 2, 1, 3};
-    int length = sizeof(data) / sizeof(data[0]);
+    int length = 10; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
 
 
-    // create head node
+    // create generator node
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
     thread_node head_node = {thread_id,NULL,out_buffer,NULL};
-    thread_args args = {data, length, &head_node};
-
+    thread_args args = {length, &head_node};1
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
 
@@ -153,7 +154,7 @@ int main(){
     pthread_mutex_unlock(&out_finished_mutex);
 
     for(int loop = 0; loop < arr_thread_size; loop++)
-        printf("%lu \n", (unsigned long)arr_thread[loop]);
+        printf("Tid: %lu \n", (unsigned long)arr_thread[loop]);
 
     for (int i=0; i<arr_thread_size;i++){
         pthread_join(arr_thread[i],NULL);
@@ -172,12 +173,12 @@ void* gen_thread(void *g_arg){
     if (cur_node->next == NULL) {
         thread_node *out_node = create_next_node(cur_node);
         thread_args *out_args = create_next_args(cur_args,out_node);
-        pthread_create(&out_node->thread_id, NULL, &HelloWorld_node, out_args);
+        pthread_create(&out_node->thread_id, NULL, &out_thread, out_args);
     }
 
     bounded_buffer *out_buffer = cur_node->out_buffer;
     for (int i=0; i<cur_args->length; i++){
-        int value = rand();
+        int value = rand() % (100 + 1 - 50) + 50; // range 50-100
         append_bb(out_buffer,value);
     }
 
@@ -196,13 +197,13 @@ void* out_thread(void *o_arg){
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-        printf("%d \n",cur_num);
+        printf("Num is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
     // skip first END
     cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-        printf("%d \n",cur_num);
+        printf("Num is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
 
