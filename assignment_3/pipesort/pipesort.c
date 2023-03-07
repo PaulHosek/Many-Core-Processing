@@ -129,11 +129,11 @@ int main(){ // only for testing rn
     printf("The pointer is: %p\n", head_node.next);
     printf("test1\n");
 
-//    pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
-    pthread_create(&head_node.thread_id, NULL, &test_func, &args);
+    pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
+//    pthread_create(&head_node.thread_id, NULL, &test_func, &args);
 
 
-    // join all if done
+    // join all threads if done
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
@@ -151,47 +151,9 @@ int main(){ // only for testing rn
     return 0;
 }
 
-// TODO actual main function below
-
-//int main() {
-//
-//    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-//    int data[] = {4, 2, 1, 3};
-//    int length = sizeof(data) / sizeof(data[0]);
-//    arr_thread_size = length;
-//    arr_thread_id = (long unsigned int*)malloc(arr_thread_size*sizeof(long unsigned int));
-//
-//
-//    // create head node
-//    pthread_t thread_id;
-//    bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
-//    thread_node head_node = {thread_id,NULL,out_buffer,NULL,0};
-//    thread_args args = {data, length, &head_node};
-//    printf("The pointer is: %p\n", head_node.next);
-//    printf("test1\n");
-//
-////    pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
-//    pthread_create(&head_node.thread_id, NULL, &test_func, &args);
-//
-//
-//    // join all if done
-//    pthread_mutex_lock(&out_finished_mutex);
-//    while (!out_finished_bool){
-//        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
-//    }
-//    pthread_mutex_unlock(&out_finished_mutex);
-//    for (int i=0; i<arr_thread_size;i++){
-//        pthread_join(arr_thread_id[i],NULL);
-//    }
-//
-//    free(arr_thread_id);
-//    return 0;
-//}
-
-
-void* gen_thread(void *c_arg){
+void* gen_thread(void *g_arg){
     add_id_global(NULL);
-    thread_args *cur_args = (thread_args*)c_arg;
+    thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
 
     // If there is no downstream thread, create an output node/thread
@@ -211,6 +173,18 @@ void* gen_thread(void *c_arg){
     send_bb(out_buffer,END_SIGNAL);
     send_bb(out_buffer,END_SIGNAL);
     return NULL;
+}
+
+void* out_thread(void *o_arg){
+    add_id_global(NULL);
+    thread_args *cur_args = (thread_args*)o_arg;
+    thread_node *cur_node = cur_args->Node;
+    // read from input buffer until end
+
+
+    out_finished_bool = 1;
+    pthread_cond_signal(&out_finished_cond);
+    return o_arg;
 }
 
 
@@ -358,9 +332,8 @@ void* HelloWorld_simple(void *out_args) {
 void* HelloWorld_node(void *out_args) {
     add_id_global(NULL);
     thread_args *t_args = (thread_args*)out_args;
-    printf("test5\n");
     if (t_args != NULL) {
-        printf("Thread id is %lu\n", (unsigned long)t_args->Node->thread_id);
+        printf("HS thread id is %lu\n", (unsigned long)t_args->Node->thread_id);
     } else {
         printf("Error: t_args->Node is null\n");
     }
@@ -371,17 +344,3 @@ void* HelloWorld_node(void *out_args) {
     pthread_cond_signal(&out_finished_cond);
     return out_args;
 }
-
-
-
-
-//
-//
-//// gen RAND + write to buffer
-//for (int i=0; i<length; i++){
-//int value = rand();
-//send_bb(out_buffer,value);
-//}
-//// send 2x END signal
-//send_bb(out_buffer,END_SIGNAL);
-//send_bb(out_buffer,END_SIGNAL);
