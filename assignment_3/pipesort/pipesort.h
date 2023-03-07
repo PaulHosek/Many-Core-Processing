@@ -8,7 +8,6 @@
 typedef struct {
     int *buffer;        // array to hold the numbers between stages: does all the buffering :)
     int capacity;       // max numbers
-    int size;           // cur numbers
     int head;           // index first elem
     int tail;           // index first free elem
     // Access synchronisation

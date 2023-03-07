@@ -119,7 +119,6 @@ bounded_buffer* create_bb(int capacity) {
 
     // Initialise
     buffer->capacity = capacity;
-    buffer->size = 0;
     buffer->head = 0;
     buffer->tail = 0;
     pthread_mutex_init(&buffer->lock, NULL);
@@ -263,118 +262,7 @@ void* out_thread(void *o_arg){
 }
 
 
-//void* comparator_thread(void* args) {
-//    thread_args * comp_args = (thread_args*)args;
-//    thread_node * cur_node = comp_args->Node;
-//    bounded_buffer* in_buffer = cur_node->in_buffer;
-//    bounded_buffer* out_buffer = cur_node->out_buffer;
-//    int stored_value = END_SIGNAL;
-//    int received_value;
-//
-//    while (1) {
-//
-//        // get input from in_buffer
-//        pthread_mutex_lock(&in_buffer->lock);
-//        while (in_buffer->size == 0) { // pthread_cond cannot be evaluated by while
-//            pthread_cond_wait(&in_buffer->not_empty, &in_buffer->lock); // unlock lock and wait until signal
-//        }
-//        received_value = in_buffer->buffer[in_buffer->head];
-//        in_buffer->head = (in_buffer->head + 1) % in_buffer->capacity;
-//        in_buffer->size--;
-//        // wake upstream thread
-//        pthread_cond_signal(&in_buffer->not_full);
-//        pthread_mutex_unlock(&in_buffer->lock);
-//
-//        if (received_value == END_SIGNAL) {
-//            // TODO: If no downstream, create output thread here
-//            if (!comparator_thread.next) {
-//
-//            }
-//            // If get END and downstream exists:
-//            // 1. forward END
-//            // 2. forward stored
-//            // 3. forward everything up to and including second END
-//            // 4. terminate thread
-//
-//            // 1. send received_value/ END to output buffer
-//            pthread_mutex_lock(&out_buffer->lock);
-//            while (out_buffer->size == out_buffer->capacity) {
-//                pthread_cond_wait(&out_buffer->not_full, &out_buffer->lock);
-//            }
-//            out_buffer->buffer[out_buffer->tail] = received_value;
-//            out_buffer->tail = (out_buffer->tail + 1) % out_buffer->capacity;
-//            out_buffer->size++;
-//            pthread_cond_signal(&out_buffer->not_empty);
-//            pthread_mutex_unlock(&out_buffer->lock);
-//
-//            // 2. send stored_value to output buffer
-//            pthread_mutex_lock(&out_buffer->lock);
-//            while (out_buffer->size == out_buffer->capacity) {
-//                pthread_cond_wait(&out_buffer->not_full, &out_buffer->lock);
-//            }
-//            out_buffer->buffer[out_buffer->tail] = stored_value;
-//            out_buffer->tail = (out_buffer->tail + 1) % out_buffer->capacity;
-//            out_buffer->size++;
-//            pthread_cond_signal(&out_buffer->not_empty);
-//            pthread_mutex_unlock(&out_buffer->lock);
-//
-//            // 3. forward everything up to and including second END
-//            do  {
-//                // get input from in_buffer
-//                pthread_mutex_lock(&in_buffer->lock);
-//                while (in_buffer->size == 0) { // pthread_cond cannot be evaluated by while
-//                    pthread_cond_wait(&in_buffer->not_empty, &in_buffer->lock);
-//                }
-//                received_value = in_buffer->buffer[in_buffer->head];
-//                in_buffer->head = (in_buffer->head + 1) % in_buffer->capacity;
-//                in_buffer->size--;
-//                // wake upstream thread
-//                pthread_cond_signal(&in_buffer->not_full);
-//                pthread_mutex_unlock(&in_buffer->lock);
-//                // send received_value to output buffer
-//                pthread_mutex_lock(&out_buffer->lock);
-//                while (out_buffer->size == out_buffer->capacity) {
-//                    pthread_cond_wait(&out_buffer->not_full, &out_buffer->lock);
-//                }
-//                out_buffer->buffer[out_buffer->tail] = received_value;
-//                out_buffer->tail = (out_buffer->tail + 1) % out_buffer->capacity;
-//                out_buffer->size++;
-//                pthread_cond_signal(&out_buffer->not_empty);
-//                pthread_mutex_unlock(&out_buffer->lock);
-//                // 3. Get next received value
-//            } while (received_value != END_SIGNAL);
-//
-//            // 4. terminate thread
-//            pthread_exit(NULL);
-//        }
-//
-//        // compare received_value with stored_value
-//        if (received_value > stored_value) {
-//            // send stored_value to output buffer and update stored_value
-//            pthread_mutex_lock(&out_buffer->lock);
-//            while (out_buffer->size == out_buffer->capacity) {
-//                pthread_cond_wait(&out_buffer->not_full, &out_buffer->lock);
-//            }
-//            out_buffer->buffer[out_buffer->tail] = stored_value;
-//            out_buffer->tail = (out_buffer->tail + 1) % out_buffer->capacity;
-//            out_buffer->size++;
-//            pthread_cond_signal(&out_buffer->not_empty);
-//            pthread_mutex_unlock(&out_buffer->lock);
-//            stored_value = received_value;
-//        } else {
-//            // send received_value to output buffer
-//            pthread_mutex_lock(&out_buffer->lock);
-//            while (out_buffer->size == out_buffer->capacity) {
-//                pthread_cond_wait(&out_buffer->not_full, &out_buffer->lock);
-//            }
-//            out_buffer->buffer[out_buffer->tail] = received_value;
-//            out_buffer->tail = (out_buffer->tail + 1) % out_buffer->capacity;
-//            out_buffer->size++;
-//            pthread_cond_signal(&out_buffer->not_empty);
-//            pthread_mutex_unlock(&out_buffer->lock);
-//        }
-//    }
-//}
+
 
 // ---------------------------------------------------------------------------------------------------
 void* test_func(void *c_arg){
