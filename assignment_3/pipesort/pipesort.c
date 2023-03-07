@@ -142,7 +142,7 @@ int main(){
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
     thread_node head_node = {thread_id,NULL,out_buffer,NULL};
-    thread_args args = {length, &head_node};1
+    thread_args args = {length, &head_node};
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
 
