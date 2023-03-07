@@ -13,15 +13,18 @@
 // TODO:general stuff
 //  1. go over and check if all bb destroyed
 //  2. check for memory leaks
-//  3.
+//  3. clean up nodes correctly
 
 
 #define END_SIGNAL -1
-#define BUFFER_SIZE 10 // Should probs j be 1
+#define BUFFER_SIZE 10
+
+// signaling output thread is finished
 pthread_cond_t out_finished_cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t out_finished_mutex = PTHREAD_MUTEX_INITIALIZER;
 int out_finished_bool = 0;
 
+// global array holding all thread ids
 pthread_mutex_t arr_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t *arr_thread;
 int arr_thread_size;
@@ -105,15 +108,12 @@ void *add_id_global(void*args){
 }
 
 
-
-
-
 // FIXME: reminder: get segfault if do: head_node.next->thread_id, bc next is NULL pointer
 
 
 
 // ------------------------------------------------
-int main(){ // only for testing rn
+int main(){
     printf("Master thread is %lu\n", (unsigned long)pthread_self());
     int data[] = {4, 2, 1, 3};
     int length = sizeof(data) / sizeof(data[0]);
@@ -126,11 +126,8 @@ int main(){ // only for testing rn
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
     thread_node head_node = {thread_id,NULL,out_buffer,NULL};
     thread_args args = {data, length, &head_node};
-    printf("The pointer is: %p\n", head_node.next);
-    printf("test1\n");
 
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
-//    pthread_create(&head_node.thread_id, NULL, &test_func, &args);
 
 
     // join all threads if done
