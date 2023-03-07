@@ -192,9 +192,20 @@ void* out_thread(void *o_arg){
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
 
-    // read from input buffer until end
-    // ...
-    //...
+
+    bounded_buffer * cur_in_bb = cur_node->in_buffer;
+    int cur_num = pop_bb(cur_in_bb);
+    while(cur_num != END_SIGNAL){
+        printf("%d \n",cur_num);
+        cur_num = pop_bb(cur_in_bb);
+    }
+    // skip first END
+    cur_num = pop_bb(cur_in_bb);
+    while(cur_num != END_SIGNAL){
+        printf("%d \n",cur_num);
+        cur_num = pop_bb(cur_in_bb);
+    }
+
 
     out_finished_bool = 1;
     pthread_cond_signal(&out_finished_cond);
