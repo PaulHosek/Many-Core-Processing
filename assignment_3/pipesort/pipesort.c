@@ -47,33 +47,65 @@ thread_node *create_next_node(thread_node *cur_node);
 
 // helper functions -------------------------------
 
-// append element to tail position in bb
-void append_bb(bounded_buffer *buffer, int num){
+// push element to tail position in bb
+//void push_bb(bounded_buffer *buffer, int num){
+//    pthread_mutex_lock(&buffer->lock);
+//    // wait if full
+//    while (buffer->size == buffer->capacity){
+//        printf("append\n");
+//        pthread_cond_wait(&buffer->not_full, &buffer->lock);
+//
+//
+//    }
+//    // write to buffer and update parameters
+//    buffer->buffer[buffer->tail] = num;  // FIXME: here tail can be equal to capacity!!
+////    if (buffer->size){ // if not equal to
+////        buffer->tail++;
+////    }
+//    buffer->tail = (buffer->tail+1) % buffer->capacity; // to be not always less than capacity
+//    buffer->size++;
+//
+//    print_bb(*buffer);
+//    pthread_cond_signal(&buffer->not_empty);
+//    pthread_mutex_unlock(&buffer->lock);
+//}
+
+void push_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
-    while (buffer->size == buffer->capacity){
+    while (buffer->tail == buffer->capacity){
+        printf("append\n");
         pthread_cond_wait(&buffer->not_full, &buffer->lock);
+
     }
     // write to buffer and update parameters
     buffer->buffer[buffer->tail] = num;
-    buffer->tail = (buffer->tail + 1) % buffer->capacity;
-    buffer->size++;
+    buffer->tail++;
+
+    print_bb(*buffer);
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
 }
 
-// pop element from tail-1 in bb
 int pop_bb(bounded_buffer *buffer){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
-    while (buffer->size == 0){
+    while (!(buffer->tail)){
+        printf("pop\n");
         pthread_cond_wait(&buffer->not_empty, &buffer->lock);
+
     }
     // write to buffer and update parameters
-    int num = buffer->buffer[buffer->tail]-1;
-    buffer->buffer[buffer->tail] = 0; // not needed but may make debugging easier later
-    buffer->tail = (buffer->tail + buffer->capacity - 1) % buffer->capacity;
-    buffer->size--;
+
+    int num = buffer->buffer[buffer->tail-1];
+
+    printf("The tail is: %d, num: %d\n",buffer->tail-1, num);
+    print_bb(*buffer);
+    buffer->buffer[buffer->tail-1] = 0; // not needed but may make debugging easier later
+
+    buffer->tail--; // decrease buffer by 1
+
+    print_bb(*buffer);
     pthread_cond_signal(&buffer->not_full);
     pthread_mutex_unlock(&buffer->lock);
     return num;
@@ -145,7 +177,7 @@ void *add_id_global(void*args){
 // ------------------------------------------------
 int main(){
     printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int length = 10; // hard-coded for now
+    int length = 11; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
 
@@ -191,14 +223,13 @@ void* gen_thread(void *g_arg){
     bounded_buffer *out_buffer = cur_node->out_buffer;
     for (int i=0; i<cur_args->length; i++){
         int value = rand() % (100 + 1 - 50) + 50; // range 50-100
-        append_bb(out_buffer,value);
-        print_bb(*out_buffer);
+        push_bb(out_buffer,value);
 
     }
 
     // send 2x END signal
-    append_bb(out_buffer,END_SIGNAL);
-    append_bb(out_buffer,END_SIGNAL);
+    push_bb(out_buffer,END_SIGNAL);
+    push_bb(out_buffer,END_SIGNAL);
     printf("gen_done\n");
     return NULL;
 }
@@ -212,15 +243,15 @@ void* out_thread(void *o_arg){
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-        printf("Num is: %d \n",cur_num);
+        printf("Num1 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
     printf("END is: %d \n",cur_num);
     // skip first END
     cur_num = pop_bb(cur_in_bb);
     printf("between is: %d \n",cur_num);
-    while(cur_num != END_SIGNAL){
-        printf("Num is: %d \n",cur_num);
+    while(cur_num != END_SIGNAL){ // FIXME: race condition or sth fishy, escape loop but print num is: -2. also -2 is not a num we are generatign
+        printf("Num2 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
 
@@ -388,12 +419,41 @@ void* HelloWorld_node(void *out_args) {
     pthread_cond_signal(&out_finished_cond);
     return out_args;
 }
-
+// not thread-safe, use within locked region
 void print_bb(bounded_buffer bb){
-    pthread_mutex_lock(&bb.lock);
+//    pthread_mutex_lock(&bb.lock);
     for (int i=0; i<bb.capacity;i++){
         printf("%d ",bb.buffer[i]);
     }
     printf("\n");
-    pthread_mutex_unlock(&bb.lock);
+//    pthread_mutex_unlock(&bb.lock);
 }
+
+// pop element from tail-1 in bb
+//int pop_bb(bounded_buffer *buffer){
+//    pthread_mutex_lock(&buffer->lock);
+//    // wait if full
+//    while (!buffer->size){
+//        printf("pop\n");
+//        pthread_cond_wait(&buffer->not_empty, &buffer->lock);
+//
+//    }
+//    // write to buffer and update parameters
+////    buffer->tail--;  // FIXME: now buffersize incorrect
+//
+//    int num = buffer->buffer[buffer->tail];
+//
+//    printf("The buffersize is: %d, tail: %d, num: %d\n",buffer->size,buffer->tail, num);
+//    print_bb(*buffer);
+//    buffer->buffer[buffer->tail] = 0; // not needed but may make debugging easier later
+//
+//    buffer->tail = (buffer->tail + buffer->capacity-1) % buffer->capacity; // decrease buffer by 1
+//
+//
+//    buffer->size--;
+//
+//    print_bb(*buffer);
+//    pthread_cond_signal(&buffer->not_full);
+//    pthread_mutex_unlock(&buffer->lock);
+//    return num;
+//}
