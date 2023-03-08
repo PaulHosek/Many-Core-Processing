@@ -25,6 +25,10 @@ pthread_cond_t out_finished_cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t out_finished_mutex = PTHREAD_MUTEX_INITIALIZER;
 int out_finished_bool = 0;
 
+pthread_cond_t nr_active_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t nr_active_mutex = PTHREAD_MUTEX_INITIALIZER;
+int nr_active = 0;
+
 // global array holding all thread ids
 pthread_mutex_t arr_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t *arr_thread;
@@ -155,6 +159,16 @@ void destroy_bb(bounded_buffer* buffer) {
     free(buffer);
 }
 
+void destroy_node_safe(thread_node *cur_node){
+    pthread_mutex_lock(&out_finished_mutex);
+    while (!out_finished_bool){
+        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
+    }
+    destroy_bb(cur_node->in_buffer);
+    free(cur_node);
+    pthread_mutex_unlock(&out_finished_mutex);
+}
+
 // create downstream node, link in-and out-buffers
 thread_node *create_next_node(thread_node *cur_node){
     thread_node *out_node = (thread_node *) malloc(sizeof(thread_node));
@@ -184,6 +198,20 @@ void *add_id_global(void*args){
     return NULL;
 }
 
+void *add_nr_active(void*args){
+    pthread_mutex_lock(&nr_active_mutex);
+    nr_active++;
+    pthread_mutex_unlock(&nr_active_mutex);
+    return NULL;
+}
+
+void *remove_nr_active(void*args){
+    pthread_mutex_lock(&nr_active_mutex);
+    nr_active--;
+    pthread_mutex_unlock(&nr_active_mutex);
+    return NULL;
+}
+
 
 // FIXME: reminder: get segfault if do: head_node.next->thread_id, bc next is NULL pointer
 
@@ -205,12 +233,19 @@ int main(){
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
 
-    // join all threads if done
+    // know out is done
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
+
+    // wait for all other to free memory
+    pthread_mutex_lock(&nr_active_mutex);
+    while (nr_active){
+        pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
+    }
+    pthread_mutex_unlock(&nr_active_mutex);
 
     for(int loop = 0; loop < arr_thread_size; loop++)
         printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
@@ -232,6 +267,7 @@ int main(){
 
 void* gen_thread(void *g_arg){
     add_id_global(NULL);
+    add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
 
@@ -252,12 +288,17 @@ void* gen_thread(void *g_arg){
     // send 2x END signal
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
-//    printf("gen_done\n");
+
+
+    destroy_node_safe(cur_node);
+
+    remove_nr_active(NULL);
     return NULL;
 }
 
 void * comp_thread(void *c_arg){
     add_id_global(NULL);
+    add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)c_arg;
     thread_node *cur_node = cur_args->Node;
     bounded_buffer *in_buffer = cur_node->in_buffer;
@@ -340,11 +381,13 @@ void * comp_thread(void *c_arg){
     printf("This should be 2nd END: %d\n", num);
 
 
-    // TODO delete in_buffer here (not outbuffer)
+    destroy_node_safe(cur_node);
+    remove_nr_active(NULL);
     return NULL;
 }
 
 void* out_thread(void *o_arg){
+    add_nr_active(NULL);
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
@@ -366,10 +409,13 @@ void* out_thread(void *o_arg){
         cur_num = pop_bb(cur_in_bb);
     }
 
-
+    // signal other nodes to destroy
     out_finished_bool = 1;
-    pthread_cond_signal(&out_finished_cond);
-    printf("out done\n");
+    pthread_cond_broadcast(&out_finished_cond);
+    destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
+    destroy_node_safe(cur_node);
+    // signal join that thread is done
+    remove_nr_active(NULL);
     return o_arg;
 }
 
