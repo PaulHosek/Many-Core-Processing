@@ -208,6 +208,9 @@ void *add_nr_active(void*args){
 void *remove_nr_active(void*args){
     pthread_mutex_lock(&nr_active_mutex);
     nr_active--;
+    if (nr_active == 0){
+        pthread_cond_signal(&nr_active_cond);
+    }
     pthread_mutex_unlock(&nr_active_mutex);
     return NULL;
 }
@@ -220,7 +223,7 @@ void *remove_nr_active(void*args){
 // ------------------------------------------------
 int main(){
     printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int length = 2; // hard-coded for now
+    int length = 1; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -244,8 +247,9 @@ int main(){
     pthread_mutex_lock(&nr_active_mutex);
     while (nr_active){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
+        printf("waiting ");
     }
-    pthread_mutex_unlock(&nr_active_mutex);
+
 
     for(int loop = 0; loop < arr_thread_size; loop++)
         printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
@@ -260,6 +264,7 @@ int main(){
         }
         pthread_join(arr_thread[i],NULL);
     }
+    pthread_mutex_unlock(&nr_active_mutex);
 
     free(arr_thread);
     return 0;
@@ -289,7 +294,7 @@ void* gen_thread(void *g_arg){
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
 
-
+    printf("gen done: nr active %d\n",nr_active);
     destroy_node_safe(cur_node);
 
     remove_nr_active(NULL);
@@ -339,7 +344,7 @@ void * comp_thread(void *c_arg){
                 thread_args *ds_args = create_next_args(cur_args,ds_node);
                 // FIXME: Testing here with outnode first
                 pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
-                printf("%lu created comp thread\n", (long unsigned)pthread_self());
+                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
                 no_downstream = 0;
             }
             // b. II comparison
@@ -348,7 +353,7 @@ void * comp_thread(void *c_arg){
                 push_bb(out_buffer,stored);
                 stored = num;
             } else {
-                printf("%lu (comp) pushed %d to comp\n",(long unsigned)pthread_self(), num);
+                printf("comp %lu pushed %d to comp\n",(long unsigned)pthread_self(), num);
                 push_bb(out_buffer,num);
             }
         }
@@ -360,7 +365,7 @@ void * comp_thread(void *c_arg){
     // 2.a if no downstream but end, create output thread
     if (no_downstream){
 //    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
-        printf("%lu created out thread\n", (long unsigned)pthread_self());
+        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
         thread_node *ds_node = create_next_node(cur_node);
         thread_args *ds_args = create_next_args(cur_args,ds_node);
         pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
@@ -380,9 +385,11 @@ void * comp_thread(void *c_arg){
 
     printf("This should be 2nd END: %d\n", num);
 
-
+    printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
     destroy_node_safe(cur_node);
+    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
     remove_nr_active(NULL);
+    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
     return NULL;
 }
 
@@ -396,7 +403,7 @@ void* out_thread(void *o_arg){
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
-    while(cur_num != END_SIGNAL){ // TODO: think we dont need this and can j pop again, bc outnode will only be created if gets -1
+    while(cur_num != END_SIGNAL){
         printf("Num1 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
@@ -415,10 +422,10 @@ void* out_thread(void *o_arg){
     destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
     destroy_node_safe(cur_node);
     // signal join that thread is done
+    printf("out done: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     return o_arg;
 }
-
 
 
 
