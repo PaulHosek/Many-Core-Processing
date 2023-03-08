@@ -199,7 +199,7 @@ thread_args *create_next_args(thread_args *cur_args, thread_node *out_node){
 void *add_id_global(void*args){
     pthread_mutex_lock(&arr_thread_mutex);
     pthread_t thread_id = pthread_self();
-    arr_thread[arr_thread_idx++] = thread_id;
+    arr_thread[arr_thread_idx++] = thread_id;// FIXME: Valgrind detects invalid write here
     pthread_mutex_unlock(&arr_thread_mutex);
     return NULL;
 }
@@ -284,7 +284,7 @@ void* gen_thread(void *g_arg){
     // If there is no downstream thread, create an output node/thread
     if (cur_node->next == NULL) {
         thread_node *comp_node = create_next_node(cur_node);
-        thread_args *comp_args = create_next_args(cur_args,comp_node);
+        thread_args *comp_args = create_next_args(cur_args,comp_node); // FIXME: definite leak here -> 191
         pthread_create(&comp_node->thread_id, NULL, &comp_thread, comp_args);
     }
     bounded_buffer *out_buffer = cur_node->out_buffer;
@@ -308,7 +308,7 @@ void* gen_thread(void *g_arg){
 }
 
 void * comp_thread(void *c_arg){
-    add_id_global(NULL);
+    add_id_global(NULL); // FIXME: invalid write every call to this function essentially
     add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)c_arg;
     thread_node *cur_node = cur_args->Node;
@@ -347,9 +347,9 @@ void * comp_thread(void *c_arg){
             if (no_downstream){
 //            if (cur_node->next == NULL){
                 thread_node *ds_node = create_next_node(cur_node);
-                thread_args *ds_args = create_next_args(cur_args,ds_node);
+                thread_args *ds_args = create_next_args(cur_args,ds_node); // FIXME: possible leak here
                 // FIXME: Testing here with outnode first
-                pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
+                pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args); // FIXME: possible leak here
 //                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
                 no_downstream = 0;
             }
@@ -374,7 +374,7 @@ void * comp_thread(void *c_arg){
 //        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
         thread_node *ds_node = create_next_node(cur_node);
         thread_args *ds_args = create_next_args(cur_args,ds_node);
-        pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
+        pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args); // FIXME: possible memory leak here
         no_downstream = 0;
     }
     // 2.b send END, send stored, keep sending input until second END
