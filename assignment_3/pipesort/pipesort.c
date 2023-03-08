@@ -102,8 +102,8 @@ void push_bb(bounded_buffer *buffer, int num){
     // write to buffer and update parameters
     buffer->buffer[(buffer->head + buffer->count) % buffer->capacity] = num;
     buffer->count++;
-    printf("%lu pushed %d  | ",(unsigned long)pthread_self(), num);
-    print_bb(*buffer);
+//    printf("%lu pushed %d  | ",(unsigned long)pthread_self(), num);
+//    print_bb(*buffer);
 
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
@@ -120,8 +120,8 @@ int pop_bb(bounded_buffer *buffer){
     buffer->buffer[buffer->head] = 0; // probs don't need this but for debugging if print_bb
     buffer->head = (buffer->head + 1) % buffer->capacity;
     buffer->count--;
-    printf("%lu popped %d  | ",(unsigned long)pthread_self(), num);
-    print_bb(*buffer);
+//    printf("%lu popped %d  | ",(unsigned long)pthread_self(), num);
+//    print_bb(*buffer);
 
     pthread_cond_signal(&buffer->not_full);
     pthread_mutex_unlock(&buffer->lock);
@@ -161,7 +161,7 @@ void destroy_bb(bounded_buffer* buffer) {
 }
 
 void destroy_node_safe(thread_node *cur_node, int head_node){
-    printf("(attempt) %lu attempts to destroy its node\n", (long unsigned)pthread_self());
+//    printf("(attempt) %lu attempts to destroy its node\n", (long unsigned)pthread_self());
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
@@ -171,7 +171,7 @@ void destroy_node_safe(thread_node *cur_node, int head_node){
     }
     free(cur_node);
     pthread_mutex_unlock(&out_finished_mutex);
-    printf("(destoyed) %lu has destroyed its node\n", (long unsigned)pthread_self());
+//    printf("(destoyed) %lu has destroyed its node\n", (long unsigned)pthread_self());
 }
 
 // create downstream node, link in-and out-buffers
@@ -227,8 +227,8 @@ void *remove_nr_active(void*args){
 
 // ------------------------------------------------
 int main(){
-    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int length = 1; // hard-coded for now
+//    printf("Master thread is %lu\n", (unsigned long)pthread_self());
+    int length = 8; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -252,7 +252,7 @@ int main(){
     pthread_mutex_lock(&nr_active_mutex);
     while (nr_active){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
-        printf("waiting ");
+//        printf("waiting ");
     }
 
 
@@ -299,9 +299,9 @@ void* gen_thread(void *g_arg){
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
 
-    printf("gen done: nr active %d\n",nr_active);
-    destroy_node_safe(cur_node, 0); // FIXME -> this line only leads to problems, but not in other functions only here
-    printf("gen node in buffer %p", cur_node->in_buffer);
+//    printf("gen done: nr active %d\n",nr_active);
+//    destroy_node_safe(cur_node, 1); // FIXME -> this line only leads to problems, but not in other functions only here
+//    printf("gen node in buffer %p", cur_node->in_buffer);
 
     remove_nr_active(NULL);
     return NULL;
@@ -337,12 +337,12 @@ void * comp_thread(void *c_arg){
         // a. store number if empty
 
         if (stored == -2){
-            printf("init store replace %d with %d\n ",stored, num);
+//            printf("init store replace %d with %d\n ",stored, num);
             stored = num;
 //            num = pop_bb(in_buffer);
 //            continue;
         } else {
-            printf("else num is %d\n", num);
+//            printf("else num is %d\n", num);
             // b. I create downstream comp_node if not exist
             if (no_downstream){
 //            if (cur_node->next == NULL){
@@ -350,28 +350,28 @@ void * comp_thread(void *c_arg){
                 thread_args *ds_args = create_next_args(cur_args,ds_node);
                 // FIXME: Testing here with outnode first
                 pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
-                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
+//                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
                 no_downstream = 0;
             }
             // b. II comparison
             if (stored < num){
-                printf("replace stored: %d< %d\n", stored,num);
+//                printf("replace stored: %d< %d\n", stored,num);
                 push_bb(out_buffer,stored);
                 stored = num;
             } else {
-                printf("comp %lu pushed %d to comp\n",(long unsigned)pthread_self(), num);
+//                printf("comp %lu pushed %d to comp\n",(long unsigned)pthread_self(), num);
                 push_bb(out_buffer,num);
             }
         }
 
         num = pop_bb(in_buffer);
-        printf("%lu 's num is %d \n", (long unsigned)pthread_self(), num);
+//        printf("%lu 's num is %d \n", (long unsigned)pthread_self(), num);
     }
 
     // 2.a if no downstream but end, create output thread
     if (no_downstream){
 //    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
-        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
+//        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
         thread_node *ds_node = create_next_node(cur_node);
         thread_args *ds_args = create_next_args(cur_args,ds_node);
         pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
@@ -389,13 +389,13 @@ void * comp_thread(void *c_arg){
     }
     push_bb(out_buffer,num); // send 2nd END
 
-    printf("This should be 2nd END: %d\n", num);
+//    printf("This should be 2nd END: %d\n", num);
 
-    printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
+//    printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
     destroy_node_safe(cur_node,0);
-    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
+//    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
     remove_nr_active(NULL);
-    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
+//    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
     return NULL;
 }
 
@@ -404,7 +404,7 @@ void* out_thread(void *o_arg){
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
-    printf("outthread %lu bb\n",(long unsigned)pthread_self());
+//    printf("outthread %lu bb\n",(long unsigned)pthread_self());
 
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
@@ -426,10 +426,10 @@ void* out_thread(void *o_arg){
     out_finished_bool = 1;
     pthread_cond_broadcast(&out_finished_cond);
     destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
-    printf("outbuffer outhread destroyed \n");
+//    printf("outbuffer outhread destroyed \n");
     destroy_node_safe(cur_node,0);
     // signal join that thread is done
-    printf("outnode destroyed: nr active %d\n",nr_active);
+//    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     return o_arg;
 }
