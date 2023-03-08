@@ -205,8 +205,9 @@ void* gen_thread(void *g_arg){
     bounded_buffer *out_buffer = cur_node->out_buffer;
 
     for (int i=0; i<cur_args->length; i++){
-        int value = rand() % (100 + 1 - 50) + 50; // range 50-100
+        int value = rand() % (200 + 1 - 50) + 50; // range 50-200
         push_bb(out_buffer,value);
+        printf("gen value: %d\n", value);
 
     }
 
@@ -224,48 +225,55 @@ void * comp_thread(void *c_arg){
     bounded_buffer *in_buffer = cur_node->in_buffer;
     bounded_buffer *out_buffer = cur_node->out_buffer;
     int stored = cur_node->stored;
-    // TODO: pseudo code of what to do
+    // TODO: pseudo code of behaviour to implement
     //  1. wait for input as long as not END
     //      a. if store empty -> store number
     //      b. else
-    //          0: if node.next == NULL -> create downstream node
-    //          I. if store < new: -> send store away and save new in store
-    //          II. else (store >new): -> send new number away
+    //          I: if node.next == NULL -> create downstream node
+    //          II. if store < new: -> send store away and save new in store
+    //              II. else (store >new): -> send new number away
     //  2. if END
     //      a. if no downstream node -> create downstream OUTPUT node
-    //      b. else:
-    //          I. send END && stored in that order
-    //          II. while (new != END): send away immediately without storing
+    //      b.      else:
+    //                   I. send END && stored in that order
+    //                  II. while (new != END): send away immediately without storing
     //  3. send END
     //  done
 
     // 1. wait for input as long as not END
     int num = pop_bb(in_buffer);
-
     while (num != END_SIGNAL){
-        // a. store number if empty
+        printf("received num %d\n", num);
+        num = pop_bb(in_buffer);
+    }
+
+//    while (num != END_SIGNAL){
+//        // a. store number if empty
 //        if (stored != -1){
 //            stored = num;
 //            num = pop_bb(in_buffer);
 //            continue;
 //        }
-        // b. create downstream comp_node if not exist
-        if (cur_node->next == NULL){
-            thread_node *comp_node = create_next_node(cur_node);
-            thread_args *comp_args = create_next_args(cur_args,comp_node);
-            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
-        }
-        printf("num %d \n", num);
-        print_bb(*out_buffer);
-        if (num <75){
-            push_bb(out_buffer,num);
-        }
+//        // b. I create downstream comp_node if not exist
+//        if (cur_node->next == NULL){
+//            thread_node *comp_node = create_next_node(cur_node);
+//            thread_args *comp_args = create_next_args(cur_args,comp_node);
+//            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
+//        }
+//        // b. II comparison
+//        if (stored < num){
+//            push_bb(out_buffer,stored);
+//            stored = num;
+//        } else {
+//            push_bb(out_buffer,num);
+//        }
+//        print_bb(*out_buffer);
+//
+//        num = pop_bb(in_buffer);
+//
+//    }
 
-        num = pop_bb(in_buffer);
-
-    }
-
-    printf("outside while, num is %d\n", num);
+    printf("This should be END: %d\n", num);
 
     // TODO delete in_buffer here (not outbuffer)
     return NULL;
@@ -275,13 +283,13 @@ void* out_thread(void *o_arg){
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
+    printf("outthread bb\n");
     print_bb(*cur_node->in_buffer);
-
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-//        printf("Num1 is: %d \n",cur_num);
+        printf("Num1 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
 //    printf("END is: %d \n",cur_num);
@@ -289,7 +297,7 @@ void* out_thread(void *o_arg){
     cur_num = pop_bb(cur_in_bb);
 //    printf("between is: %d \n",cur_num);
     while(cur_num != END_SIGNAL){
-//        printf("Num2 is: %d \n",cur_num);
+        printf("Num2 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
 
