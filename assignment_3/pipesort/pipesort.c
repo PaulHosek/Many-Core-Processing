@@ -216,9 +216,9 @@ int main(){
     for(int loop = 0; loop < arr_thread_size; loop++)
         printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
 
-
     for (int i=0; i<arr_thread_size;i++){
         pthread_t cur_thread = arr_thread[i];
+
         if (!(long unsigned)cur_thread){
             // to account for the array being longer than there are threads assigned, but should not happen ideally
             // because we know exactly how many threads we need to sort any number sequence
@@ -285,33 +285,34 @@ void * comp_thread(void *c_arg){
         num = pop_bb(in_buffer);
     }
 
-//    while (num != END_SIGNAL){
-//        // a. store number if empty
-//        if (stored != -1){
-//            stored = num;
-//            num = pop_bb(in_buffer);
-//            continue;
-//        }
-//        // b. I create downstream comp_node if not exist
-//        if (cur_node->next == NULL){
-//            thread_node *comp_node = create_next_node(cur_node);
-//            thread_args *comp_args = create_next_args(cur_args,comp_node);
-//            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
-//        }
-//        // b. II comparison
-//        if (stored < num){
-//            push_bb(out_buffer,stored);
-//            stored = num;
-//        } else {
-//            push_bb(out_buffer,num);
-//        }
-//        print_bb(*out_buffer);
-//
-//        num = pop_bb(in_buffer);
-//
-//    }
+    while (num != END_SIGNAL){
+        // a. store number if empty
+        if (stored != -1){
+            stored = num;
+            num = pop_bb(in_buffer);
+            continue;
+        }
+        // b. I create downstream comp_node if not exist
+        if (cur_node->next == NULL){
+            thread_node *comp_node = create_next_node(cur_node);
+            thread_args *comp_args = create_next_args(cur_args,comp_node);
+            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
+        }
+        // b. II comparison
+        if (stored < num){
+            push_bb(out_buffer,stored);
+            stored = num;
+        } else {
+            push_bb(out_buffer,num);
+        }
+        print_bb(*out_buffer);
+
+        num = pop_bb(in_buffer);
+
+    }
 
     printf("This should be END: %d\n", num);
+
 
     // TODO delete in_buffer here (not outbuffer)
     return NULL;
