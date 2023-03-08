@@ -49,43 +49,82 @@ thread_node *create_next_node(thread_node *cur_node);
 // helper functions -------------------------------
 
 // push element to tail position in bb
+//void push_bb(bounded_buffer *buffer, int num){
+//    pthread_mutex_lock(&buffer->lock);
+//    // wait if full
+//    while (buffer->tail == buffer->capacity){
+//        pthread_cond_wait(&buffer->not_full, &buffer->lock);
+//
+//    }
+//    // write to buffer and update parameters
+//    buffer->buffer[buffer->tail] = num;
+//    buffer->tail++;
+//
+////    print_bb(*buffer);
+//    pthread_cond_signal(&buffer->not_empty);
+//    pthread_mutex_unlock(&buffer->lock);
+//}
+//
+//int pop_bb(bounded_buffer *buffer){
+//    pthread_mutex_lock(&buffer->lock);
+//    // wait if full
+//    while (!(buffer->tail)){
+//        pthread_cond_wait(&buffer->not_empty, &buffer->lock);
+//
+//    }
+//    // write to buffer and update parameters
+//
+//    int num = buffer->buffer[buffer->tail-1];
+//    //    printf("The tail is: %d, num: %d\n",buffer->tail-1, num);
+////    print_bb(*buffer);
+//    buffer->buffer[buffer->tail-1] = 0; // not needed but may make debugging easier later
+//
+//    buffer->tail--; // decrease buffer by 1
+//
+////    print_bb(*buffer);
+//    pthread_cond_signal(&buffer->not_full);
+//    pthread_mutex_unlock(&buffer->lock);
+//    return num;
+//}
+
+// queue implementation
 void push_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
     // wait if full
-    while (buffer->tail == buffer->capacity){
+    while (buffer->count == buffer->capacity){
         pthread_cond_wait(&buffer->not_full, &buffer->lock);
 
     }
     // write to buffer and update parameters
-    buffer->buffer[buffer->tail] = num;
-    buffer->tail++;
+    buffer->buffer[(buffer->head + buffer->count) % buffer->capacity] = num;
+    buffer->count++;
+    printf("capacity %d | ", buffer->capacity);
+    printf("pushed %d |  ", num);
+    print_bb(*buffer);
 
-//    print_bb(*buffer);
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
 }
 
 int pop_bb(bounded_buffer *buffer){
     pthread_mutex_lock(&buffer->lock);
-    // wait if full
-    while (!(buffer->tail)){
+    // wait if empty
+    while (buffer->count == 0){
         pthread_cond_wait(&buffer->not_empty, &buffer->lock);
-
     }
-    // write to buffer and update parameters
+    // read from buffer and update parameters
+    int num = buffer->buffer[buffer->head];
+    buffer->buffer[buffer->head] = 0; // probs don't need this but for debugging if print_bb
+    buffer->head = (buffer->head + 1) % buffer->capacity;
+    buffer->count--;
+    printf("popped %d  | ", num);
+    print_bb(*buffer);
 
-    int num = buffer->buffer[buffer->tail-1];
-    //    printf("The tail is: %d, num: %d\n",buffer->tail-1, num);
-//    print_bb(*buffer);
-    buffer->buffer[buffer->tail-1] = 0; // not needed but may make debugging easier later
-
-    buffer->tail--; // decrease buffer by 1
-
-//    print_bb(*buffer);
     pthread_cond_signal(&buffer->not_full);
     pthread_mutex_unlock(&buffer->lock);
     return num;
 }
+
 
 // initialise bb
 bounded_buffer* create_bb(int capacity) {
@@ -97,6 +136,7 @@ bounded_buffer* create_bb(int capacity) {
     buffer->capacity = capacity;
     buffer->head = 0;
     buffer->tail = 0;
+    buffer->count = 0;
     pthread_mutex_init(&buffer->lock, NULL);
     pthread_cond_init(&buffer->not_full, NULL);
     pthread_cond_init(&buffer->not_empty, NULL);
@@ -207,7 +247,6 @@ void* gen_thread(void *g_arg){
     for (int i=0; i<cur_args->length; i++){
         int value = rand() % (200 + 1 - 50) + 50; // range 50-200
         push_bb(out_buffer,value);
-        printf("gen value: %d\n", value);
 
     }
 
@@ -243,7 +282,6 @@ void * comp_thread(void *c_arg){
     // 1. wait for input as long as not END
     int num = pop_bb(in_buffer);
     while (num != END_SIGNAL){
-        printf("received num %d\n", num);
         num = pop_bb(in_buffer);
     }
 
@@ -284,7 +322,7 @@ void* out_thread(void *o_arg){
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
     printf("outthread bb\n");
-    print_bb(*cur_node->in_buffer);
+
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
