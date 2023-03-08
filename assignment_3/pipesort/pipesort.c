@@ -116,7 +116,7 @@ int pop_bb(bounded_buffer *buffer){
     buffer->buffer[buffer->head] = 0; // probs don't need this but for debugging if print_bb
     buffer->head = (buffer->head + 1) % buffer->capacity;
     buffer->count--;
-    printf("popped %d  | ", num);
+    printf("%lu popped %d  | ",(unsigned long)pthread_self(), num);
     print_bb(*buffer);
 
     pthread_cond_signal(&buffer->not_full);
@@ -282,29 +282,35 @@ void * comp_thread(void *c_arg){
     int num = pop_bb(in_buffer);
     while (num != END_SIGNAL){
         // a. store number if empty
+
         if (stored == -2){
             printf("init store replace %d with %d\n ",stored, num);
             stored = num;
             num = pop_bb(in_buffer);
-            continue;
-        }
-        // b. I create downstream comp_node if not exist
-        if (cur_node->next == NULL){
-            thread_node *ds_node = create_next_node(cur_node);
-            thread_args *ds_args = create_next_args(cur_args,ds_node);
-            // FIXME: Testing here with outnode first
-            pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
-            printf("%lu created comp thread\n", (long unsigned)pthread_self());
-        }
-        // b. II comparison
-        if (stored < num){
-            printf("replace stored: %d< %d\n", stored,num);
-            push_bb(out_buffer,stored);
-            stored = num;
+//            continue;
         } else {
-            push_bb(out_buffer,num);
+            printf("else num is %d\n", num);
+            // b. I create downstream comp_node if not exist
+            if (cur_node->next == NULL){
+                thread_node *ds_node = create_next_node(cur_node);
+                thread_args *ds_args = create_next_args(cur_args,ds_node);
+                // FIXME: Testing here with outnode first
+                pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
+                printf("%lu created comp thread\n", (long unsigned)pthread_self());
+            }
+            // b. II comparison
+            if (stored < num){
+                printf("replace stored: %d< %d\n", stored,num);
+                push_bb(out_buffer,stored);
+                stored = num;
+            } else {
+                printf("%lu (comp) pushed %d to comp\n",(long unsigned)pthread_self(), num);
+                push_bb(out_buffer,num);
+            }
         }
+
         num = pop_bb(in_buffer);
+        printf("%lu 's num is %d \n", (long unsigned)pthread_self(), num);
     }
 
     // 2.a if no downstream but end, create output thread
