@@ -157,16 +157,21 @@ void destroy_bb(bounded_buffer* buffer) {
     // Free memory used by buffer array and buffer struct
     free(buffer->buffer);
     free(buffer);
+
 }
 
-void destroy_node_safe(thread_node *cur_node){
+void destroy_node_safe(thread_node *cur_node, int head_node){
+    printf("(attempt) %lu attempts to destroy its node\n", (long unsigned)pthread_self());
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
-    destroy_bb(cur_node->in_buffer);
+    if (!head_node){
+        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
+    }
     free(cur_node);
     pthread_mutex_unlock(&out_finished_mutex);
+    printf("(destoyed) %lu has destroyed its node\n", (long unsigned)pthread_self());
 }
 
 // create downstream node, link in-and out-buffers
@@ -231,7 +236,7 @@ int main(){
     // create generator node
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
-    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL};
+    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL}; // FIXME: problem is we are not assigning any memory for in buffer of  first node
     thread_args args = {length, &head_node};
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
@@ -295,7 +300,8 @@ void* gen_thread(void *g_arg){
     push_bb(out_buffer,END_SIGNAL);
 
     printf("gen done: nr active %d\n",nr_active);
-    destroy_node_safe(cur_node);
+    destroy_node_safe(cur_node, 0); // FIXME -> this line only leads to problems, but not in other functions only here
+    printf("gen node in buffer %p", cur_node->in_buffer);
 
     remove_nr_active(NULL);
     return NULL;
@@ -386,7 +392,7 @@ void * comp_thread(void *c_arg){
     printf("This should be 2nd END: %d\n", num);
 
     printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
-    destroy_node_safe(cur_node);
+    destroy_node_safe(cur_node,0);
     printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
     remove_nr_active(NULL);
     printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
@@ -398,7 +404,7 @@ void* out_thread(void *o_arg){
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
-    printf("outthread bb\n");
+    printf("outthread %lu bb\n",(long unsigned)pthread_self());
 
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
@@ -420,9 +426,10 @@ void* out_thread(void *o_arg){
     out_finished_bool = 1;
     pthread_cond_broadcast(&out_finished_cond);
     destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
-    destroy_node_safe(cur_node);
+    printf("outbuffer outhread destroyed \n");
+    destroy_node_safe(cur_node,0);
     // signal join that thread is done
-    printf("out done: nr active %d\n",nr_active);
+    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     return o_arg;
 }
