@@ -98,7 +98,6 @@ void push_bb(bounded_buffer *buffer, int num){
     // write to buffer and update parameters
     buffer->buffer[(buffer->head + buffer->count) % buffer->capacity] = num;
     buffer->count++;
-    printf("capacity %d | ", buffer->capacity);
     printf("pushed %d |  ", num);
     print_bb(*buffer);
 
@@ -163,7 +162,7 @@ thread_node *create_next_node(thread_node *cur_node){
     out_node->in_buffer = cur_node->out_buffer; // map buffer of prev to next
     out_node->out_buffer = create_bb(BUFFER_SIZE);
     out_node->next = NULL;
-    out_node->stored = -1;
+    out_node->stored = -2; // untouched, -1 is end flag
     return out_node;
 }
 
@@ -282,13 +281,10 @@ void * comp_thread(void *c_arg){
     // 1. wait for input as long as not END
     int num = pop_bb(in_buffer);
     while (num != END_SIGNAL){
-        num = pop_bb(in_buffer);
-    }
-
-    while (num != END_SIGNAL){
         // a. store number if empty
-        if (stored != -1){
+        if (stored == -2){
             stored = num;
+            printf("stored %d\n ",num);
             num = pop_bb(in_buffer);
             continue;
         }
@@ -300,15 +296,14 @@ void * comp_thread(void *c_arg){
         }
         // b. II comparison
         if (stored < num){
+            printf("replace stored: %d< %d\n", stored,num);
             push_bb(out_buffer,stored);
+
             stored = num;
         } else {
             push_bb(out_buffer,num);
         }
-        print_bb(*out_buffer);
-
         num = pop_bb(in_buffer);
-
     }
 
     printf("This should be END: %d\n", num);
