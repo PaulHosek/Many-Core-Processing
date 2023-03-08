@@ -192,7 +192,7 @@ void *add_id_global(void*args){
 // ------------------------------------------------
 int main(){
     printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int length = 11; // hard-coded for now
+    int length = 2; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -269,7 +269,7 @@ void * comp_thread(void *c_arg){
     //      b. else
     //          I: if node.next == NULL -> create downstream node
     //          II. if store < new: -> send store away and save new in store
-    //              II. else (store >new): -> send new number away
+    //              -> else (store >new): -> send new number away
     //  2. if END
     //      a. if no downstream node -> create downstream OUTPUT node
     //      b.      else:
@@ -283,22 +283,23 @@ void * comp_thread(void *c_arg){
     while (num != END_SIGNAL){
         // a. store number if empty
         if (stored == -2){
+            printf("init store replace %d with %d\n ",stored, num);
             stored = num;
-            printf("stored %d\n ",num);
             num = pop_bb(in_buffer);
             continue;
         }
         // b. I create downstream comp_node if not exist
         if (cur_node->next == NULL){
-            thread_node *comp_node = create_next_node(cur_node);
-            thread_args *comp_args = create_next_args(cur_args,comp_node);
-            pthread_create(&comp_node->thread_id, NULL, &out_thread, comp_args);// FIXME: Testing here with outnode first
+            thread_node *ds_node = create_next_node(cur_node);
+            thread_args *ds_args = create_next_args(cur_args,ds_node);
+            // FIXME: Testing here with outnode first
+            pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
+            printf("%lu created comp thread\n", (long unsigned)pthread_self());
         }
         // b. II comparison
         if (stored < num){
             printf("replace stored: %d< %d\n", stored,num);
             push_bb(out_buffer,stored);
-
             stored = num;
         } else {
             push_bb(out_buffer,num);
@@ -306,7 +307,26 @@ void * comp_thread(void *c_arg){
         num = pop_bb(in_buffer);
     }
 
-    printf("This should be END: %d\n", num);
+    // 2.a if no downstream but end, create output thread
+    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
+        printf("%lu created out thread\n", (long unsigned)pthread_self());
+        thread_node *ds_node = create_next_node(cur_node);
+        thread_args *ds_args = create_next_args(cur_args,ds_node);
+        pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
+    }
+    // 2.b send END, send stored, keep sending input until second END
+    push_bb(out_buffer,num); // send END
+    if (stored != -2){
+        push_bb(out_buffer,stored); // send stored
+    }
+    num = pop_bb(in_buffer);
+    while (num != END_SIGNAL){
+        push_bb(out_buffer, num);
+        num = pop_bb(in_buffer);
+    }
+    push_bb(out_buffer,num); // send 2nd END
+
+    printf("This should be 2nd END: %d\n", num);
 
 
     // TODO delete in_buffer here (not outbuffer)
@@ -322,7 +342,7 @@ void* out_thread(void *o_arg){
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
-    while(cur_num != END_SIGNAL){
+    while(cur_num != END_SIGNAL){ // TODO: think we dont need this and can j pop again, bc outnode will only be created if gets -1
         printf("Num1 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
