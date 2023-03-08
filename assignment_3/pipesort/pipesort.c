@@ -262,6 +262,7 @@ void * comp_thread(void *c_arg){
     thread_node *cur_node = cur_args->Node;
     bounded_buffer *in_buffer = cur_node->in_buffer;
     bounded_buffer *out_buffer = cur_node->out_buffer;
+    int no_downstream = 1;
     int stored = cur_node->stored;
     // TODO: pseudo code of behaviour to implement
     //  1. wait for input as long as not END
@@ -291,12 +292,14 @@ void * comp_thread(void *c_arg){
         } else {
             printf("else num is %d\n", num);
             // b. I create downstream comp_node if not exist
-            if (cur_node->next == NULL){
+            if (no_downstream){
+//            if (cur_node->next == NULL){
                 thread_node *ds_node = create_next_node(cur_node);
                 thread_args *ds_args = create_next_args(cur_args,ds_node);
                 // FIXME: Testing here with outnode first
                 pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
                 printf("%lu created comp thread\n", (long unsigned)pthread_self());
+                no_downstream = 0;
             }
             // b. II comparison
             if (stored < num){
@@ -314,11 +317,13 @@ void * comp_thread(void *c_arg){
     }
 
     // 2.a if no downstream but end, create output thread
-    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
+    if (no_downstream){
+//    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
         printf("%lu created out thread\n", (long unsigned)pthread_self());
         thread_node *ds_node = create_next_node(cur_node);
         thread_args *ds_args = create_next_args(cur_args,ds_node);
         pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
+        no_downstream = 0;
     }
     // 2.b send END, send stored, keep sending input until second END
     push_bb(out_buffer,num); // send END
