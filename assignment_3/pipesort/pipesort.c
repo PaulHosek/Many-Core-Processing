@@ -98,7 +98,7 @@ void push_bb(bounded_buffer *buffer, int num){
     // write to buffer and update parameters
     buffer->buffer[(buffer->head + buffer->count) % buffer->capacity] = num;
     buffer->count++;
-    printf("pushed %d |  ", num);
+    printf("%lu pushed %d  | ",(unsigned long)pthread_self(), num);
     print_bb(*buffer);
 
     pthread_cond_signal(&buffer->not_empty);
@@ -286,7 +286,7 @@ void * comp_thread(void *c_arg){
         if (stored == -2){
             printf("init store replace %d with %d\n ",stored, num);
             stored = num;
-            num = pop_bb(in_buffer);
+//            num = pop_bb(in_buffer);
 //            continue;
         } else {
             printf("else num is %d\n", num);
