@@ -43,6 +43,7 @@ void print_bb(bounded_buffer bb);
 void* gen_thread(void *t_arg);
 void* out_thread(void *o_arg);
 void * comp_thread(void *c_arg);
+int pipesort_scheduler(int length);
 
 void send_bb(bounded_buffer *buffer, int num);
 void destroy_bb(bounded_buffer* buffer);
@@ -226,9 +227,8 @@ void *remove_nr_active(void*args){
 
 
 // ------------------------------------------------
-int main(){
+int pipesort_scheduler(int length){
 //    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    int length = 8; // hard-coded for now
     arr_thread_size = length;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -434,7 +434,49 @@ void* out_thread(void *o_arg){
     return o_arg;
 }
 
+int main(int argc, char *argv[]){
+    int c;
+    int seed = 42;
+    long length = 12;//1e4
 
+    struct timespec before;
+    struct timespec  after;
+
+
+
+    /* Read command-line options. */
+    while((c = getopt(argc, argv, "l:s:")) != -1) {
+        switch(c) {
+            case 'l':
+                length = atol(optarg);
+                break;
+            case 's':
+                seed = atoi(optarg);
+                break;
+            case '?':
+                fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
+                return -1;
+            default:
+                return -1;
+        }
+    }
+
+    /* Seed such that we can always reproduce the same random vector */
+    srand(seed);
+
+    clock_gettime(CLOCK_MONOTONIC, &before);
+    /* Do your thing here */
+    pipesort_scheduler(length);
+
+
+    /* Do your thing here */
+    clock_gettime(CLOCK_MONOTONIC, &after);
+    double time = (double)(after.tv_sec - before.tv_sec) +
+                  (double)(after.tv_nsec - before.tv_nsec) / 1e9;
+
+    printf("Pipesort took: % .6e seconds \n", time);
+
+}
 
 // ---------------------------------------------------------------------------------------------------
 void* test_func(void *c_arg){
