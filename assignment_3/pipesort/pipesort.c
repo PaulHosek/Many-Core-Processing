@@ -313,7 +313,7 @@ void* gen_thread(void *g_arg){
 //        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
 //    }
 //    free(cur_node);
-    free(cur_args);
+//    free(cur_args);
     remove_nr_active(NULL);
     return NULL;
 }
