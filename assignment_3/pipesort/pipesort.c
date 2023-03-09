@@ -229,6 +229,7 @@ void *remove_nr_active(void*args){
 // ------------------------------------------------
 int pipesort_scheduler(int length){
 //    printf("Master thread is %lu\n", (unsigned long)pthread_self());
+    length = 1; // TODO: this should be length + 2
     arr_thread_size = length+2;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -392,7 +393,7 @@ void * comp_thread(void *c_arg){
 //    printf("This should be 2nd END: %d\n", num);
 
 //    printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
-    destroy_node_safe(cur_node,0);
+//    destroy_node_safe(cur_node,0);
 //    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
     remove_nr_active(NULL);
 //    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
@@ -427,7 +428,7 @@ void* out_thread(void *o_arg){
     pthread_cond_broadcast(&out_finished_cond);
     destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
 //    printf("outbuffer outhread destroyed \n");
-    destroy_node_safe(cur_node,0);
+//    destroy_node_safe(cur_node,0);
     // signal join that thread is done
 //    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
