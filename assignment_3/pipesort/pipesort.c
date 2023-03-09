@@ -229,7 +229,7 @@ void *remove_nr_active(void*args){
 // ------------------------------------------------
 int pipesort_scheduler(int length){
 //    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    arr_thread_size = length;
+    arr_thread_size = length+2;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
 
