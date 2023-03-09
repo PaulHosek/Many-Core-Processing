@@ -285,11 +285,14 @@ void* gen_thread(void *g_arg){
     add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
+    int length = cur_args->length;
+
 
     // If there is no downstream thread, create an output node/thread
     if (cur_node->next == NULL) {
         thread_node *comp_node = create_next_node(cur_node);
         thread_args *comp_args = create_next_args(cur_args,comp_node); // FIXME: definite leak here -> 191
+
         pthread_create(&comp_node->thread_id, NULL, &comp_thread, comp_args);
     }
     bounded_buffer *out_buffer = cur_node->out_buffer;
@@ -310,7 +313,7 @@ void* gen_thread(void *g_arg){
 //        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
 //    }
 //    free(cur_node);
-
+    free(cur_args);
     remove_nr_active(NULL);
     return NULL;
 }
@@ -404,6 +407,7 @@ void * comp_thread(void *c_arg){
 //    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
     remove_nr_active(NULL);
 //    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
+    free(cur_args);
     return NULL;
 }
 
@@ -439,6 +443,7 @@ void* out_thread(void *o_arg){
     // signal join that thread is done
 //    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
+    free(cur_args);
     return o_arg;
 }
 
