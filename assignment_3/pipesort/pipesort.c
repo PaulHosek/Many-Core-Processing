@@ -33,7 +33,7 @@ int nr_active = 0;
 pthread_mutex_t arr_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t *arr_thread;
 int arr_thread_size;
-int arr_thread_idx;
+int arr_thread_idx = 0;
 
 void* test_func(void *c_arg);
 void* HelloWorld_simple(void *out_args);
