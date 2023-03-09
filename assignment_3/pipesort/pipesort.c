@@ -408,6 +408,7 @@ void * comp_thread(void *c_arg){
     remove_nr_active(NULL);
 //    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
     free(cur_args);
+    destroy_node_safe(cur_node, 0);
     return NULL;
 }
 
@@ -444,6 +445,7 @@ void* out_thread(void *o_arg){
 //    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     free(cur_args);
+    destroy_node_safe(cur_node, 0);
     return o_arg;
 }
 
