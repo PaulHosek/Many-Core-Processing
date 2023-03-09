@@ -163,14 +163,14 @@ void destroy_bb(bounded_buffer* buffer) {
 
 }
 
-void destroy_node_safe(thread_node *cur_node, int head_node){
+void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
 //    printf("(attempt) %lu attempts to destroy its node\n", (long unsigned)pthread_self());
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
-    if (!head_node){
+    if (!destroy_inbuffer){
         destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
     }
     free(cur_node);
@@ -312,9 +312,10 @@ void* gen_thread(void *g_arg){
 //    if (!head_node){
 //        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
 //    }
-//    free(cur_node);
-//    free(cur_args);
     remove_nr_active(NULL);
+//    destroy_bb(cur_node->in_buffer);
+//    free(cur_node->out_buffer->buffer);
+//    free(cur_node->in_buffer); // TODO IDK WHY THIS WORKS
     return NULL;
 }
 
@@ -446,6 +447,8 @@ void* out_thread(void *o_arg){
     remove_nr_active(NULL);
     free(cur_args);
     destroy_node_safe(cur_node, 0);
+
+
     return o_arg;
 }
 
