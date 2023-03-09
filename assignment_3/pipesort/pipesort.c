@@ -134,6 +134,7 @@ int pop_bb(bounded_buffer *buffer){
 bounded_buffer* create_bb(int capacity) {
     // Allocate memory for the bounded buffer and buffer array
     bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer));
+    printf("init call, bb %p\n", buffer);
     buffer->buffer = (int*) malloc(capacity * sizeof(int));
 
     // Initialise
@@ -156,6 +157,7 @@ void destroy_bb(bounded_buffer* buffer) {
     pthread_cond_destroy(&buffer->not_empty);
 
     // Free memory used by buffer array and buffer struct
+    printf("destroy call, bb %p\n", buffer);
     free(buffer->buffer);
     free(buffer);
 
@@ -167,11 +169,12 @@ void destroy_node_safe(thread_node *cur_node, int head_node){
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
+    pthread_mutex_unlock(&out_finished_mutex);
     if (!head_node){
         destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
     }
     free(cur_node);
-    pthread_mutex_unlock(&out_finished_mutex);
+
 //    printf("(destoyed) %lu has destroyed its node\n", (long unsigned)pthread_self());
 }
 
@@ -237,6 +240,7 @@ int pipesort_scheduler(int length){
     // create generator node
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
+
     thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL}; // FIXME: problem is we are not assigning any memory for in buffer of  first node
     thread_args args = {length, &head_node};
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
@@ -248,7 +252,7 @@ int pipesort_scheduler(int length){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
-
+//    destroy_node_safe(&head_node, 1);
     // wait for all other to free memory
     pthread_mutex_lock(&nr_active_mutex);
     while (nr_active){
@@ -299,10 +303,13 @@ void* gen_thread(void *g_arg){
     // send 2x END signal
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
-
 //    printf("gen done: nr active %d\n",nr_active);
 //    destroy_node_safe(cur_node, 1); // FIXME -> this line only leads to problems, but not in other functions only here
 //    printf("gen node in buffer %p", cur_node->in_buffer);
+//    if (!head_node){
+//        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
+//    }
+//    free(cur_node);
 
     remove_nr_active(NULL);
     return NULL;
@@ -426,7 +433,7 @@ void* out_thread(void *o_arg){
     // signal other nodes to destroy
     out_finished_bool = 1;
     pthread_cond_broadcast(&out_finished_cond);
-    destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
+//    destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
 //    printf("outbuffer outhread destroyed \n");
 //    destroy_node_safe(cur_node,0);
     // signal join that thread is done
