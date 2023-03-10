@@ -13,17 +13,18 @@ grouped.reset_index(inplace=True)
 grouped.columns = ["n_nums", "buffersize", "runtime_mean", "runtime_sem"]
 
 plt.figure()
-# lengths = sorted(list(set(grouped["n_nums"])))
-# for i in lengths):
-#     subset = grouped[grouped["n_nums"] == i]
-#     cur_mean = subset["runtime_mean"]
-#     plt.plot(subset["buffersize"], cur_mean, label=i)
+lengths = sorted(list(set(grouped["n_nums"])))
+for i in lengths:
+    subset = grouped[grouped["n_nums"] == i]
+    cur_mean = subset["runtime_mean"]
+    plt.plot(subset["buffersize"], cur_mean, label=i)
 #     plt.fill_between(subset["buffersize"], cur_mean+1.96*cur_mean, cur_mean-1.96*cur_mean, alpha = 0.4)
 # ax = sns.lineplot(x='buffersize', y='runtime_mean',hue="n_nums", data=grouped)
-ax = sns.lineplot(x='buffersize', y='runtime_mean', data=grouped[grouped["n_nums"]==1000])
+# ax = sns.lineplot(x='buffersize', y='runtime_mean', data=grouped[grouped["n_nums"]==1000])
 
 plt.xlabel("Buffersize")
 plt.ylabel("Runtime (seconds)")
+plt.xlim((0,50))
 # plt.xscale("log")
 # plt.yscale("log")
 plt.legend()

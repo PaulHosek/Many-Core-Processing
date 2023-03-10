@@ -1,3 +1,5 @@
+#!/bin/bash
+rm res_longest_seq.csv
 module load prun
 make clean
 make
@@ -11,8 +13,8 @@ if [ ! -f res_longest_seq.csv ]; then
 fi
 
 for ((i=0;i<repetitions;i++)) do
-  for ((n_nums=50;n_nums<max_length;n_nums=n_nums+50)); do
-    for buffersize in 10 100; do
+  for buffersize in 100; do
+    for ((n_nums=50;n_nums<max_length;n_nums=n_nums+50)); do
     time_elapsed=$(prun -np 1 -v pipesort -l $n_nums -s $((RANDOM)) | grep -oP 'Pipesort took:\s*\K[\d.]+')
     echo "$n_nums,$buffersize,$time_elapsed" >> res_longest_seq.csv
     done
