@@ -208,14 +208,16 @@ void *add_id_global(void*args){
     return NULL;
 }
 
-void *add_nr_active(void*args){
+// increment nr active threads
+void *increment_active(void*args){
     pthread_mutex_lock(&nr_active_mutex);
     nr_active++;
     pthread_mutex_unlock(&nr_active_mutex);
     return NULL;
 }
 
-void *remove_nr_active(void*args){
+// decrement nr active threads
+void *decrement_active(void*args){
     pthread_mutex_lock(&nr_active_mutex);
     nr_active--;
     if (nr_active == 0){
@@ -225,8 +227,6 @@ void *remove_nr_active(void*args){
     return NULL;
 }
 
-
-// FIXME: reminder: get segfault if do: head_node.next->thread_id, bc next is NULL pointer
 
 
 
@@ -247,19 +247,17 @@ int pipesort_scheduler(int length){
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
 
-    // know out is done
+    // know out-node is done
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
 
-//    destroy_node_safe(&head_node, 1);
     // wait for all other to free memory
     pthread_mutex_lock(&nr_active_mutex);
     while (nr_active){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
-//        printf("waiting ");
     }
 
     for(int loop = 0; loop < arr_thread_size; loop++)
@@ -283,21 +281,21 @@ int pipesort_scheduler(int length){
 
 void* gen_thread(void *g_arg){
     add_id_global(NULL);
-    add_nr_active(NULL);
+    increment_active(NULL);
     thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
 
     // If there is no downstream thread, create an output node/thread
     if (cur_node->next == NULL) {
         thread_node *comp_node = create_next_node(cur_node);
-        thread_args *comp_args = create_next_args(cur_args,comp_node); // FIXME: definite leak here -> 191
+        thread_args *comp_args = create_next_args(cur_args,comp_node);
 
         pthread_create(&comp_node->thread_id, NULL, &comp_thread, comp_args);
     }
     bounded_buffer *out_buffer = cur_node->out_buffer;
 
     for (int i=0; i<cur_args->length; i++){
-        int value = rand() % (200 + 1 - 50) + 50; // range 50-200
+        int value = rand(); //% (200 + 1 - 50) + 50; // range 50-200
         push_bb(out_buffer,value);
 
     }
@@ -306,17 +304,29 @@ void* gen_thread(void *g_arg){
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
 
-    remove_nr_active(NULL);
+    decrement_active(NULL);
 
 
-//    free(cur_node->in_buffer); // free only struct, in-buffer = NULL for head node // TODO does not fail but should, cause no valgrind diff
 
     return NULL;
 }
-
+// pseudo code of behaviour to implement
+//  1. wait for input as long as not END
+//      a. if store empty -> store number
+//      b. else
+//          I: if node.next == NULL -> create downstream node
+//          II. if store < new: -> send store away and save new in store
+//              -> else (store >new): -> send new number away
+//  2. if END
+//      a. if no downstream node -> create downstream OUTPUT node
+//      b.      else:
+//                   I. send END && stored in that order
+//                  II. while (new != END): send away immediately without storing
+//  3. send END
+//  done
 void * comp_thread(void *c_arg){
     add_id_global(NULL);
-    add_nr_active(NULL);
+    increment_active(NULL);
     thread_args *cur_args = (thread_args*)c_arg;
     thread_node *cur_node = cur_args->Node;
     thread_node *ds_node = create_next_node(cur_node);
@@ -325,66 +335,37 @@ void * comp_thread(void *c_arg){
     bounded_buffer *out_buffer = cur_node->out_buffer;
     int no_downstream = 1;
     int stored = cur_node->stored;
-    // TODO: pseudo code of behaviour to implement
-    //  1. wait for input as long as not END
-    //      a. if store empty -> store number
-    //      b. else
-    //          I: if node.next == NULL -> create downstream node
-    //          II. if store < new: -> send store away and save new in store
-    //              -> else (store >new): -> send new number away
-    //  2. if END
-    //      a. if no downstream node -> create downstream OUTPUT node
-    //      b.      else:
-    //                   I. send END && stored in that order
-    //                  II. while (new != END): send away immediately without storing
-    //  3. send END
-    //  done
+
 
     // 1. wait for input as long as not END
     int num = pop_bb(in_buffer);
     while (num != END_SIGNAL){
         // a. store number if empty
-
         if (stored == -2){
-//            printf("init store replace %d with %d\n ",stored, num);
             stored = num;
 //            num = pop_bb(in_buffer);
 //            continue;
         } else {
-//            printf("else num is %d\n", num);
             // b. I create downstream comp_node if not exist
             if (no_downstream){
-//            if (cur_node->next == NULL){
-//                thread_node *ds_node = create_next_node(cur_node);
-//                thread_args *ds_args = create_next_args(cur_args,ds_node); // FIXME: possible leak here
-                // FIXME: Testing here with outnode first
-                pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args); // FIXME: possible leak here
-//                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
+                pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args);
                 no_downstream = 0;
             }
             // b. II comparison
             if (stored < num){
-//                printf("replace stored: %d< %d\n", stored,num);
                 push_bb(out_buffer,stored);
                 stored = num;
             } else {
-//                printf("comp %lu pushed %d to comp\n",(long unsigned)pthread_self(), num);
                 push_bb(out_buffer,num);
             }
         }
 
         num = pop_bb(in_buffer);
-//        printf("%lu 's num is %d \n", (long unsigned)pthread_self(), num);
     }
 
     // 2.a if no downstream but end, create output thread
     if (no_downstream){
-//    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
-//        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
-//        thread_node *ds_node = create_next_node(cur_node);
-//        thread_args *ds_args = create_next_args(cur_args,ds_node);
-        pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args); // FIXME: possible memory leak here
-        no_downstream = 0;
+        pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args);
     }
     // 2.b send END, send stored, keep sending input until second END
     push_bb(out_buffer,num); // send END
@@ -397,26 +378,19 @@ void * comp_thread(void *c_arg){
         num = pop_bb(in_buffer);
     }
     push_bb(out_buffer,num); // send 2nd END
-
-//    printf("This should be 2nd END: %d\n", num);
-
-//    printf("comp %lu about to destroy node\n",(long unsigned)pthread_self());
-//    destroy_node_safe(cur_node,0);
-//    printf("comp %lu node destroyed\n",(long unsigned)pthread_self());
-    remove_nr_active(NULL);
-//    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
+    
+    // free memory of node, only destroy in-buffer
+    decrement_active(NULL);
     free(cur_args);
     destroy_node_safe(cur_node, 1);
-//    destroy_node_safe(ds_node, 0);
     return NULL;
 }
 
 void* out_thread(void *o_arg){
-    add_nr_active(NULL);
+    increment_active(NULL);
     add_id_global(NULL);
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
-//    printf("outthread %lu bb\n",(long unsigned)pthread_self());
 
 
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
@@ -425,10 +399,8 @@ void* out_thread(void *o_arg){
         printf("Num1 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
-//    printf("END is: %d \n",cur_num);
     // skip first END
     cur_num = pop_bb(cur_in_bb);
-//    printf("between is: %d \n",cur_num);
     while(cur_num != END_SIGNAL){
         printf("Num2 is: %d \n",cur_num);
         cur_num = pop_bb(cur_in_bb);
@@ -437,12 +409,7 @@ void* out_thread(void *o_arg){
     // signal other nodes to destroy
     out_finished_bool = 1;
     pthread_cond_broadcast(&out_finished_cond);
-//    destroy_bb(cur_node->out_buffer); // only outnode to destroy the outbuffer, bc no downstream node
-//    printf("outbuffer outhread destroyed \n");
-//    destroy_node_safe(cur_node,0);
-    // signal join that thread is done
-//    printf("outnode destroyed: nr active %d\n",nr_active);
-    remove_nr_active(NULL);
+    decrement_active(NULL);
     free(cur_args);
     destroy_bb(cur_node->out_buffer);
     destroy_node_safe(cur_node, 1);
