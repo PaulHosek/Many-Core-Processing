@@ -18,7 +18,7 @@
 
 
 #define END_SIGNAL -1
-#define BUFFER_SIZE 10
+int buffer_size;
 
 // signaling output thread is finished
 pthread_cond_t out_finished_cond = PTHREAD_COND_INITIALIZER;
@@ -130,7 +130,7 @@ thread_node *create_next_node(thread_node *cur_node){
     thread_node *out_node = (thread_node *) malloc(sizeof(thread_node));
 
     out_node->in_buffer = cur_node->out_buffer; // map buffer of prev to next
-    out_node->out_buffer = create_bb(BUFFER_SIZE);
+    out_node->out_buffer = create_bb(buffer_size);
     out_node->next = NULL;
     out_node->stored = -2; // untouched, -1 is end flag
     return out_node;
@@ -185,7 +185,7 @@ int pipesort_scheduler(int length){
 
     // create generator node
     pthread_t thread_id;
-    bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
+    bounded_buffer *out_buffer = create_bb(buffer_size);
 
     thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL}; // FIXME: problem is we are not assigning any memory for in buffer of  first node
     thread_args args = {length, &head_node};
@@ -344,6 +344,7 @@ int main(int argc, char *argv[]){
     int seed = 42;
     long length = 1e3;
     int print_exec_time = 1;
+    buffer_size = 10;
 
     struct timespec before;
     struct timespec  after;
@@ -351,7 +352,7 @@ int main(int argc, char *argv[]){
 
 
     /* Read command-line options. */
-    while((c = getopt(argc, argv, "l:s:p")) != -1) {
+    while((c = getopt(argc, argv, "l:s:pb:")) != -1) {
         switch(c) {
             case 'l':
                 length = atol(optarg);
@@ -361,6 +362,9 @@ int main(int argc, char *argv[]){
                 break;
             case 'p':
                 print_exec_time = 0;
+                break;
+            case 'b':
+                buffer_size = atoi(optarg);
                 break;
             case '?':
                 fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
