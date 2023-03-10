@@ -339,3 +339,70 @@ int main(int argc, char *argv[]){
     printf("Pipesort took: % .6e seconds \n", time);
 
 }
+
+// ---------------------------------------------------------------------------------------------------
+//void* test_func(void *c_arg){
+//    add_id_global(NULL);
+//    thread_args *cur_args = (thread_args*)c_arg;
+//    thread_node *cur_node = cur_args->Node;
+//    printf("test2\n");
+//    pthread_t thread_id;
+//
+//    pthread_create(&thread_id, NULL, &HelloWorld_simple, cur_args);
+//
+////    add_id_global(NULL);
+////    out_finished_bool = 1;
+////    pthread_cond_signal(&out_finished_cond);
+//
+//    return NULL;
+//}
+//
+//void* HelloWorld_simple(void *out_args) {
+//    add_id_global(NULL);
+//    pthread_t thread_id = pthread_self();
+//    printf("HW id is %lu\n", (unsigned long)thread_id);
+//    // output function should be calling this
+//    out_finished_bool = 1;
+//    pthread_cond_signal(&out_finished_cond);
+//    return out_args;
+//}
+//
+//
+//void* HelloWorld_node(void *out_args) {
+//    add_id_global(NULL);
+//    thread_args *t_args = (thread_args*)out_args;
+//    if (t_args != NULL) {
+//        printf("HS thread id is %lu\n", (unsigned long)t_args->Node->thread_id);
+//    } else {
+//        printf("Error: t_args->Node is null\n");
+//    }
+//
+//
+//    // output function should be calling this
+//    out_finished_bool = 1;
+//    pthread_cond_signal(&out_finished_cond);
+//    return out_args;
+//}
+//// not thread-safe, use within locked region
+//void print_bb(bounded_buffer bb){
+////    pthread_mutex_lock(&bb.lock);
+//    for (int i=0; i<bb.capacity;i++){
+//        printf("%d ",bb.buffer[i]);
+//    }
+//    printf("\n");
+////    pthread_mutex_unlock(&bb.lock);
+//}
+//// pseudo code of behaviour to implement
+////  1. wait for input as long as not END
+////      a. if store empty -> store number
+////      b. else
+////          I: if node.next == NULL -> create downstream node
+////          II. if store < new: -> send store away and save new in store
+////              -> else (store >new): -> send new number away
+////  2. if END
+////      a. if no downstream node -> create downstream OUTPUT node
+////      b.      else:
+////                   I. send END && stored in that order
+////                  II. while (new != END): send away immediately without storing
+////  3. send END
+////  done

@@ -35,63 +35,19 @@ pthread_t *arr_thread;
 int arr_thread_size;
 int arr_thread_idx = 0;
 
-void* test_func(void *c_arg);
-void* HelloWorld_simple(void *out_args);
-void* HelloWorld_node(void *c_arg);
-void print_bb(bounded_buffer bb);
-
-void* gen_thread(void *t_arg);
-void* out_thread(void *o_arg);
-void * comp_thread(void *c_arg);
-int pipesort_scheduler(int length);
-
+// helper functions
 void send_bb(bounded_buffer *buffer, int num);
 void destroy_bb(bounded_buffer* buffer);
 bounded_buffer* create_bb(int capacity);
 thread_node *create_next_node(thread_node *cur_node);
 
+// main program
+void* gen_thread(void *t_arg);
+void* out_thread(void *o_arg);
+void * comp_thread(void *c_arg);
+int pipesort_scheduler(int length);
 
-// helper functions -------------------------------
-
-// push element to tail position in bb
-//void push_bb(bounded_buffer *buffer, int num){
-//    pthread_mutex_lock(&buffer->lock);
-//    // wait if full
-//    while (buffer->tail == buffer->capacity){
-//        pthread_cond_wait(&buffer->not_full, &buffer->lock);
-//
-//    }
-//    // write to buffer and update parameters
-//    buffer->buffer[buffer->tail] = num;
-//    buffer->tail++;
-//
-////    print_bb(*buffer);
-//    pthread_cond_signal(&buffer->not_empty);
-//    pthread_mutex_unlock(&buffer->lock);
-//}
-//
-//int pop_bb(bounded_buffer *buffer){
-//    pthread_mutex_lock(&buffer->lock);
-//    // wait if full
-//    while (!(buffer->tail)){
-//        pthread_cond_wait(&buffer->not_empty, &buffer->lock);
-//
-//    }
-//    // write to buffer and update parameters
-//
-//    int num = buffer->buffer[buffer->tail-1];
-//    //    printf("The tail is: %d, num: %d\n",buffer->tail-1, num);
-////    print_bb(*buffer);
-//    buffer->buffer[buffer->tail-1] = 0; // not needed but may make debugging easier later
-//
-//    buffer->tail--; // decrease buffer by 1
-//
-////    print_bb(*buffer);
-//    pthread_cond_signal(&buffer->not_full);
-//    pthread_mutex_unlock(&buffer->lock);
-//    return num;
-//}
-
+// ----------------- helper functions -----------------
 // queue implementation
 void push_bb(bounded_buffer *buffer, int num){
     pthread_mutex_lock(&buffer->lock);
@@ -103,8 +59,6 @@ void push_bb(bounded_buffer *buffer, int num){
     // write to buffer and update parameters
     buffer->buffer[(buffer->head + buffer->count) % buffer->capacity] = num;
     buffer->count++;
-//    printf("%lu pushed %d  | ",(unsigned long)pthread_self(), num);
-//    print_bb(*buffer);
 
     pthread_cond_signal(&buffer->not_empty);
     pthread_mutex_unlock(&buffer->lock);
@@ -118,24 +72,18 @@ int pop_bb(bounded_buffer *buffer){
     }
     // read from buffer and update parameters
     int num = buffer->buffer[buffer->head];
-    buffer->buffer[buffer->head] = 0; // probs don't need this but for debugging if print_bb
+    buffer->buffer[buffer->head] = 0;
     buffer->head = (buffer->head + 1) % buffer->capacity;
     buffer->count--;
-//    printf("%lu popped %d  | ",(unsigned long)pthread_self(), num);
-//    print_bb(*buffer);
-
     pthread_cond_signal(&buffer->not_full);
     pthread_mutex_unlock(&buffer->lock);
     return num;
 }
 
-
-// initialise bb
-bounded_buffer* create_bb(int capacity) { // malloc of 160 + 40 bytes
+// allocate and initialise bb
+bounded_buffer* create_bb(int capacity) {
     // Allocate memory for the bounded buffer and buffer array
-    bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer)); // 160
-    printf("init call, bb %p of %zu bytes\n", buffer,sizeof(bounded_buffer));
-
+    bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer)); // 160 bytes
     buffer->buffer = (int*) malloc(capacity * sizeof(int)); // 40 bytes
     // Initialise
     buffer->capacity = capacity;
@@ -157,25 +105,24 @@ void destroy_bb(bounded_buffer* buffer) {
     pthread_cond_destroy(&buffer->not_empty);
 
     // Free memory used by buffer array and buffer struct
-    printf("destroy call, bb %p\n", buffer);
     free(buffer->buffer);
     free(buffer);
 
 }
 
 void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
-//    printf("(attempt) %lu attempts to destroy its node\n", (long unsigned)pthread_self());
+    // wait for out-node to be done
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
+
     if (destroy_inbuffer){
         destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
     }
     free(cur_node);
 
-//    printf("(destoyed) %lu has destroyed its node\n", (long unsigned)pthread_self());
 }
 
 // create downstream node, link in-and out-buffers
@@ -227,13 +174,11 @@ void *decrement_active(void*args){
     return NULL;
 }
 
+// ------------------- main program -------------------
 
-
-
-// ------------------------------------------------
+// start pipeline and manage threads
 int pipesort_scheduler(int length){
 //    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    length = 1; // TODO: remove later
     arr_thread_size = length+2;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -260,17 +205,8 @@ int pipesort_scheduler(int length){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
     }
 
-    for(int loop = 0; loop < arr_thread_size; loop++)
-        printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
-
     for (int i=0; i<arr_thread_size;i++){
         pthread_t cur_thread = arr_thread[i];
-
-        if (!(long unsigned)cur_thread){
-            // to account for the array being longer than there are threads assigned, but should not happen ideally
-            // because we know exactly how many threads we need to sort any number sequence
-            break;
-        }
         pthread_join(arr_thread[i],NULL);
     }
     pthread_mutex_unlock(&nr_active_mutex);
@@ -279,6 +215,7 @@ int pipesort_scheduler(int length){
     return 0;
 }
 
+// generator thread: RNG + pass numbers downstream
 void* gen_thread(void *g_arg){
     add_id_global(NULL);
     increment_active(NULL);
@@ -310,20 +247,8 @@ void* gen_thread(void *g_arg){
 
     return NULL;
 }
-// pseudo code of behaviour to implement
-//  1. wait for input as long as not END
-//      a. if store empty -> store number
-//      b. else
-//          I: if node.next == NULL -> create downstream node
-//          II. if store < new: -> send store away and save new in store
-//              -> else (store >new): -> send new number away
-//  2. if END
-//      a. if no downstream node -> create downstream OUTPUT node
-//      b.      else:
-//                   I. send END && stored in that order
-//                  II. while (new != END): send away immediately without storing
-//  3. send END
-//  done
+
+// comparator thread: store highest, pass lowest, recursively create downstream threads
 void * comp_thread(void *c_arg){
     add_id_global(NULL);
     increment_active(NULL);
@@ -343,8 +268,6 @@ void * comp_thread(void *c_arg){
         // a. store number if empty
         if (stored == -2){
             stored = num;
-//            num = pop_bb(in_buffer);
-//            continue;
         } else {
             // b. I create downstream comp_node if not exist
             if (no_downstream){
@@ -386,6 +309,7 @@ void * comp_thread(void *c_arg){
     return NULL;
 }
 
+// print out numbers
 void* out_thread(void *o_arg){
     increment_active(NULL);
     add_id_global(NULL);
@@ -396,25 +320,24 @@ void* out_thread(void *o_arg){
     bounded_buffer * cur_in_bb = cur_node->in_buffer;
     int cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-        printf("Num1 is: %d \n",cur_num);
+        printf("%d ",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
     // skip first END
     cur_num = pop_bb(cur_in_bb);
     while(cur_num != END_SIGNAL){
-        printf("Num2 is: %d \n",cur_num);
+        printf("%d ",cur_num);
         cur_num = pop_bb(cur_in_bb);
     }
+    printf("\n");
 
-    // signal other nodes to destroy
+    // signal other nodes to self-destroy
     out_finished_bool = 1;
     pthread_cond_broadcast(&out_finished_cond);
     decrement_active(NULL);
     free(cur_args);
     destroy_bb(cur_node->out_buffer);
     destroy_node_safe(cur_node, 1);
-
-
 
     return o_arg;
 }
@@ -461,58 +384,5 @@ int main(int argc, char *argv[]){
 
     printf("Pipesort took: % .6e seconds \n", time);
 
-}
-
-// ---------------------------------------------------------------------------------------------------
-void* test_func(void *c_arg){
-    add_id_global(NULL);
-    thread_args *cur_args = (thread_args*)c_arg;
-    thread_node *cur_node = cur_args->Node;
-    printf("test2\n");
-    pthread_t thread_id;
-
-    pthread_create(&thread_id, NULL, &HelloWorld_simple, cur_args);
-
-//    add_id_global(NULL);
-//    out_finished_bool = 1;
-//    pthread_cond_signal(&out_finished_cond);
-
-    return NULL;
-}
-
-void* HelloWorld_simple(void *out_args) {
-    add_id_global(NULL);
-    pthread_t thread_id = pthread_self();
-    printf("HW id is %lu\n", (unsigned long)thread_id);
-    // output function should be calling this
-    out_finished_bool = 1;
-    pthread_cond_signal(&out_finished_cond);
-    return out_args;
-}
-
-
-void* HelloWorld_node(void *out_args) {
-    add_id_global(NULL);
-    thread_args *t_args = (thread_args*)out_args;
-    if (t_args != NULL) {
-        printf("HS thread id is %lu\n", (unsigned long)t_args->Node->thread_id);
-    } else {
-        printf("Error: t_args->Node is null\n");
-    }
-
-
-    // output function should be calling this
-    out_finished_bool = 1;
-    pthread_cond_signal(&out_finished_cond);
-    return out_args;
-}
-// not thread-safe, use within locked region
-void print_bb(bounded_buffer bb){
-//    pthread_mutex_lock(&bb.lock);
-    for (int i=0; i<bb.capacity;i++){
-        printf("%d ",bb.buffer[i]);
-    }
-    printf("\n");
-//    pthread_mutex_unlock(&bb.lock);
 }
 
