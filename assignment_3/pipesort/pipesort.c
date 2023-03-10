@@ -10,11 +10,9 @@
 #include <signal.h>
 
 #include "pipesort.h"
-// TODO:general stuff
-//  1. go over and check if all bb destroyed
-//  2. check for memory leaks
-//  3. clean up nodes correctly
-//  4. make sure to only destroy the IN-buffer after ever node cleanup.
+
+
+
 
 
 #define END_SIGNAL -1
