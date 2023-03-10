@@ -170,7 +170,7 @@ void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
-    if (!destroy_inbuffer){
+    if (destroy_inbuffer){
         destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
     }
     free(cur_node);
@@ -406,7 +406,7 @@ void * comp_thread(void *c_arg){
     remove_nr_active(NULL);
 //    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
     free(cur_args);
-    destroy_node_safe(cur_node, 0);
+    destroy_node_safe(cur_node, 1);
 //    destroy_node_safe(ds_node, 0);
     return NULL;
 }
@@ -444,7 +444,7 @@ void* out_thread(void *o_arg){
 //    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     free(cur_args);
-    destroy_node_safe(cur_node, 0);
+    destroy_node_safe(cur_node, 1);
 
 
 
