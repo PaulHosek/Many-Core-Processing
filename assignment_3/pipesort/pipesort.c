@@ -131,12 +131,12 @@ int pop_bb(bounded_buffer *buffer){
 
 
 // initialise bb
-bounded_buffer* create_bb(int capacity) {
+bounded_buffer* create_bb(int capacity) { // malloc of 160 + 40 bytes
     // Allocate memory for the bounded buffer and buffer array
-    bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer));
-    printf("init call, bb %p\n", buffer);
-    buffer->buffer = (int*) malloc(capacity * sizeof(int));
+    bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer)); // 160
+    printf("init call, bb %p of %zu bytes\n", buffer,sizeof(bounded_buffer));
 
+    buffer->buffer = (int*) malloc(capacity * sizeof(int)); // 40 bytes
     // Initialise
     buffer->capacity = capacity;
     buffer->head = 0;
@@ -191,7 +191,8 @@ thread_node *create_next_node(thread_node *cur_node){
 
 // copy args of node for initialisation of downstream node
 thread_args *create_next_args(thread_args *cur_args, thread_node *out_node){
-    thread_args *out_args = (thread_args *) malloc(sizeof(thread_args));
+    thread_args *out_args = (thread_args *) malloc(sizeof(thread_args)); // 16 bytes
+
     // Avoid race condition
     memcpy(out_args, cur_args, sizeof(thread_args));
     out_args->Node = out_node;
@@ -232,7 +233,7 @@ void *remove_nr_active(void*args){
 // ------------------------------------------------
 int pipesort_scheduler(int length){
 //    printf("Master thread is %lu\n", (unsigned long)pthread_self());
-    length = 1; // TODO: this should be length + 2
+    length = 1; // TODO: remove later
     arr_thread_size = length+2;
     arr_thread = (pthread_t*)malloc(arr_thread_size*sizeof(pthread_t));
     memset(arr_thread, 0, arr_thread_size*sizeof(pthread_t));
@@ -252,6 +253,7 @@ int pipesort_scheduler(int length){
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
+
 //    destroy_node_safe(&head_node, 1);
     // wait for all other to free memory
     pthread_mutex_lock(&nr_active_mutex);
@@ -259,7 +261,6 @@ int pipesort_scheduler(int length){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
 //        printf("waiting ");
     }
-
 
     for(int loop = 0; loop < arr_thread_size; loop++)
         printf("Tid: %lu \n", (unsigned long)arr_thread[loop]); // testing
@@ -285,8 +286,6 @@ void* gen_thread(void *g_arg){
     add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
-    int length = cur_args->length;
-
 
     // If there is no downstream thread, create an output node/thread
     if (cur_node->next == NULL) {
@@ -306,24 +305,22 @@ void* gen_thread(void *g_arg){
     // send 2x END signal
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
-//    printf("gen done: nr active %d\n",nr_active);
-//    destroy_node_safe(cur_node, 1); // FIXME -> this line only leads to problems, but not in other functions only here
-//    printf("gen node in buffer %p", cur_node->in_buffer);
-//    if (!head_node){
-//        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
-//    }
+
     remove_nr_active(NULL);
-//    destroy_bb(cur_node->in_buffer);
-//    free(cur_node->out_buffer->buffer);
-//    free(cur_node->in_buffer); // TODO IDK WHY THIS WORKS
+
+
+//    free(cur_node->in_buffer); // free only struct, in-buffer = NULL for head node // TODO does not fail but should, cause no valgrind diff
+
     return NULL;
 }
 
 void * comp_thread(void *c_arg){
-    add_id_global(NULL); // FIXME: invalid write every call to this function essentially
+    add_id_global(NULL);
     add_nr_active(NULL);
     thread_args *cur_args = (thread_args*)c_arg;
     thread_node *cur_node = cur_args->Node;
+    thread_node *ds_node = create_next_node(cur_node);
+    thread_args *ds_args = create_next_args(cur_args,ds_node);
     bounded_buffer *in_buffer = cur_node->in_buffer;
     bounded_buffer *out_buffer = cur_node->out_buffer;
     int no_downstream = 1;
@@ -358,8 +355,8 @@ void * comp_thread(void *c_arg){
             // b. I create downstream comp_node if not exist
             if (no_downstream){
 //            if (cur_node->next == NULL){
-                thread_node *ds_node = create_next_node(cur_node);
-                thread_args *ds_args = create_next_args(cur_args,ds_node); // FIXME: possible leak here
+//                thread_node *ds_node = create_next_node(cur_node);
+//                thread_args *ds_args = create_next_args(cur_args,ds_node); // FIXME: possible leak here
                 // FIXME: Testing here with outnode first
                 pthread_create(&ds_node->thread_id, NULL, &comp_thread, ds_args); // FIXME: possible leak here
 //                printf("comp %lu created comp thread\n", (long unsigned)pthread_self());
@@ -384,8 +381,8 @@ void * comp_thread(void *c_arg){
     if (no_downstream){
 //    if (cur_node->next == NULL){ // FIXME: this should only happen if there is no outnode
 //        printf("comp %lu created out thread\n", (long unsigned)pthread_self());
-        thread_node *ds_node = create_next_node(cur_node);
-        thread_args *ds_args = create_next_args(cur_args,ds_node);
+//        thread_node *ds_node = create_next_node(cur_node);
+//        thread_args *ds_args = create_next_args(cur_args,ds_node);
         pthread_create(&ds_node->thread_id, NULL, &out_thread, ds_args); // FIXME: possible memory leak here
         no_downstream = 0;
     }
@@ -410,6 +407,7 @@ void * comp_thread(void *c_arg){
 //    printf("comp %lu reduced: nr active %d\n",(long unsigned)pthread_self(),nr_active);
     free(cur_args);
     destroy_node_safe(cur_node, 0);
+//    destroy_node_safe(ds_node, 0);
     return NULL;
 }
 
@@ -447,6 +445,7 @@ void* out_thread(void *o_arg){
     remove_nr_active(NULL);
     free(cur_args);
     destroy_node_safe(cur_node, 0);
+
 
 
     return o_arg;
