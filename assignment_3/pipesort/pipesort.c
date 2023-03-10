@@ -444,6 +444,7 @@ void* out_thread(void *o_arg){
 //    printf("outnode destroyed: nr active %d\n",nr_active);
     remove_nr_active(NULL);
     free(cur_args);
+    destroy_bb(cur_node->out_buffer);
     destroy_node_safe(cur_node, 1);
 
 
