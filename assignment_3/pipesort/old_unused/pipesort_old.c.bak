@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <pthread.h>
-#include "pipesort.h"
+#include "../pipesort.h"
 
 #define END_SIGNAL -1
 void* HelloWorld(void *a);

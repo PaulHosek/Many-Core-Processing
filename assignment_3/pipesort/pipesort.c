@@ -242,9 +242,6 @@ void* gen_thread(void *g_arg){
     push_bb(out_buffer,END_SIGNAL);
 
     decrement_active(NULL);
-
-
-
     return NULL;
 }
 
@@ -345,7 +342,8 @@ void* out_thread(void *o_arg){
 int main(int argc, char *argv[]){
     int c;
     int seed = 42;
-    long length = 12;//1e4
+    long length = 1e3;
+    int print_exec_time = 1;
 
     struct timespec before;
     struct timespec  after;
@@ -353,13 +351,16 @@ int main(int argc, char *argv[]){
 
 
     /* Read command-line options. */
-    while((c = getopt(argc, argv, "l:s:")) != -1) {
+    while((c = getopt(argc, argv, "l:s:p")) != -1) {
         switch(c) {
             case 'l':
                 length = atol(optarg);
                 break;
             case 's':
                 seed = atoi(optarg);
+                break;
+            case 'p':
+                print_exec_time = 0;
                 break;
             case '?':
                 fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
@@ -381,8 +382,10 @@ int main(int argc, char *argv[]){
     clock_gettime(CLOCK_MONOTONIC, &after);
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
+    if (print_exec_time){
+        printf("Pipesort took: % .6e seconds \n", time);
+    }
 
-    printf("Pipesort took: % .6e seconds \n", time);
 
 }
 
