@@ -7,7 +7,7 @@ repetitions=20
 
 if [ ! -f res_buffersize.csv ]; then
   touch res_buffersize.csv
-  echo "version,inner_max,len_outer,runtime" > res_buffersize.csv
+  echo "n_nums,buffersize,runtime" > res_buffersize.csv
 fi
 
 for ((i=0;i<repetitions;i++)) do

@@ -23,7 +23,7 @@ plt.figure()
 ax = sns.lineplot(x='buffersize', y='runtime_mean', data=grouped[grouped["n_nums"]==1000])
 
 plt.xlabel("Buffersize")
-plt.ylabel("Runtime, s")
+plt.ylabel("Runtime (seconds)")
 # plt.xscale("log")
 # plt.yscale("log")
 plt.legend()
