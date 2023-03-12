@@ -284,7 +284,7 @@ void * update_temperatures(void * grid_parameters)
 
             // Outer cells
             index_left_col = row_offset;
-            index_right_col = index++;
+            index_right_col = index+1;
             old_temperature_left = temperature_old[index_left_col];
             old_temperature_right = temperature_old[index_right_col];
 

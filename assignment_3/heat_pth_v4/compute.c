@@ -234,7 +234,7 @@ void * update_temperatures(void * grid_parameters)
     int iters_to_next_period = period-1;
     int index,row,row_offset=0,col, index_left_col, index_right_col;
     int result_index = 0;
-    double maxdiff_thread, tmin_thread, tmax_thread, tsum_thread, new_temperature, old_temperature, diff, c_c;
+    double maxdiff_thread, tmin_thread, tmax_thread, tsum_thread, new_temperature, old_temperature, diff, c_c, rest_c_c;
     double old_temperature_left, old_temperature_right;
     do {
         maxdiff_thread = 0.0;
@@ -253,18 +253,19 @@ void * update_temperatures(void * grid_parameters)
                 index++;
                 old_temperature = temperature_old[index];
                 c_c = conductivity[index - M];
+                rest_c_c = 1 - c_c;
                 // Scale old temperature at the cell
 
                 new_temperature = old_temperature * c_c;
 
                 // Adjacent neighbors
                 new_temperature += (temperature_old[index-1] + temperature_old[index - M] + temperature_old[index+1] + 
-                                    temperature_old[index + M]) * c_c * c_cdir;
+                                    temperature_old[index + M]) * rest_c_c * c_cdir;
 
                 // Diagonal neighbors
                 new_temperature += (temperature_old[index-1 - M] + temperature_old[index+1 - M] + 
                                     temperature_old[index-1 + M] + temperature_old[index+1 + M])
-                                    * c_c * c_cdiag;
+                                    * rest_c_c * c_cdiag;
 
                 temperature_new[index] = new_temperature;
 
@@ -278,23 +279,24 @@ void * update_temperatures(void * grid_parameters)
 
             // Outer cells
             index_left_col = row_offset;
-            index_right_col = index++;
+            index_right_col = index+1;
             old_temperature_left = temperature_old[index_left_col];
             old_temperature_right = temperature_old[index_right_col];
 
             // Left
             // Scale old temperature at the cell
             c_c = conductivity[index_left_col - M];
+            rest_c_c = 1 - c_c;
             new_temperature = old_temperature_left * c_c;
 
             // Adjacent neighbors
             new_temperature += (old_temperature_right + temperature_old[index_left_col - M] + temperature_old[index_left_col+1] + 
-                                temperature_old[index_left_col + M]) * c_c * c_cdir;
+                                temperature_old[index_left_col + M]) * rest_c_c * c_cdir;
 
             // Diagonal neighbors
             new_temperature += (temperature_old[index_right_col - M] + temperature_old[index_left_col+1 - M] + 
                                 temperature_old[index_right_col + M] + temperature_old[index_left_col+1 + M])
-                                * c_c * c_cdiag;
+                                * rest_c_c * c_cdiag;
 
             temperature_new[index_left_col] = new_temperature;
 
@@ -308,16 +310,17 @@ void * update_temperatures(void * grid_parameters)
             // Right
             // Scale old temperature at the cell
             c_c = conductivity[index_right_col - M];
+            rest_c_c = 1 - c_c;
             new_temperature = old_temperature_right * c_c;
 
             // Adjacent neighbors
             new_temperature += (old_temperature_left + temperature_old[index_right_col - M] + temperature_old[index_right_col-1] + 
-                                temperature_old[index_right_col + M]) * c_c * c_cdir;
+                                temperature_old[index_right_col + M]) * rest_c_c * c_cdir;
 
             // Diagonal neighbors
             new_temperature += (temperature_old[index_left_col - M] + temperature_old[index_right_col-1 - M] + 
                                 temperature_old[index_left_col + M] + temperature_old[index_right_col-1 + M])
-                                * c_c * c_cdiag;
+                                * rest_c_c * c_cdiag;
 
             temperature_new[index_right_col] = new_temperature;
 
