@@ -7,7 +7,8 @@
 
 #include "compute.h"
 
-#define NUM_THREADS 16
+pthread_barrier_t barrier_start;
+pthread_barrier_t barrier_finished;
 
 struct grid_data {
    int  first;
@@ -28,8 +29,6 @@ struct grid_data {
    int converged;
    int M;
    int * finish_execution;
-   pthread_barrier_t * barrier_start;
-   pthread_barrier_t * barrier_finished;
 };
 
 void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, 
@@ -94,6 +93,7 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
 void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
+    const int num_threads = p->nthreads;
     double * temperature_old = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * temperature_new = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * conductivity = (double * ) malloc((p->N) * p->M * sizeof(double));
@@ -101,27 +101,23 @@ void do_compute(const struct parameters* p, struct results *r)
     double * weight_indirect = (double * ) malloc((p->N) * p->M * sizeof(double));
     int * indices_left = (int * ) malloc ( p->N * p->M * sizeof(int));
     int * indices_right = (int * ) malloc ( p->N * p->M * sizeof(int));
-    struct grid_data * grid_parameters = (struct grid_data *) malloc(NUM_THREADS * sizeof(struct grid_data));
-    pthread_t thread_ids[NUM_THREADS];
-    int it = 1, suspended=1;
+    struct grid_data * grid_parameters = (struct grid_data *) malloc(num_threads * sizeof(struct grid_data));
+    pthread_t thread_ids[num_threads];
+    int it = 1;
     const int grid_start = p->M;
     const int grid_end = p->M  * (p->N + 1);
     const int grid_size = (p->N * p->M);
-    const int grid_size_per_thread = grid_size / NUM_THREADS;
+    const int grid_size_per_thread = grid_size / num_threads;
     const int maxiter = p->maxiter;
     const int period = p->period;
     const int M = p->M;
-    int converged, compute_statistics, finish_execution=0;
+    int converged, compute_statistics, compute_statistics_new, finish_execution=0;
     double maxdiff, tmin, tmax, tsum, maxdiff_thread, tmin_thread, tmax_thread;
-    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-    pthread_cond_t condition_continue = PTHREAD_COND_INITIALIZER;
-    pthread_barrier_t barrier_start;
-    pthread_barrier_t barrier_finished;
 
     initialize(p, temperature_old, temperature_new, conductivity, weight_direct, weight_indirect, indices_left, indices_right);
-    
+    compute_statistics_new = (it % period == 0 || it == maxiter);
     int index;
-    for (index=0; index < NUM_THREADS; index++)
+    for (index=0; index < num_threads; index++)
     {
         grid_parameters[index].temperature_old = temperature_old;
         grid_parameters[index].temperature_new = temperature_new;
@@ -136,19 +132,19 @@ void do_compute(const struct parameters* p, struct results *r)
         grid_parameters[index].maxdiff = 0.0;
         grid_parameters[index].first = grid_start + index * grid_size_per_thread;
         grid_parameters[index].last = grid_start + (index+1) *grid_size_per_thread;
-        grid_parameters[index].compute_statistics = (it % period == 0 || it == maxiter);
+        grid_parameters[index].compute_statistics = compute_statistics_new;
         grid_parameters[index].threshold = p->threshold;
-        grid_parameters[index].compute_statistics = 0;
         grid_parameters[index].M = M;
-        grid_parameters[index].barrier_start = &barrier_start;
-        grid_parameters[index].barrier_finished = &barrier_finished;
         grid_parameters[index].finish_execution = &finish_execution;
     }
-    grid_parameters[NUM_THREADS-1].last = grid_end;
+    grid_parameters[num_threads-1].last = grid_end;
+
+    pthread_barrier_init(&barrier_start, NULL, num_threads+1);
+    pthread_barrier_init(&barrier_finished, NULL, num_threads+1);
 
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
-    for (index=0; index<NUM_THREADS; index++) {
+    for (index=0; index<num_threads; index++) {
         pthread_create(&thread_ids[index],
         NULL,
         update_temperatures,
@@ -162,16 +158,17 @@ void do_compute(const struct parameters* p, struct results *r)
         tmax = DBL_MIN;
         // Check convergence every timestep
         converged = 1;
+        compute_statistics = compute_statistics_new;
 
         pthread_barrier_wait (&barrier_finished);
 
-        for (index=0; index<NUM_THREADS; index++) {
+        for (index=0; index<num_threads; index++) {
             converged &= grid_parameters[index].converged;
         }
 
         // Go over temperatures and check minimum, maximum temperature and maximum difference
         if (compute_statistics || converged){
-            for (index = 0; index < NUM_THREADS; index++){
+            for (index = 0; index < num_threads; index++){
                 tsum += grid_parameters[index].tsum;
                 tmax_thread = grid_parameters[index].tmax;
                 tmin_thread = grid_parameters[index].tmin;
@@ -194,9 +191,9 @@ void do_compute(const struct parameters* p, struct results *r)
         }
         else
         {
-            compute_statistics = ((it+1) % period == 0 || (it+1) == maxiter);
-            for (index=0; index<NUM_THREADS; index++) {
-                grid_parameters[index].compute_statistics = compute_statistics;
+            compute_statistics_new = ((it+1) % period == 0 || (it+1) == maxiter);
+            for (index=0; index<num_threads; index++) {
+                grid_parameters[index].compute_statistics = compute_statistics_new;
             }
         }
         pthread_barrier_wait (&barrier_start);
@@ -246,8 +243,6 @@ void do_compute(const struct parameters* p, struct results *r)
 void * update_temperatures(void * grid_parameters)
 {
     struct grid_data * parameters = (struct grid_data *) grid_parameters;
-    pthread_barrier_t * barrier_start = parameters->barrier_start;
-    pthread_barrier_t * barrier_finished = parameters->barrier_finished;
     double * conductivity = parameters->conductivity;
     double * weight_direct = parameters->weight_direct;
     double * weight_indirect = parameters->weight_indirect;
@@ -270,7 +265,7 @@ void * update_temperatures(void * grid_parameters)
         tmax_thread = DBL_MIN;
         tsum_thread = 0.0;
         converged = 1;
-        pthread_barrier_wait (barrier_start);
+        pthread_barrier_wait (&barrier_start);
         if (*finish_execution) return NULL;
         int compute_statistics = parameters->compute_statistics;
 
@@ -323,7 +318,7 @@ void * update_temperatures(void * grid_parameters)
             parameters->converged = converged;
         }
 
-        pthread_barrier_wait (barrier_finished);
+        pthread_barrier_wait (&barrier_finished);
 
         {double * tmp = temperature_old; temperature_old = temperature_new; temperature_new = tmp;}
     }
