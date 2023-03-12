@@ -126,7 +126,6 @@ void do_compute(const struct parameters* p, struct results *r)
     clock_gettime(CLOCK_MONOTONIC, &before);
     
     for (index=0; index<NUM_THREADS; index++) {
-        printf("index=%d\n", index);
         pthread_create(&thread_ids[index],
         NULL,
         update_temperatures,
@@ -194,7 +193,6 @@ void do_compute(const struct parameters* p, struct results *r)
         }
         result_index ^= 1;
     } while ((it <= maxiter) && (!converged));
-    fprintf(stderr, "Main finished\n");
     clock_gettime(CLOCK_MONOTONIC, &after);
     r->time = (double)(after.tv_sec - before.tv_sec) + 
         (double)(after.tv_nsec - before.tv_nsec) / 1e9;
@@ -344,9 +342,7 @@ void * update_temperatures(void * grid_parameters)
 
         // Go over temperatures and check minimum, maximum temperature
         if (!iters_to_next_period || iter == maxiter || converged_global){
-            row_offset=first_row * M;
-            int last_row_offset = last_row * M;
-            for (index=row_offset; index < last_row_offset; index++)
+            for (index=first_row * M; index < last_row * M; index++)
             {
                 new_temperature = temperature_new[index];
                 tsum_thread += new_temperature;
