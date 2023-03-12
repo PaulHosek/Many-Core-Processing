@@ -9,6 +9,8 @@
 
 #define NUM_THREADS 16
 
+pthread_barrier_t barrier;
+
 struct grid_data {
    size_t  first_row;
    size_t  last_row;
@@ -31,7 +33,6 @@ struct grid_data {
    int period;
    int * finish_execution;
    int thread_id;
-   pthread_barrier_t * barrier;
 };
 
 void initialize(const struct parameters* p, double* temperature_old, double* temperature_new, 
@@ -97,10 +98,12 @@ void do_compute(const struct parameters* p, struct results *r)
     const int period = p->period;
     const int M = p->M;
     int result_index = 0;
+    int remaining_rows = N % NUM_THREADS;
+    int current_row = 1;
     int converged_threads[2 * NUM_THREADS];
     int converged, compute_statistics, finish_execution=0, iters_to_next_period = period - 1;
     double maxdiff, tmin, tmax, tsum, maxdiff_thread, tmin_thread, tmax_thread;
-    pthread_barrier_t barrier;
+    pthread_barrier_init(&barrier, NULL,NUM_THREADS+1);
 
     initialize(p, temperature_old, temperature_new, conductivity, weight_direct, weight_indirect);
     
@@ -117,18 +120,23 @@ void do_compute(const struct parameters* p, struct results *r)
         grid_parameters[index].tmin[result_index] = p->io_tmax;
         grid_parameters[index].tmax[result_index] = p->io_tmin;
         grid_parameters[index].maxdiff[result_index] = 0.0;
-        grid_parameters[index].first_row = 1 + index*rows_per_thread;
-        grid_parameters[index].last_row = 1 + (index+1) *rows_per_thread;
+        grid_parameters[index].first_row = current_row;
+        current_row += rows_per_thread;
+        if (remaining_rows)
+        {
+            remaining_rows--;
+            current_row++;
+        }
+        grid_parameters[index].last_row = current_row;
         grid_parameters[index].compute_statistics = (it % period == 0 || it == maxiter);
         grid_parameters[index].threshold = p->threshold;
         grid_parameters[index].M = M;
-        grid_parameters[index].barrier = &barrier;
         grid_parameters[index].finish_execution = &finish_execution;
         grid_parameters[index].maxiter = maxiter;
         grid_parameters[index].period = period;
         grid_parameters[index].converged = converged_threads;
     }
-    grid_parameters[NUM_THREADS-1].last_row = N;
+    grid_parameters[NUM_THREADS-1].last_row = N+1;
 
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
@@ -225,7 +233,6 @@ void do_compute(const struct parameters* p, struct results *r)
 void * update_temperatures(void * grid_parameters)
 {
     struct grid_data * parameters = (struct grid_data *) grid_parameters;
-    pthread_barrier_t * barrier = parameters->barrier;
     double * conductivity = parameters->conductivity;
     double * weight_direct = parameters->weight_direct;
     double * weight_indirect = parameters->weight_indirect;
@@ -253,7 +260,7 @@ void * update_temperatures(void * grid_parameters)
         tsum_thread = 0.0;
         converged_local = 1;
 
-        for (row=first_row; row <= last_row; row++)
+        for (row=first_row; row < last_row; row++)
         {
             row_offset += M;
             index = row_offset;
@@ -340,7 +347,7 @@ void * update_temperatures(void * grid_parameters)
 
         // Check global convergence
         converged_global = 1;
-        pthread_barrier_wait (barrier);
+        pthread_barrier_wait (&barrier);
         for (index = 0; index < NUM_THREADS; index++)
         {
             converged_global &= converged[2 * index + result_index];
@@ -349,7 +356,7 @@ void * update_temperatures(void * grid_parameters)
         // Go over temperatures and check minimum, maximum temperature
         if (!iters_to_next_period || iter == maxiter || converged_global){
             row_offset=0;
-            for (row=first_row; row <= last_row; row++)
+            for (row=first_row; row < last_row; row++)
             {
                 row_offset += M;
                 for (col=0; col < M; index++)
