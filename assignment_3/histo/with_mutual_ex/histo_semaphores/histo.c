@@ -91,14 +91,11 @@ void * histogram(void * parameters){
     const int last = histo_param->last;
     int * image = histo_param->image;
     int * histo = histo_param->histo;
-    int index, element;
+    int index;
 
     for (index=first; index < last; index++)
     {
-        element=image[index];
-        sem_wait(&semaphores[element]);
-        histo[element]++;
-        sem_post(&semaphores[element]);
+        sem_post(&semaphores[image[index]]);
     }
 }
 
@@ -183,7 +180,7 @@ int main(int argc, char *argv[]){
 
     for (index = 0; index < 256; index ++) 
     {
-        if ( sem_init(&semaphores[index], 0, 1) != 0 )
+        if ( sem_init(&semaphores[index], 0, 0) != 0 )
         {
             die("Initalization of semaphore failed.");
         }
@@ -201,6 +198,10 @@ int main(int argc, char *argv[]){
     /* Do your thing here */
     for (index =0; index<num_threads ; index++) {
         pthread_join(thread_ids[index], NULL);
+    }
+
+    for (index =0; index<256 ; index++) {
+        sem_getvalue(&semaphores[index], &histo[index]);
     }
 
     if (debug){

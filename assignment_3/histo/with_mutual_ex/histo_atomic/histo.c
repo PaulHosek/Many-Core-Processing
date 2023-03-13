@@ -89,12 +89,11 @@ void * histogram(void * parameters){
     const int last = histo_param->last;
     int * image = histo_param->image;
     int * histo = histo_param->histo;
-    int index, element;
+    int index;
 
     for (index=first; index < last; index++)
     {
-        element=image[index];
-        __atomic_fetch_add(&histo[element], 1, __ATOMIC_SEQ_CST);
+        __atomic_fetch_add(&histo[image[index]], 1, __ATOMIC_SEQ_CST);
     }
 }
 

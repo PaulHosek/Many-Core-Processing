@@ -88,13 +88,12 @@ void * histogram(void * parameters){
     const int last = histo_param->last;
     int * image = histo_param->image;
     int * histo = histo_param->histo;
-    int index, element;
+    int index;
 
     for (index=first; index < last; index++)
     {
-        element=image[index];
         __transaction_atomic {
-        histo[element]++;
+        histo[image[index]]++;
         }
     }
 }
