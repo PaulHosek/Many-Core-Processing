@@ -6,9 +6,9 @@ e=0.0001
 L=0
 H=100
 data="data_assignment2.csv"
-repetitions=10
+repetitions=5
 start=1
-experiment_dir=../../test/experiments_assignment2/*
+experiment_dir=experiments_assignment2/*
 END=25
 
 for m in ${experiment_dir}; do
