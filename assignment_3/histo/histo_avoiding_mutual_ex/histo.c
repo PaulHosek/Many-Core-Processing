@@ -5,6 +5,15 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+struct histogram_data {
+   int * image;
+   int first;
+   int last;
+   int * histo;
+};
 
 void die(const char *msg){
     if (errno != 0) 
@@ -74,15 +83,25 @@ void print_image(int num_rows, int num_cols, int * image){
 	printf("\n");
 }
 
-void histogram(int * histo, int * image){
-    //TODO: For Students
+void * histogram(void * parameters){  
+    struct histogram_data * histo_param = (struct histogram_data *) parameters;
+    const int first = histo_param->first;
+    const int last = histo_param->last;
+    int * image = histo_param->image;
+    int * histo = histo_param->histo;
+    int index;
+
+    for (index=first; index < last; index++)
+    {
+        histo[image[index]]++;
+    }
 }
 
 int main(int argc, char *argv[]){
     int c;
     int seed = 42;
     const char *image_path = 0;
-    image_path ="../../../images/pat1_100x150.pgm";
+    image_path ="../../../../images/pat1_100x150.pgm";
     int gen_image = 0;
     int debug = 0;
 
@@ -125,7 +144,7 @@ int main(int argc, char *argv[]){
                 return -1;
         }
     }
-    
+
     int * image = (int *) malloc(sizeof(int) * num_cols * num_rows);
 
     /* Seed such that we can always reproduce the same random vector */
@@ -136,21 +155,59 @@ int main(int argc, char *argv[]){
     	read_image(image_path,num_rows, num_cols, image);
     }
 
+    int index;
+    int current_element=0;
+    const int elements_per_thread = num_rows * num_cols / num_threads;
+    int remaining_elements = (num_rows * num_cols) % num_threads;
+    pthread_t thread_ids[num_threads];
+    int * histo_tmp = (int *) calloc(256 * num_threads, sizeof(int));
+    struct histogram_data * histo_param = (struct histogram_data *) malloc(num_threads * sizeof(struct histogram_data));
+    for (index=0; index < num_threads; index++)
+    {
+        histo_param[index].image = image;
+        histo_param[index].first = current_element;
+        current_element += elements_per_thread;
+        if (remaining_elements)
+        {
+            remaining_elements--;
+            current_element++;
+        }
+        histo_param[index].last = current_element;
+        histo_param[index].histo = &histo_tmp[256 * index];
+    }
+    histo_param[num_threads-1].last = num_cols * num_rows;
+
     clock_gettime(CLOCK_MONOTONIC, &before);
     /* Do your thing here */
-
-
-    histogram(histo, image);
-
+    for (int index=0; index<num_threads; index++) {
+        pthread_create(&thread_ids[index],
+        NULL,
+        histogram,
+        (void *)&histo_param[index]);
+    }
+    int offset=0;;
     /* Do your thing here */
+    for (index =0; index<num_threads ; index++) {
+        pthread_join(thread_ids[index], NULL);
+        for (int bin=0; bin < 256; bin++)
+        {
+            histo[bin] += histo_tmp[offset + bin];
+        }
+        offset += 256;  
+    }
 
     if (debug){
     	print_histo(histo);
     }
 
     clock_gettime(CLOCK_MONOTONIC, &after);
+
     double time = (double)(after.tv_sec - before.tv_sec) +
                   (double)(after.tv_nsec - before.tv_nsec) / 1e9;
 
     printf("Histo took: % .6e seconds \n", time);
+
+    free(histo);
+    free(image);
+    free(histo_param);
 }
