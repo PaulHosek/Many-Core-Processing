@@ -29,15 +29,15 @@ timeout 10s perf stat -e $events -o /dev/null ./pipesort &
 
 perf stat -e $events -o res_caches.txt ./pipesort
 
-## Iterate over different values of n_nums and buffersize
-#for n_nums in 10 100 1000 3000 4000; do
-#  for buffersize in 1 5 10 100 500 700 1000; do
-#    # Run the command in a loop for the specified duration
-#    start_time=$(date +%s)
-#    while (( $(date +%s) - start_time < duration_perf )); do
-#      perf stat -e $events -o /dev/null ./pipesort -l $n_nums -s $((RANDOM)) -b $buffersize >/dev/null 2>&1
-#    done
-#
-#    perf stat -e $events ./pipesort -l $n_nums -s $((RANDOM)) -b $buffersize 2>&1 | grep -oP '(\d+\.?\d*)' | tr '\n' ',' >> res_caches.txt
-#  done
-#done
+# Iterate over different values of n_nums and buffersize
+for n_nums in 10 100 1000 3000 4000; do
+  for buffersize in 1 5 10 100 500 700 1000; do
+    # Run the command in a loop for the specified duration
+    start_time=$(date +%s)
+    while (( $(date +%s) - start_time < duration_perf )); do
+      perf stat -e $events -o /dev/null ./pipesort -l $n_nums -s $((RANDOM)) -b $buffersize >/dev/null 2>&1
+    done
+
+    perf stat -e $events ./pipesort -l $n_nums -s $((RANDOM)) -b $buffersize 2>&1 | grep -oP '(\d+\.?\d*)' | tr '\n' ',' >> res_caches.txt
+  done
+done

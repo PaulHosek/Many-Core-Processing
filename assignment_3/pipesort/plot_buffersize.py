@@ -7,7 +7,7 @@ import seaborn as sns
 plt.style.use('seaborn-v0_8-darkgrid')
 rcParams['font.size'] = 16
 
-data = pd.read_csv("data/res_buffersize_20rep.csv")
+data = pd.read_csv("data/test.csv")
 
 grouped = data.groupby(["n_nums", "buffersize"]).agg(["mean", "sem"])
 grouped.reset_index(inplace=True)
