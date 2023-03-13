@@ -5,8 +5,8 @@ make clean
 make
 
 
-repetitions=5
-max_length=5000
+repetitions=1
+max_length=10000
 if [ ! -f res_longest_seq.csv ]; then
   touch res_longest_seq.csv
   echo "n_nums,buffersize,runtime" > res_longest_seq.csv

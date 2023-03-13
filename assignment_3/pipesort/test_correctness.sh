@@ -11,13 +11,14 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 is_sorted=true
 last_number=-1
-
+min=4000
+max=50000
 
 # sort 10 strings of numbers with different seeds and of length up to 4000
 # test if matches expected output
 for ((i=1;i<nr_tests;i++)); do
   last_number=-1
-  myrand=$((RANDOM % 4000 + 1))
+  myrand=$((RANDOM % ($max-$min+1) + $min))
   myrand2=$((RANDOM % 1000 + 1))
   seed=$((RANDOM % 10000 + 1))
   sorted_numbers=$(prun -np 1 -v pipesort -l $myrand -s $seed -p -b $myrand | grep -oP '\d+') #match any digits

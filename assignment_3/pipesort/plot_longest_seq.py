@@ -6,7 +6,7 @@ import seaborn as sns
 plt.style.use('seaborn-v0_8-darkgrid')
 rcParams['font.size'] = 16
 
-data = pd.read_csv("data/res_longest_seq.csv")
+data = pd.read_csv("res_longest_seq.csv")
 
 
 print(data)

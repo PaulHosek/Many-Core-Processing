@@ -3,7 +3,7 @@ make clean
 make
 
 
-repetitions=20
+repetitions=1 # 20
 
 if [ ! -f res_buffersize.csv ]; then
   touch res_buffersize.csv
