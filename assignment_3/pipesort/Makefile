@@ -3,10 +3,9 @@ PRJ=$(CURR_DIR)
 SRC=$(wildcard *.c)
 OBJ=$(patsubst %.c,%.o,$(SRC))
 CC=gcc
-DEBUG = 1
 INCLUDES=-I../../include
 ifndef DEBUG
-CFLAGS=-O2 -pthread -std=gnu99
+CFLAGS=-O2 -pthread -std=gnu99 -D_LARGE_THREAD
 LIB=
 else
 CFLAGS=-O0 -pthread -g3 -std=gnu99

@@ -30,6 +30,7 @@ typedef struct Node {
 
 typedef struct {
     int length;
+//    pthread_t upstream_tid;
     thread_node *Node;
 } thread_args;
 

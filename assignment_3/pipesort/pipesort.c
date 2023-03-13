@@ -33,6 +33,7 @@ pthread_t *arr_thread;
 int arr_thread_size;
 int arr_thread_idx = 0;
 
+
 // helper functions
 void send_bb(bounded_buffer *buffer, int num);
 void destroy_bb(bounded_buffer* buffer);
@@ -171,6 +172,16 @@ void *decrement_active(void*args){
     pthread_mutex_unlock(&nr_active_mutex);
     return NULL;
 }
+void join_finished_threads(){
+    pthread_mutex_lock(&arr_thread_mutex);
+    for (int i=0; i<arr_thread_size;i++){
+        if (arr_thread[i] != 0){
+            pthread_join(arr_thread[i],NULL);
+            arr_thread[i] = 0;
+        }
+    }
+    pthread_mutex_unlock(&arr_thread_mutex);
+}
 
 // ------------------- main program -------------------
 
@@ -185,7 +196,7 @@ int pipesort_scheduler(int length){
     pthread_t thread_id;
     bounded_buffer *out_buffer = create_bb(buffer_size);
 
-    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL}; // FIXME: problem is we are not assigning any memory for in buffer of  first node
+    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL};
     thread_args args = {length, &head_node};
     pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 
@@ -193,6 +204,8 @@ int pipesort_scheduler(int length){
     // know out-node is done
     pthread_mutex_lock(&out_finished_mutex);
     while (!out_finished_bool){
+        // before program is done, join threads that are done
+        join_finished_threads();
         pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
     }
     pthread_mutex_unlock(&out_finished_mutex);
@@ -202,12 +215,9 @@ int pipesort_scheduler(int length){
     while (nr_active){
         pthread_cond_wait(&nr_active_cond,&nr_active_mutex);
     }
-
-    for (int i=0; i<arr_thread_size;i++){
-        pthread_t cur_thread = arr_thread[i];
-        pthread_join(arr_thread[i],NULL);
-    }
     pthread_mutex_unlock(&nr_active_mutex);
+
+    join_finished_threads();
 
     free(arr_thread);
     return 0;
@@ -215,7 +225,6 @@ int pipesort_scheduler(int length){
 
 // generator thread: RNG + pass numbers downstream
 void* gen_thread(void *g_arg){
-    add_id_global(NULL);
     increment_active(NULL);
     thread_args *cur_args = (thread_args*)g_arg;
     thread_node *cur_node = cur_args->Node;
@@ -238,14 +247,14 @@ void* gen_thread(void *g_arg){
     // send 2x END signal
     push_bb(out_buffer,END_SIGNAL);
     push_bb(out_buffer,END_SIGNAL);
-
+    add_id_global(NULL);
     decrement_active(NULL);
     return NULL;
 }
 
 // comparator thread: store highest, pass lowest, recursively create downstream threads
 void * comp_thread(void *c_arg){
-    add_id_global(NULL);
+
     increment_active(NULL);
     thread_args *cur_args = (thread_args*)c_arg;
     thread_node *cur_node = cur_args->Node;
@@ -296,18 +305,19 @@ void * comp_thread(void *c_arg){
         num = pop_bb(in_buffer);
     }
     push_bb(out_buffer,num); // send 2nd END
-    
+
     // free memory of node, only destroy in-buffer
     decrement_active(NULL);
     free(cur_args);
     destroy_node_safe(cur_node, 1);
-    return NULL;
+    add_id_global(NULL);
+    pthread_exit(NULL);
 }
 
 // print out numbers
 void* out_thread(void *o_arg){
     increment_active(NULL);
-    add_id_global(NULL);
+
     thread_args *cur_args = (thread_args*)o_arg;
     thread_node *cur_node = cur_args->Node;
 
@@ -333,6 +343,7 @@ void* out_thread(void *o_arg){
     free(cur_args);
     destroy_bb(cur_node->out_buffer);
     destroy_node_safe(cur_node, 1);
+    add_id_global(NULL);
 
     return o_arg;
 }
