@@ -108,21 +108,28 @@
 //    free(buffer);
 //
 //}
-//
 //void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
 //    // wait for out-node to be done
-//    pthread_mutex_lock(&out_finished_mutex);
-//    while (!out_finished_bool){
-//        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
-//    }
-//    pthread_mutex_unlock(&out_finished_mutex);
-//
 //    if (destroy_inbuffer){
 //        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
 //    }
 //    free(cur_node);
 //
 //}
+////void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
+////    // wait for out-node to be done
+////    pthread_mutex_lock(&out_finished_mutex); // TODO this is only doing it at the end, want upstream done and inbuffer empy
+////    while (!out_finished_bool){
+////        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
+////    }
+////    pthread_mutex_unlock(&out_finished_mutex);
+////
+////    if (destroy_inbuffer){
+////        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
+////    }
+////    free(cur_node);
+////
+////}
 //
 //// create downstream node, link in-and out-buffers
 //thread_node *create_next_node(thread_node *cur_node){
@@ -132,6 +139,7 @@
 //    out_node->out_buffer = create_bb(buffer_size);
 //    out_node->next = NULL;
 //    out_node->stored = -2; // untouched, -1 is end flag
+////    out_node->upstream_tid = pthread_self();
 //    return out_node;
 //}
 //
@@ -142,7 +150,6 @@
 //    // Avoid race condition
 //    memcpy(out_args, cur_args, sizeof(thread_args));
 //    out_args->Node = out_node;
-//    out_args->upstream_tid = pthread_self();
 //    return out_args;
 //}
 //
@@ -197,8 +204,8 @@
 //    pthread_t thread_id;
 //    bounded_buffer *out_buffer = create_bb(buffer_size);
 //
-//    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL};
-//    thread_args args = {length, 0,&head_node};
+//    thread_node head_node = {thread_id,NULL,out_buffer,-1,NULL, pthread_self()};
+//    thread_args args = {length, &head_node};
 //    pthread_create(&head_node.thread_id, NULL, &gen_thread, &args);
 //
 //
@@ -307,11 +314,12 @@
 //    }
 //    push_bb(out_buffer,num); // send 2nd END
 //
-//    pthread_join(cur_args->upstream_tid,NULL);
+////    pthread_join(cur_node->upstream_tid, NULL);
 //    // free memory of node, only destroy in-buffer
 //    decrement_active(NULL);
 //    free(cur_args);
-//    destroy_node_safe(cur_node, 1);
+//    destroy_node_safe(cur_node, 1); // TODO important not to store upstream tid in upstream node if want to access after
+//
 //    add_id_global(NULL);
 //    pthread_exit(NULL);
 //}

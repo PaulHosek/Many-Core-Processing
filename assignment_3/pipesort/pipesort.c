@@ -111,14 +111,14 @@ void destroy_bb(bounded_buffer* buffer) {
 
 void destroy_node_safe(thread_node *cur_node, int destroy_inbuffer){
     // wait for out-node to be done
-    pthread_mutex_lock(&out_finished_mutex);
-    while (!out_finished_bool){
-        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
-    }
-    pthread_mutex_unlock(&out_finished_mutex);
+//    pthread_mutex_lock(&out_finished_mutex); // TODO this is only doing it at the end, want upstream done and inbuffer empy
+//    while (!out_finished_bool){
+//        pthread_cond_wait(&out_finished_cond,&out_finished_mutex);
+//    }
+//    pthread_mutex_unlock(&out_finished_mutex);
 
     if (destroy_inbuffer){
-        destroy_bb(cur_node->in_buffer); // FIXME these cause the segfault/ mallloc crah
+        destroy_bb(cur_node->in_buffer);
     }
     free(cur_node);
 

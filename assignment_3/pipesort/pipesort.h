@@ -3,6 +3,7 @@
 
 
 #include <pthread.h>
+#include <semaphore.h>
 
 //Decouple pipeline stages: bounded buffer implemented as a FIFO queue.
 typedef struct {
@@ -25,12 +26,12 @@ typedef struct Node {
     bounded_buffer *out_buffer;// or Node.next.in_buffer
     int stored;
     struct Node *next;
+//    pthread_t upstream_tid;
 } thread_node;
 
 
 typedef struct {
     int length;
-//    pthread_t upstream_tid;
     thread_node *Node;
 } thread_args;
 
