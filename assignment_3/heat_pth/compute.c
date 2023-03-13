@@ -7,8 +7,6 @@
 
 #include "compute.h"
 
-#define NUM_THREADS 16
-
 struct grid_data {
    int  first;
    int  last;
@@ -91,6 +89,7 @@ double* conductivity, double * weight_direct, double * weight_indirect, int* ind
 void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
+    const int num_threads = p->nthreads;
     double * temperature_old = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * temperature_new = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * conductivity = (double * ) malloc((p->N) * p->M * sizeof(double));
@@ -98,13 +97,13 @@ void do_compute(const struct parameters* p, struct results *r)
     double * weight_indirect = (double * ) malloc((p->N) * p->M * sizeof(double));
     int * indices_left = (int * ) malloc ( p->N * p->M * sizeof(int));
     int * indices_right = (int * ) malloc ( p->N * p->M * sizeof(int));
-    struct grid_data * grid_parameters = (struct grid_data *) malloc(NUM_THREADS * sizeof(struct grid_data));
-    pthread_t thread_ids[NUM_THREADS];
+    struct grid_data * grid_parameters = (struct grid_data *) malloc(num_threads * sizeof(struct grid_data));
+    pthread_t thread_ids[num_threads];
     int it = 1;
     const int grid_start = p->M;
     const int grid_end = p->M  * (p->N + 1);
     const int grid_size = (p->N * p->M);
-    const int grid_size_per_thread = grid_size / NUM_THREADS;
+    const int grid_size_per_thread = grid_size / num_threads;
     const int maxiter = p->maxiter;
     const int period = p->period;
     const int M = p->M;
@@ -114,7 +113,7 @@ void do_compute(const struct parameters* p, struct results *r)
     initialize(p, temperature_old, temperature_new, conductivity, weight_direct, weight_indirect, indices_left, indices_right);
     
     int index;
-    for (index=0; index < NUM_THREADS; index++)
+    for (index=0; index < num_threads; index++)
     {
         grid_parameters[index].temperature_old = temperature_old;
         grid_parameters[index].temperature_new = temperature_new;
@@ -134,7 +133,7 @@ void do_compute(const struct parameters* p, struct results *r)
         grid_parameters[index].compute_statistics = 0;
         grid_parameters[index].M = M;
     }
-    grid_parameters[NUM_THREADS-1].last = grid_end;
+    grid_parameters[num_threads-1].last = grid_end;
 
     struct timespec before, after;
     clock_gettime(CLOCK_MONOTONIC, &before);
@@ -148,7 +147,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
         compute_statistics = (it % period == 0 || it == maxiter);
 
-        for (index=0; index<NUM_THREADS; index++) {
+        for (index=0; index<num_threads; index++) {
             grid_parameters[index].compute_statistics = compute_statistics;
             grid_parameters[index].temperature_old = temperature_old;
             grid_parameters[index].temperature_new = temperature_new;
@@ -158,14 +157,14 @@ void do_compute(const struct parameters* p, struct results *r)
             (void *)&grid_parameters[index]);
         }
 
-        for (index=0; index<NUM_THREADS; index++) {
+        for (index=0; index<num_threads; index++) {
             pthread_join(thread_ids[index], NULL);
             converged &= grid_parameters[index].converged;
         }
 
         // Go over temperatures and check minimum, maximum temperature and maximum difference
         if (compute_statistics || converged){
-            for (index = 0; index < NUM_THREADS; index++){
+            for (index = 0; index < num_threads; index++){
                 tsum += grid_parameters[index].tsum;
                 tmax_thread = grid_parameters[index].tmax;
                 tmin_thread = grid_parameters[index].tmin;

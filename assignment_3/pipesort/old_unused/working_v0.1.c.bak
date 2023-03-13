@@ -1,0 +1,135 @@
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
+#include <pthread.h>
+#include "../pipesort.h"
+
+// Assume we are sorting integers > 1!
+
+
+#define END_SIGNAL -1
+#define BUFFER_SIZE 10 // Should probs j be 1
+void* HelloWorld(void *c_arg) ;
+void* gen_thread(void *t_arg);
+//void* comparator_thread(void* args);
+
+// helper functions -------------------------------
+// send data to bounded_buffer
+void send_bb(bounded_buffer *buffer, int num){
+    pthread_mutex_lock(&buffer->lock);
+    // wait if full
+    while (buffer->size == buffer->capacity){
+        pthread_cond_wait(&buffer->not_full, &buffer->lock);
+    }
+    // write to buffer and update parameters
+    buffer->buffer[buffer->tail] = num;
+    buffer->tail = (buffer->tail + 1) % buffer->capacity;
+    buffer->size++;
+    pthread_cond_signal(&buffer->not_empty);
+    pthread_mutex_unlock(&buffer->lock);
+}
+// initialise bb
+bounded_buffer* create_bb(int capacity) {
+    // Allocate memory for the bounded buffer and buffer array
+    bounded_buffer* buffer = (bounded_buffer*) malloc(sizeof(bounded_buffer));
+    buffer->buffer = (int*) malloc(capacity * sizeof(int));
+
+    // Initialise
+    buffer->capacity = capacity;
+    buffer->size = 0;
+    buffer->head = 0;
+    buffer->tail = 0;
+    pthread_mutex_init(&buffer->lock, NULL);
+    pthread_cond_init(&buffer->not_full, NULL);
+    pthread_cond_init(&buffer->not_empty, NULL);
+
+    return buffer;
+}
+void destroy_bb(bounded_buffer* buffer) {
+    // Destroy mutex and condition variables
+    pthread_mutex_destroy(&buffer->lock);
+    pthread_cond_destroy(&buffer->not_full);
+    pthread_cond_destroy(&buffer->not_empty);
+
+    // Free memory used by buffer array and buffer struct
+    free(buffer->buffer);
+    free(buffer);
+}
+thread_node *create_next_node(thread_node *cur_node){
+    thread_node *out_node = (thread_node *) malloc(sizeof(thread_node));
+
+    out_node->in_buffer = cur_node->out_buffer; // map buffer of prev to next
+    out_node->out_buffer = create_bb(BUFFER_SIZE);
+    out_node->next = NULL;
+    return out_node;
+}
+
+
+// ------------------------------------------------
+int main() {
+    bounded_buffer *in_buffer = create_bb(BUFFER_SIZE);
+    bounded_buffer *out_buffer = create_bb(BUFFER_SIZE);
+
+    int data[] = {4, 2, 1, 3};
+    int length = sizeof(data) / sizeof(data[0]);
+    pthread_t thread_id;
+    thread_node first_node = {thread_id,NULL,NULL,NULL};
+
+
+    thread_args args = {data, length, &first_node};
+
+
+    pthread_create(&first_node.thread_id, NULL, &gen_thread, &args);
+
+    // Wait for the thread to finish
+    pthread_join(first_node.thread_id, NULL);
+    printf("join done");
+    // Clean up
+    destroy_bb(in_buffer);
+    destroy_bb(out_buffer);
+
+    return 0;
+}
+
+
+void* gen_thread(void *c_arg){ // TODO assumed that threads exist already, need to create them in iteration function
+    thread_args *cur_args = (thread_args*)c_arg;
+    thread_node *cur_node = cur_args->Node;
+    // If there is no downstream thread, create an output node/thread
+    printf("Thread 1 created");
+    if (cur_node->next == NULL) {
+
+        thread_node *out_node =  create_next_node(cur_node);
+        thread_args out_args = {cur_args->data, cur_args->length,out_node};
+        printf("second thread created");
+        pthread_create(&out_node->thread_id, NULL, &HelloWorld, &out_args);
+        printf("HW handed to thread.");
+    }
+//    bounded_buffer *out_buffer = cur_node->out_buffer;
+
+
+    return NULL;
+}
+
+void* HelloWorld(void *out_args) {
+    printf("HW-call\n");
+    thread_args *t_args = (thread_args*)out_args;
+    printf("Thread id is %lu/n", (unsigned long)t_args->Node->thread_id);
+    return out_args;
+}
+
+
+//
+//
+//// gen RAND + write to buffer
+//for (int i=0; i<length; i++){
+//int value = rand();
+//send_bb(out_buffer,value);
+//}
+//// send 2x END signal
+//send_bb(out_buffer,END_SIGNAL);
+//send_bb(out_buffer,END_SIGNAL);

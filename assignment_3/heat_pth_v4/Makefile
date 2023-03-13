@@ -1,3 +1,4 @@
+DEBUG=1
 CURR_DIR=$(notdir $(basename $(shell pwd)))
 PRJ=$(CURR_DIR)
 SRC=$(wildcard *.c)

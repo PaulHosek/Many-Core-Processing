@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
+#include <omp.h>
 
 #include "compute.h"
 
@@ -48,6 +49,7 @@ double* conductivity)
 void do_compute(const struct parameters* p, struct results *r)
 {
     // Initialize grid 
+    const int nthreads = p->nthreads;
     double * temperature_old = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * temperature_new = (double * ) malloc((p->N + 2) * p->M * sizeof(double));
     double * conductivity = (double * ) malloc((p->N) * p->M * sizeof(double));
@@ -81,6 +83,7 @@ void do_compute(const struct parameters* p, struct results *r)
         converged = 1;
         compute_statistics = (!iters_to_next_period || it == maxiter);
 
+        #pragma omp parallel for num_threads (nthreads) reduction(&: converged) reduction(max: maxdiff)
         for (row_offset=M; row_offset < grid_end; row_offset+=M)
         {
             // Inner cells
@@ -168,6 +171,7 @@ void do_compute(const struct parameters* p, struct results *r)
 
         // Go over temperatures and check minimum, maximum temperature and maximum difference
         if (compute_statistics || converged){
+            #pragma omp parallel for num_threads (nthreads) reduction(+: tsum) reduction(max: tmax) reduction(min: tmin)
             for (index = M; index < grid_end; ++index){
                 new_temperature = temperature_new[index];
                 tsum += new_temperature;
