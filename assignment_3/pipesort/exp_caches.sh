@@ -41,3 +41,6 @@ for n_nums in 10 100 1000 3000 4000; do
     perf stat -e $events ./pipesort -l $n_nums -s $((RANDOM)) -b $buffersize 2>&1 | grep -oP '(\d+\.?\d*)' | tr '\n' ',' >> res_caches.txt
   done
 done
+
+perf prun stat n_nums,buffersize,task-clock,cycles,instructions,cache-references,cache-misses ./pipesort -l 1000 -b 20
+perf stat -e task-clock,cycles,instructions,cache-references,cache-misses ./pipesort -l 1000 -b 20

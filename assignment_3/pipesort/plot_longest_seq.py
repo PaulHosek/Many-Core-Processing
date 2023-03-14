@@ -6,7 +6,7 @@ import seaborn as sns
 plt.style.use('seaborn-v0_8-darkgrid')
 rcParams['font.size'] = 16
 
-data = pd.read_csv("res_longest_seq.csv")
+data = pd.read_csv("data/res_longest_seq_find.csv")
 
 
 print(data)
@@ -31,4 +31,5 @@ legend = plt.legend(title="Buffer size")
 # legend.legendPatch.set_facecolor('white')
 # plt.xscale("log")
 # plt.yscale("log")
+plt.xlim((0,25))
 plt.savefig("test.png", bbox_inches="tight", dpi=300)
