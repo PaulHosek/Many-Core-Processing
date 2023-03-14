@@ -1,8 +1,7 @@
 module load prun
 rm res_hist_size.csv
 
-#directories=(histo_atomic histo_mutex histo_avoiding_mutex_ex histo_semaphores histo_sw_transactional)
-directories=(histo_atomic histo_mutex histo_semaphores histo_sw_transactional) # histo_no_mutex
+directories=(histo_atomic histo_mutex histo_avoiding_mutex_ex histo_semaphores histo_sw_transactional)
 
 repetitions=1
 max_length=3000 # idk make 1 M
