@@ -1,14 +1,14 @@
-all: $(filter-out Makefile,$(wildcard *))
+all: $(filter-out Makefile %.sh %.py,$(wildcard *))
 
-.PHONY: $(filter-out Makefile,$(wildcard *)) clean $(addprefix clean,$(filter-out Makefile,$(wildcard *)))
+.PHONY: $(filter-out Makefile %.sh %.py,$(wildcard *)) clean $(addprefix clean,$(filter-out Makefile %.sh %.py,$(wildcard *)))
 
-$(filter-out Makefile,$(wildcard *)):
+$(filter-out Makefile %.sh %.py,$(wildcard *)):
 	$(MAKE) -C $@
 
-clean: $(addprefix clean_,$(filter-out Makefile,$(wildcard *)))
+clean: $(addprefix clean_,$(filter-out Makefile %.sh %.py,$(wildcard *)))
 	@echo $+
 	
 
-$(addprefix clean_,$(filter-out Makefile,$(wildcard *))):
+$(addprefix clean_,$(filter-out Makefile %.sh %.py,$(wildcard *))):
 	@echo clean $@
 	$(MAKE) -C $(subst clean_,,$@) clean
