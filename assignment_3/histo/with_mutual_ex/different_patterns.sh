@@ -1,16 +1,17 @@
 module load prun
-rm res_hist_patterns.csv
+rm res_hist.csv
 
-directories=(histo_atomic histo_mutex histo_avoiding_mutex_ex histo_semaphores histo_sw_transactional)
+# histo_atomic histo_mutex histo_avoiding_mutual_ex
+directories=(histo_atomic histo_mutex histo_semaphores histo_sw_transactional histo_avoiding_mutual_ex)
 
-repetitions=50
+repetitions=3
 threads=(1 2 4 8 16)
 patterns=("areas" "plasma" "gradient" "uni" "pat1" "pat2")
 sizes=(1000 3000 5000)
 
-if [ ! -f res_hist_patterns.csv ]; then
-  touch res_hist_patterns.csv
-  echo "version,pattern,thread,n_rows,n_cols,time_elapsed" > res_hist_patterns.csv
+if [ ! -f res_hist.csv ]; then
+  touch res_hist.csv
+  echo "version,pattern,thread,n_rows,n_cols,time_elapsed" > res_hist.csv
 fi
 
 #copy no mutex directory into no_mutex folder
@@ -31,29 +32,33 @@ for dir in "${directories[@]}"; do
   do
 	for pattern in "${patterns[@]}"
     do
+        echo "prun -np 1 -v $dir -n $size -m $size -p $thread -i ../../../../images/${pattern}_${size}x${size}.pgm"
         time_elapsed=$(prun -np 1 -v "$dir" -n $size -m $size -p $thread -i "../../../../images/${pattern}_${size}x${size}.pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern, $thread, $size,$size,$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern, $thread, $size,$size,$time_elapsed" >> ../res_hist.csv
 
+        echo "prun -np 1 -v $dir -n $(( $size*10 )) -m $(( $size/10 )) -p $thread -i ../../../../images/${pattern}_$(( $size/10 ))x$(( $size*10 )).pgm"
         time_elapsed=$(prun -np 1 -v "$dir" -n $(( $size*10 )) -m $(( $size/10 )) -p $thread -i "../../../../images/${pattern}_$(( $size/10 ))x$(( $size*10 )).pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern, $thread,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern, $thread,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist.csv
 
+        echo "prun -np 1 -v $dir -n $(( $size/10 )) -m $(( $size*10 )) -p $thread -i ../../../../images/${pattern}_$(( $size*10 ))x$(( $size/10 )).pgm"
         time_elapsed=$(prun -np 1 -v "$dir" -n $(( $size/10 )) -m $(( $size*10 )) -p $thread -i "../../../../images/${pattern}_$(( $size*10 ))x$(( $size/10 )).pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern, $thread,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern, $thread,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist.csv
     done
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $size -m $size -p $thread -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random, $thread, $size,$size,$time_elapsed" >> ../res_hist_patterns.csv
+    echo "$dir, random, $thread, $size,$size,$time_elapsed" >> ../res_hist.csv
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $(( $size*10 )) -m $(( $size/10 )) -p $thread -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random, $thread,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist_patterns.csv
+    echo "$dir, random, $thread,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist.csv
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $(( $size/10 )) -m $(( $size*10 )) -p $thread -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random, $thread,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist_patterns.csv
-done
+    echo "$dir, random, $thread,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist.csv
 done
 done
 
-  cd ..
+done
+
+cd ..
 done
 
 #histo_seq
@@ -68,27 +73,27 @@ cd "$dir"
 	for pattern in "${patterns[@]}"
     do
         time_elapsed=$(prun -np 1 -v "$dir" -n $size -m $size -i "../../../../images/${pattern}_${size}x${size}.pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern,-, $size,$size,$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern,-, $size,$size,$time_elapsed" >> ../res_hist.csv
 
         time_elapsed=$(prun -np 1 -v "$dir" -n $(( $size*10 )) -m $(( $size/10 )) -i "../../../../images/${pattern}_$(( $size/10 ))x$(( $size*10 )).pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern,-,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern,-,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist.csv
 
         time_elapsed=$(prun -np 1 -v "$dir" -n $(( $size/10 )) -m $(( $size*10 )) -i "../../../../images/${pattern}_$(( $size*10 ))x$(( $size/10 )).pgm" | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-        echo "$dir, $pattern,-,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist_patterns.csv
+        echo "$dir, $pattern,-,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist.csv
     done
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $size -m $size -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random,-, $size,$size,$time_elapsed" >> ../res_hist_patterns.csv
+    echo "$dir, random,-, $size,$size,$time_elapsed" >> ../res_hist.csv
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $(( $size*10 )) -m $(( $size/10 )) -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random,-,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist_patterns.csv
+    echo "$dir, random,-,$(( $size*10 )),$(( $size/10 )),$time_elapsed" >> ../res_hist.csv
 
     time_elapsed=$(prun -np 1 -v "$dir" -r -n $(( $size/10 )) -m $(( $size*10 )) -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-    echo "$dir, random,-,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist_patterns.csv
+    echo "$dir, random,-,$(( $size/10 )),$(( $size*10 )),$time_elapsed" >> ../res_hist.csv
 done
 done
 
 cd ..
 
-rm -R histo_avoiding_mutual_ex
-rm -R histo_seq
+# rm -R histo_avoiding_mutual_ex
+# rm -R histo_seq
