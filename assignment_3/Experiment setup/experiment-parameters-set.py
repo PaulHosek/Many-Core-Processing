@@ -124,10 +124,25 @@ def make_plots():
 
     experiment_tuples = [(100, 100), (1000,1000), (100, 20000), (20000, 100), (5000, 5000)]
 
-    # fig1,ax1 = plt.subplots()
-    # fig2,ax2 = plt.subplots()
+    #Flops best
+    fig1,ax1 = plt.subplots()
+
+    #Times best
+    fig2,ax2 = plt.subplots()
+
+    #Speedups diff versions vs OMP
     fig3,ax3 = plt.subplots()
+
+    #Speedup diff versions vs seq
     fig4,ax4 = plt.subplots()
+
+    #Cache misses
+    fig5,ax5 = plt.subplots()
+
+    #Test corectness
+    test_corectness()
+    
+    #
 
     # for tuple in experiment_tuples:
     #     (m, n) = tuple
