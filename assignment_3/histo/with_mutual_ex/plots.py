@@ -173,3 +173,57 @@ ax.set_ylabel("Speed-up", fontsize=14)
 plt.xticks(rotation=0)
 
 plt.savefig("threads_speedup.png", dpi=300, bbox_inches="tight")
+
+
+
+
+df_plot3 = df[(df.n_rows==df.n_cols) & (df.pattern=="random") & (df.thread_par == 16)]
+
+df_plot3.sort_values(by=['version_par', 'n_rows'], inplace=True)
+print(df_plot3)
+
+n_rows = df_plot3.n_rows.unique()
+# num_nrows = df_plot3.n_rows.size
+versions = df_plot3.version_par.unique()
+num_versions = df_plot3.version_par.unique().size
+speedup_means_atomic = df_plot3[df_plot3.version_par=='histo_atomic']['speedup_mean'].values
+speedup_means_mutex = df_plot3[df_plot3.version_par=='histo_mutex']['speedup_mean'].values
+speedup_means_semaphores = df_plot3[df_plot3.version_par=='histo_semaphores']['speedup_mean'].values
+speedup_means_sw_transactional = df_plot3[df_plot3.version_par=='histo_sw_transactional']['speedup_mean'].values
+speedup_means_avoiding_mutex = df_plot3[df_plot3.version_par=='histo_avoiding_mutual_ex']['speedup_mean'].values
+speedup_sem_atomic = df_plot3[df_plot3.version_par=='histo_atomic']['speedup_sem'].values
+speedup_sem_mutex = df_plot3[df_plot3.version_par=='histo_mutex']['speedup_sem'].values
+speedup_sem_semaphores = df_plot3[df_plot3.version_par=='histo_semaphores']['speedup_sem'].values
+speedup_sem_sw_transactional = df_plot3[df_plot3.version_par=='histo_sw_transactional']['speedup_sem'].values
+speedup_sem_avoiding_mutex = df_plot3[df_plot3.version_par=='histo_avoiding_mutual_ex']['speedup_sem'].values
+
+fig, ax = plt.subplots(figsize=(8, 6))
+# ax.bar(threads, means, yerr=1.96*sems, capsize=5, color="#8FA993")
+input_sizes = np.power(np.array(n_rows),2)
+ax.set_xticks(n_rows, labels=n_rows)
+ax.set_yticks(n_rows, labels=n_rows) # TODO hashed this
+#ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
+#ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
+print(speedup_means_atomic)
+print(n_rows)
+ax.scatter(n_rows, speedup_means_atomic, color="red")
+ax.plot(n_rows, speedup_means_atomic, color="red", label="atomic")
+ax.scatter(n_rows, speedup_means_mutex, color="purple")
+ax.plot(n_rows, speedup_means_mutex, color="purple", label="mutex")
+ax.scatter(n_rows, speedup_means_semaphores, color="green")
+ax.plot(n_rows, speedup_means_semaphores, color="green", label="semaphores")
+ax.scatter(n_rows, speedup_means_sw_transactional, color="blue")
+ax.plot(n_rows, speedup_means_sw_transactional, color="blue", label="SW transational")
+ax.scatter(n_rows, speedup_means_avoiding_mutex, color="orange")
+ax.plot(n_rows, speedup_means_avoiding_mutex, color="orange", label="avoiding mutex")
+# ax.scatter(n_rows, n_rows, color="green")
+# ax.plot(n_rows, n_rows, color="green", label="linear") # linear for reference
+ax.legend(loc="upper left")
+ax.set_title("Input size comparison", fontsize=16)
+ax.set_xlabel("Input size", fontsize=14)
+ax.set_ylabel("Speed-up", fontsize=14)
+#ax.set_ylim(1)
+
+plt.xticks(rotation=0)
+
+plt.savefig("size_versions.png", dpi=300, bbox_inches="tight")
