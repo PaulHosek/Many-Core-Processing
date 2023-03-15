@@ -103,10 +103,12 @@ offset += width
 rects = ax.bar(x + offset, speedup_means_semaphores, yerr=1.96*speedup_sem_semaphores, width=width, label="semaphores", color="green")
 
 offset += width
-rects = ax.bar(x + offset, speedup_means_sw_transactional, yerr=1.96*speedup_sem_sw_transactional, width=width, label="SW transactional", color="blue")
+rects = ax.bar(x + offset, speedup_means_mutex, yerr=1.96*speedup_sem_mutex, width=width, label="with_mutex", color="purple")
 
 offset += width
-rects = ax.bar(x + offset, speedup_means_mutex, yerr=1.96*speedup_sem_mutex, width=width, label="with_mutex", color="purple")
+rects = ax.bar(x + offset, speedup_means_sw_transactional, yerr=1.96*speedup_sem_sw_transactional, width=width, label="SW transactional", color="blue")
+
+
 
 ax.set_title("Speed-up for different patterns and variants of mutual exclusion", fontsize=16)
 
