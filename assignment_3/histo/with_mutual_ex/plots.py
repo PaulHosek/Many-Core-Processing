@@ -116,6 +116,7 @@ ax.set_xticks(x + width, df.pattern.unique())
 ax.set_xlabel("Patterns", fontsize=14)
 ax.set_ylabel("Speed-up", fontsize=14)
 ax.set_yscale("log")
+ax.axhline(1)
 legend= ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=3)
 legend.set_title("Buffer size", prop={'size': 14})
 #ax.set_ylim(1)
@@ -128,7 +129,7 @@ plt.savefig("speedup_patterns_versions.png", dpi=300, bbox_inches="tight")
 ################################################################
 # Speed-up for different versions and threads
 # Fix length : 5000x5000, pattern=pat1
-df_plot2 = df[(df.n_rows==5000) & (df.n_cols==5000) & (df.pattern=="pat1")]
+df_plot2 = df[(df.n_rows==1000) & (df.n_cols==1000) & (df.pattern=="uni")]
 
 df_plot2.sort_values(by=['version_par', 'thread_par'], inplace=True)
 print(df_plot2)
@@ -171,6 +172,7 @@ ax.set_title("Threads Speed-up", fontsize=16)
 ax.set_xlabel("Number of Threads", fontsize=14)
 ax.set_ylabel("Speed-up", fontsize=14)
 #ax.set_ylim(1)
+
 
 plt.xticks(rotation=0)
 
