@@ -108,55 +108,55 @@ for m in ${experiment_dir}; do
       cd heat_seq_good
       #Sequential old
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_seq_old};
-      prun -np 1 -v heat_seq_good -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_seq_good -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
       
       cd heat_seq
       #Sequential new
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_seq_new};
-      prun -np 1 -v heat_seq -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_seq -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_omp
       #OMP
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_omp};
-      prun -np 1 -v heat_omp -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_omp -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_pth
       #PTH v0
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_v0};
-      prun -np 1 -v heat_pth -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_pth_v1
       #PTH v1 
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_v1};
-      prun -np 1 -v heat_pth_v1 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth_v1 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..   
 
       cd heat_pth_v2
       #PTH v2
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_v2};
-      prun -np 1 -v heat_pth_v2 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth_v2 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_pth_v3
       #PTH v3
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_v3};
-      prun -np 1 -v heat_pth_v3 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth_v3 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_pth_v4;
       #PTH v4
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_v4};
-      prun -np 1 -v heat_pth_v4 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth_v4 -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
 
       cd heat_pth_simd;
       #PTH SIMD
       echo -n "${array[0]}, ${array[1]}, ${i} " >> ${data_pth_simd};
-      prun -np 1 -v heat_pth_simd -n ${array[1]} -m ${array[0]} -i ${maxiter} -e "../${m}" -c ${m} -t ${m} -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
+      prun -np 1 -v heat_pth_simd -n ${array[1]} -m ${array[0]} -i ${maxiter} -e ${e} -c "../${m}" -t "../${m}" -r 1 -k ${maxiter} -L ${L} -H ${H} -p ${i};
       cd ..
     done
   done
