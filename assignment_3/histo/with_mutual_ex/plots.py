@@ -173,6 +173,7 @@ ax.set_xlabel("Number of Threads", fontsize=14)
 ax.set_ylabel("Speed-up", fontsize=14)
 #ax.set_ylim(1)
 
+
 plt.xticks(rotation=0)
 
 plt.savefig("threads_speedup.png", dpi=300, bbox_inches="tight")
