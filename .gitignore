@@ -50,3 +50,15 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/assignment_3/pipesort/pp_buffersize.png
+/assignment_3/pipesort/pp_longest_seq.png
+/assignment_3/pipesort/res_longest_seq.csv
+/assignment_3/pipesort/test.o
+/assignment_3/pipesort/test.png
+/assignment_3/pipesort/test.py
+/assignment_3/pipesort/test_14.csv
+/assignment_3/pipesort/data/res_longest_seq_find.csv
+/assignment_3/pipesort/data/test.csv
+/assignment_3/pipesort/data/res_longest_seq_14.csv
+/assignment_3/pipesort/data/res_buffersize_14_1000.csv
+/assignment_3/pipesort/data/only_100_15.csv
