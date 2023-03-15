@@ -77,7 +77,7 @@ cd ..
 #heat_pth_simd
 cd heat_pth_simd
 make clean
-make ${heat_pth_simd}
+make ${data_pth_simd}
 cd ..
 
 #2.000.000 cell counts ... 1 iteration (20000 x 100)
@@ -88,7 +88,7 @@ cd ..
 #500.000.000 ... 250 iterations (20000 x 100)
 #500.000.000 ... 50000 iterations (100 x 100)
 #500.000.000 ...  500 iterations (1000 x 1000)
-#500.000.000 cell counts ... 50 iterations (5000 x 5000) 
+#500.000.000 cell counts ... 20 iterations (5000 x 5000) 
 
 for m in ${experiment_dir}; do
   for ((it=${start}; it<=${repetitions}; it++)); do
@@ -97,7 +97,7 @@ for m in ${experiment_dir}; do
       if [ ${array[0]} == "1000" ]; then 
         maxiter=500;
       elif [ ${array[0]} == "5000" ]; then
-        maxiter=50;
+        maxiter=20;
       elif [ ${array[0]} == "20000" ] || [ ${array[1]} == "20000" ]; then
         maxiter=250;
       else
