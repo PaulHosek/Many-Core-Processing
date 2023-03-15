@@ -14,13 +14,14 @@ data = pd.read_csv("data/res_longest_seq_final.csv")
 # ax = sns.lineplot(x='n_nums', y='runtime', data=data[data["buffersize"]==100], label="100")
 plt.figure()
 
-sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["#red", "#brown", "#blue"], alpha=0.5)
+sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["red", "blue", "green"], alpha=0.5)
 
 
 plt.xlabel("Length random sequence")
 plt.ylabel("Runtime (seconds)")
 # # Add a black box around the legend
-legend = plt.legend(title="Buffer size")
+legend= plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=3)
+legend.set_title("Buffer size", prop={'size': 12})
 # frame = legend.get_frame()
 # frame.set_linewidth(0.0)
 # frame.set_facecolor('black')
