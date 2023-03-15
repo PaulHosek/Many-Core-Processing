@@ -6,16 +6,15 @@ import seaborn as sns
 plt.style.use('seaborn-v0_8-darkgrid')
 rcParams['font.size'] = 16
 
-data = pd.read_csv("data/res_longest_seq_find.csv")
+data = pd.read_csv("data/res_longest_seq_final.csv")
 
 
-print(data)
 
 # ax = sns.lineplot(x='n_nums', y='runtime', data=data[data["buffersize"]==10], label="10")
 # ax = sns.lineplot(x='n_nums', y='runtime', data=data[data["buffersize"]==100], label="100")
 plt.figure()
 
-sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["#809F92", "#446469"])
+sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["#red", "#brown", "#blue"], alpha=0.5)
 
 
 plt.xlabel("Length random sequence")
@@ -31,5 +30,4 @@ legend = plt.legend(title="Buffer size")
 # legend.legendPatch.set_facecolor('white')
 # plt.xscale("log")
 # plt.yscale("log")
-plt.xlim((0,25))
-plt.savefig("test.png", bbox_inches="tight", dpi=300)
+plt.savefig("pp_longest_seq.png", bbox_inches="tight", dpi=300)
