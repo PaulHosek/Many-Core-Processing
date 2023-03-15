@@ -1,27 +1,35 @@
-from matplotlib import rcParams
+from matplotlib import rcParams,colors
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
+
 
 plt.style.use('seaborn-v0_8-darkgrid')
 rcParams['font.size'] = 16
 
-data = pd.read_csv("data/res_longest_seq.csv")
+data = pd.read_csv("data/res_longest_seq_14_sep.csv")
+# data[data["buffersize"]==10].to_csv('test_14.csv')
 
+cmap = colors.LinearSegmentedColormap.from_list("mycmap", ["green", "red"])
 
-print(data)
+bb_sizes = sorted(list(set(data["buffersize"])), reverse=True)
+
+fig, ax = plt.subplots()
+
 
 # ax = sns.lineplot(x='n_nums', y='runtime', data=data[data["buffersize"]==10], label="10")
 # ax = sns.lineplot(x='n_nums', y='runtime', data=data[data["buffersize"]==100], label="100")
-plt.figure()
 
-sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["#809F92", "#446469"])
+
+sns.lineplot(x='n_nums', y='runtime', hue="buffersize", data=data, palette=["green", "brown", "red"])
 
 
 plt.xlabel("Length random sequence")
 plt.ylabel("Runtime (seconds)")
 # # Add a black box around the legend
-legend = plt.legend(title="Buffer size")
+legend= plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=3)
+legend.set_title("Buffer size", prop={'size': 12})
 # frame = legend.get_frame()
 # frame.set_linewidth(0.0)
 # frame.set_facecolor('black')
@@ -31,4 +39,4 @@ legend = plt.legend(title="Buffer size")
 # legend.legendPatch.set_facecolor('white')
 # plt.xscale("log")
 # plt.yscale("log")
-plt.savefig("test.png", bbox_inches="tight", dpi=300)
+plt.savefig("pp_longest_seq.png", bbox_inches="tight", dpi=300)
