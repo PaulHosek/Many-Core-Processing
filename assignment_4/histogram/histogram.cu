@@ -73,9 +73,13 @@ static void checkCudaCall(cudaError_t result) {
 }
 
 
-__global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-// insert operation here
 
+__global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
+    // insert operation here
+    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
+    if (tid < img_size){
+        atomicAdd(&histogram[image[tid]], 1);
+    }
 }
 
 void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
@@ -104,9 +108,14 @@ void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram,
     checkCudaCall(cudaMemcpy(deviceImage, image, img_size*sizeof(unsigned char), cudaMemcpyHostToDevice));
     memoryTime.stop();
 
+    // Paul:
+    // launch differently, change threadblock-size such we dont wast threads if the image size is not a multiple of 512
+    int numBlocks = (img_size + threadBlockSize - 1) / threadBlockSize;
+
     // execute kernel
     kernelTime1.start();
-    histogramKernel<<<img_size/threadBlockSize, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
+    histogramKernel<<<numBlocks, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
+//    histogramKernel<<<img_size/threadBlockSize, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -130,7 +139,9 @@ void histogramSeq(unsigned char* image, long img_size, unsigned int* histogram, 
 
   timer sequentialTime = timer("Sequential");
   
-  for (i=0; i<hist_size; i++) histogram[i]=0;
+  for (i=0; i<hist_size; i++){
+      histogram[i]=0;
+  }
 
   sequentialTime.start();
   for (i=0; i<img_size; i++) {
