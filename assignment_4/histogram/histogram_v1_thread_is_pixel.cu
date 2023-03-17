@@ -20,7 +20,6 @@ using namespace std;
    checkCudaCall(cudaGetLastError());
 */
 
-git filter-branch --index-filter 'git rm -r --cached --ignore-unmatch <heat_assignment_3_group_5_14567040_12637033_14700239_1456263.tar.gz>' HEAD
 
 void die(const char *msg){
     if (errno != 0) 
