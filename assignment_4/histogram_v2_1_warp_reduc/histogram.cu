@@ -99,23 +99,13 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
     __syncthreads();
 
 
-    // Perform tree-reduction on local histograms
-    // add local histogram of i+s to own
-    // divide by 2 every step
-    // 512
-    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
-        if (threadIdx.x < s) {
-            int i = threadIdx.x * 2;
-            local_hist[i] += local_hist[i + s];
+    // warp-reduction
+    if (threadIdx.x < warpSize) {
+        // 8 iterations per thread
+        for (int i = 0; i < 256; i += warpSize) {
+            atomicAdd(&histogram[i + threadIdx.x], local_hist[i + threadIdx.x]);
         }
-        __syncthreads();
     }
-
-    if (threadIdx.x < 256) {
-        histogram[threadIdx.x] = local_hist[threadIdx.x];
-    }
-
-
 }
 
 

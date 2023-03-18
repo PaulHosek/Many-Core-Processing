@@ -78,10 +78,9 @@ static void checkCudaCall(cudaError_t result) {
 
 
 __global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-    // Compute the global thread ID
     unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
 
-    // The first 256 threads within a block initialise the local array to 0
+    // initialise local hist for block
     __shared__ unsigned int local_hist[256]; // cannot use hist_size because not compile-time constant
     if (threadIdx.x < 256) {
         local_hist[threadIdx.x] = 0;
@@ -96,7 +95,6 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
         atomicAdd(&local_hist[image[i]], 1);
     }
 
-    // Synchronize threads to ensure that all warps have computed their local hist + aggregate to global hist
     __syncthreads();
     if (threadIdx.x < 256) {
         atomicAdd(&histogram[threadIdx.x], local_hist[threadIdx.x]);
