@@ -19,15 +19,13 @@ using namespace std;
 
    checkCudaCall(cudaGetLastError());
 */
-
-
 void die(const char *msg){
-    if (errno != 0)
+    if (errno != 0) 
         perror(msg);
     else
         fprintf(stderr, "error: %s\n", msg);
     exit(1);
-}
+}   
 
 void generate_image(int num_rows, int num_cols, unsigned char * image){
     for (int i = 0; i < num_cols * num_rows; ++i)
@@ -37,18 +35,18 @@ void generate_image(int num_rows, int num_cols, unsigned char * image){
 }
 
 void read_image(const char * image_path, int num_rows, int num_cols, unsigned char * image){
-    char format[3];
+	char format[3];
     FILE *f;
     unsigned imgw, imgh, maxv, v;
     size_t i;
 
-    printf("Reading PGM data from %s...\n", image_path);
+	printf("Reading PGM data from %s...\n", image_path);
 
-    if (!(f = fopen(image_path, "r"))) die("fopen");
+	if (!(f = fopen(image_path, "r"))) die("fopen");
 
-    fscanf(f, "%2s", format);
+	fscanf(f, "%2s", format);
     if (format[0] != 'P' || format[1] != '2') die("only ASCII PGM input is supported");
-
+    
     if (fscanf(f, "%u", &imgw) != 1 ||
         fscanf(f, "%u", &imgh) != 1 ||
         fscanf(f, "%u", &maxv) != 1) die("invalid input");
@@ -76,12 +74,38 @@ static void checkCudaCall(cudaError_t result) {
 
 
 
+
+
+
 __global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
+    // Compute the global thread ID
     unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
-    if (tid < img_size){
-        atomicAdd(&histogram[image[tid]], 1);
+
+    // The first 256 threads within a block initialise the local array to 0
+    __shared__ unsigned int local_hist[256]; // cannot use hist_size because not compile-time constant
+    if (threadIdx.x < 256) {
+        local_hist[threadIdx.x] = 0;
+    }
+    __syncthreads();
+
+    // Compute local histogram for each threadblock using strided access to image
+    // -> avoid race conditions and ensure unique access
+    // each thread works on blockDim*gridDim elements: 1024*
+    int n_elem = blockDim.x * gridDim.x;
+    for (int i = tid; i < img_size; i += n_elem) {
+        atomicAdd(&local_hist[image[i]], 1);
+    }
+
+    // Synchronize threads to ensure that all warps have computed their local hist + aggregate to global hist
+    __syncthreads();
+    if (threadIdx.x < 256) {
+        atomicAdd(&histogram[threadIdx.x], local_hist[threadIdx.x]);
     }
 }
+
+
+
+
 
 void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
     int threadBlockSize = 512;
@@ -116,6 +140,7 @@ void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram,
     // execute kernel
     kernelTime1.start();
     histogramKernel<<<numBlocks, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
+
 //    histogramKernel<<<img_size/threadBlockSize, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
     cudaDeviceSynchronize();
     kernelTime1.stop();
@@ -136,21 +161,21 @@ void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram,
 }
 
 void histogramSeq(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-    int i;
+  int i; 
 
-    timer sequentialTime = timer("Sequential");
+  timer sequentialTime = timer("Sequential");
+  
+  for (i=0; i<hist_size; i++){
+      histogram[i]=0;
+  }
 
-    for (i=0; i<hist_size; i++){
-        histogram[i]=0;
-    }
-
-    sequentialTime.start();
-    for (i=0; i<img_size; i++) {
-        histogram[image[i]]++;
-    }
-    sequentialTime.stop();
-
-    cout << "histogram (sequential): \t\t" << sequentialTime << endl;
+  sequentialTime.start();
+  for (i=0; i<img_size; i++) {
+	histogram[image[i]]++;
+  }
+  sequentialTime.stop();
+  
+  cout << "histogram (sequential): \t\t" << sequentialTime << endl;
 
 }
 
@@ -172,20 +197,20 @@ int main(int argc, char* argv[]) {
                 seed = atoi(optarg);
                 break;
             case 'i':
-                image_path = optarg;
-                break;
+            	image_path = optarg;
+            	break;
             case 'r':
-                gen_image = 1;
-                break;
+            	gen_image = 1;
+            	break;
             case 'n':
-                num_rows = strtol(optarg, 0, 10);
-                break;
+            	num_rows = strtol(optarg, 0, 10);
+            	break;
             case 'm':
-                num_cols = strtol(optarg, 0, 10);
-                break;
-            case 'g':
-                debug = 1;
-                break;
+				num_cols = strtol(optarg, 0, 10);
+				break;
+			case 'g':
+				debug = 1;
+				break;
             case '?':
                 fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
                 return -1;
@@ -197,33 +222,33 @@ int main(int argc, char* argv[]) {
     int hist_size = 256;
     long img_size = num_rows*num_cols;
 
-    unsigned char *image = (unsigned char *)malloc(img_size * sizeof(unsigned char));
-    unsigned int *histogramS = (unsigned int *)malloc(hist_size * sizeof(unsigned int));
+    unsigned char *image = (unsigned char *)malloc(img_size * sizeof(unsigned char)); 
+    unsigned int *histogramS = (unsigned int *)malloc(hist_size * sizeof(unsigned int));     
     unsigned int *histogram = (unsigned int *)malloc(hist_size * sizeof(unsigned int));
 
     /* Seed such that we can always reproduce the same random vector */
     if (gen_image){
-        srand(seed);
-        generate_image(num_rows, num_cols, image);
+    	srand(seed);
+    	generate_image(num_rows, num_cols, image);
     }else{
-        read_image(image_path,num_rows, num_cols, image);
+    	read_image(image_path,num_rows, num_cols, image);
     }
 
     histogramSeq(image, img_size, histogramS, hist_size);
     histogramCuda(image, img_size, histogram, hist_size);
-
+    
     // verify the resuls
     for(int i=0; i<hist_size; i++) {
-        if (histogram[i]!=histogramS[i]) {
-            cout << "error in results! Bin " << i << " is "<< histogram[i] << ", but should be " << histogramS[i] << endl;
+	  if (histogram[i]!=histogramS[i]) {
+            cout << "error in results! Bin " << i << " is "<< histogram[i] << ", but should be " << histogramS[i] << endl; 
             exit(1);
         }
     }
     cout << "results OK!" << endl;
-
+     
     free(image);
     free(histogram);
-    free(histogramS);
-
+    free(histogramS);         
+    
     return 0;
 }

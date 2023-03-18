@@ -74,50 +74,39 @@ static void checkCudaCall(cudaError_t result) {
 
 
 
+
+
+
 __global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-    // shared memory to store local histogram of warp
-    __shared__ unsigned int smem_hist[256];
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    int lane = threadIdx.x & (32-1); // tid in warp
-//    int warp_id = threadIdx.x >> 5; // warp index, = /32+ round down
-    unsigned int local_hist[256] = {0};
+    // Compute the global thread ID
+    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
 
-
-    // process 32 elements
-    // each thread processes every max(tid)s pixel. if there are 12 threads, every 12th pixel will be processed
-    // Note, that if values in image have pattern that matches this division, collisions are maximal
-    for (int i = tid; i < img_size; i += blockDim.x * gridDim.x) {
-        unsigned char value = image[i];
-        atomicAdd(&local_hist[value], 1);
-    }
-    // aggregate the local histograms using warp-level atomic operations in shared memory
-    for (int i = lane; i < 256; i += warpSize) {
-        smem_hist[i] = 0;
-    }
-    // iterate over bins (0-255)
-    for (int i = lane; i < 256; i += warpSize) {
-        unsigned int sum = 0;
-        // iterate over threads in warp
-        for (int j = 0; j < warpSize; j++) {
-            int index = i+j*256;
-//            printf("(%d)+(%d)*256 =(%d)\n", i,j,i+j*256);
-            if (index < 256){
-                sum += local_hist[index];
-            }
-
-
-//            sum += local_hist[i + j * 256]; // FIXME: here is the illegal access
-        }
-        atomicAdd(&smem_hist[i], sum);
+    // The first 256 threads within a block initialise the local array to 0
+    __shared__ unsigned int local_hist[256]; // cannot use hist_size because not compile-time constant
+    if (threadIdx.x < 256) {
+        local_hist[threadIdx.x] = 0;
     }
     __syncthreads();
-    // copy the aggregated histogram to global memory
-    if (lane == 0) {
-        for (int i = 0; i < 256; i++) {
-            atomicAdd(&histogram[i], smem_hist[i]);
-        }
+
+    // Compute local histogram for each threadblock using strided access to image
+    // -> avoid race conditions and ensure unique access
+    // each thread works on blockDim*gridDim elements: 1024*
+    int n_elem = blockDim.x * gridDim.x;
+    for (int i = tid; i < img_size; i += n_elem) {
+        atomicAdd(&local_hist[image[i]], 1);
+    }
+
+    // Synchronize threads to ensure that all warps have computed their local histograms
+    __syncthreads();
+
+    // Add up local histograms to get global histogram
+    if (threadIdx.x < 256) {
+        atomicAdd(&histogram[threadIdx.x], local_hist[threadIdx.x]);
     }
 }
+
+
+
 
 
 void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
