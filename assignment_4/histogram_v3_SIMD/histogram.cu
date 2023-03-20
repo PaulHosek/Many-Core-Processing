@@ -89,14 +89,8 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
     }
     __syncthreads();
 
-    // Compute local histogram for each threadblock using strided access to image
-    // -> avoid race conditions and ensure unique access
-    // each thread works on blockDim*gridDim elements: 1024*
-//    int n_elem = blockDim.x * gridDim.x;
-//    for (int i = tid; i < img_size; i += n_elem) {
-//        atomicAdd(&local_hist[image[i]], 1);
-//    }
 
+    // strided access + vector instructions
     uchar4 in;
     int stride = blockDim.x * gridDim.x;
     for (int i = tid; i < img_size/4; i +=stride) {
@@ -106,6 +100,7 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
         atomicAdd(&local_hist[in.z], 1);
         atomicAdd(&local_hist[in.w], 1);
     }
+
     // single thread works on <4 remaining elements
     int remainder = img_size%4;
     printf("%d (%d) | ", tid, remainder);
@@ -115,15 +110,18 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
             atomicAdd(&local_hist[image[idx]],1);
         }
     }
-
     __syncthreads();
 
 
     // warp-reduction
+    int val;
     if (threadIdx.x < warpSize) {
         // 8 iterations per thread
         for (int i = 0; i < 256; i += warpSize) {
-            atomicAdd(&histogram[i + threadIdx.x], local_hist[i + threadIdx.x]);
+            val = local_hist[i + threadIdx.x];
+            if (val != 0){
+                atomicAdd(&histogram[i + threadIdx.x], val);
+            }
         }
     }
 }

@@ -98,12 +98,15 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
 
     __syncthreads();
 
-
     // warp-reduction
+    int val;
     if (threadIdx.x < warpSize) {
         // 8 iterations per thread
         for (int i = 0; i < 256; i += warpSize) {
-            atomicAdd(&histogram[i + threadIdx.x], local_hist[i + threadIdx.x]);
+            val = local_hist[i + threadIdx.x];
+            if (val != 0){
+                atomicAdd(&histogram[i + threadIdx.x], val);
+            }
         }
     }
 }
