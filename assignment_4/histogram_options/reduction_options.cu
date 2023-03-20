@@ -19,7 +19,7 @@ if (threadIdx.x < warpSize) {
     }
 }
 
-// v3. tree reduction
+// v3. tree reduction // todo this cannot be used with shared memory, bc shared memory can only be accessed by 1 thread block
 // reduce local hists into
 // Perform tree-reduction on local histograms
 for (int s = blockDim.x / 2; s > 0; s >>= 1) {
@@ -37,3 +37,29 @@ if (threadIDX.x < 256){ // copy first local_hist, no need for atomic here
 //    for (int i = 0; i < 256; i++) {
 //        atomicAdd(&histogram[i], local_hist[i]);
 //    }
+
+
+
+
+
+
+__global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
+    // Compute the global thread ID
+    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
+
+    // The first 256 threads within a block initialise the local array to 0
+    __shared__ unsigned int local_hist[256];
+    if (threadIdx.x < 256) {
+        local_hist[threadIdx.x] = 0;
+    }
+    __syncthreads();
+
+
+    uchar4 in;
+    int stride = blockDim.x * gridDim.x;
+    for (int i = tid; i < img_size/4; i +=stride) {
+        in = *reinterpret_cast<uchar4*>(image[i]);
+    }
+
+    __syncthreads();
+}
