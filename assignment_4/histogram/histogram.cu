@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-
 using namespace std;
 
 /* Utility function, use to do error checking.
@@ -20,6 +19,8 @@ using namespace std;
 
    checkCudaCall(cudaGetLastError());
 */
+
+
 void die(const char *msg){
     if (errno != 0)
         perror(msg);
@@ -75,64 +76,12 @@ static void checkCudaCall(cudaError_t result) {
 
 
 
-
-
-
 __global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-    // Compute the global thread ID
     unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
-
-    // The first 256 threads within a block initialise the local array to 0
-    __shared__ unsigned int local_hist[256]; // cannot use hist_size because not compile-time constant
-    if (threadIdx.x < 256) {
-        local_hist[threadIdx.x] = 0;
-    }
-    __syncthreads();
-
-    // Compute local histogram for each threadblock using strided access to image
-    // -> avoid race conditions and ensure unique access
-    // each thread works on blockDim*gridDim elements: 1024*
-//    int n_elem = blockDim.x * gridDim.x;
-//    for (int i = tid; i < img_size; i += n_elem) {
-//        atomicAdd(&local_hist[image[i]], 1);
-//    }
-
-    uchar4 in;
-    int stride = blockDim.x * gridDim.x;
-    for (int i = tid; i < img_size/4; i +=stride) {
-        in = reinterpret_cast<uchar4*>(image)[i];
-        atomicAdd(&local_hist[in.x], 1);
-        atomicAdd(&local_hist[in.y], 1);
-        atomicAdd(&local_hist[in.z], 1);
-        atomicAdd(&local_hist[in.w], 1);
-    }
-    // single thread works on <4 remaining elements
-    int remainder = img_size%4;
-    printf("%d (%d) | ", tid, remainder);
-    if (tid==0 && remainder!=0) {
-        while(remainder) {
-            int idx= img_size - remainder--;
-            atomicAdd(&local_hist[image[idx]],1);
-        }
-    }
-    __syncthreads();
-
-    // warp-reduction
-    int val;
-    if (threadIdx.x < warpSize) {
-        // 8 iterations per thread
-        for (int i = 0; i < 256; i += warpSize) {
-            val = local_hist[i + threadIdx.x];
-            if (val != 0){
-                atomicAdd(&histogram[i + threadIdx.x], val);
-            }
-        }
+    if (tid < img_size){
+        atomicAdd(&histogram[image[tid]], 1);
     }
 }
-
-
-
-
 
 void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
     int threadBlockSize = 512;
@@ -167,7 +116,6 @@ void histogramCuda(unsigned char* image, long img_size, unsigned int* histogram,
     // execute kernel
     kernelTime1.start();
     histogramKernel<<<numBlocks, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
-
 //    histogramKernel<<<img_size/threadBlockSize, threadBlockSize>>>(deviceImage, img_size, deviceHisto, hist_size);
     cudaDeviceSynchronize();
     kernelTime1.stop();
