@@ -13,14 +13,24 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 file_path = os.path.join(current_dir, 'res_hist_gpu.csv')
 
-df = pd.read_csv(file_path)
-df.drop(columns=['pattern', "n_cols"], inplace=True)
+# df = pd.read_csv(file_path)
+# df.drop(columns=['pattern', "n_cols"], inplace=True)
+#
+#
+#
+#
+#
+#
+# df = df.groupby(["version", "n_rows"]).agg(["mean", "sem"])
+# df.reset_index(inplace=True)
+# df.columns = ["version", "size", "runtime_mean", "runtime_sem"]
+# df_gpu = df
+
+df_cpu = pd.read_csv(os.path.join(current_dir, "res_hist_cpu.csv"))
+print(df_cpu)
 
 
-df = df.groupby(["version", "n_rows"]).agg(["mean", "sem"])
-df.reset_index(inplace=True)
-df.columns = ["version", "size", "runtime_mean", "runtime_sem"]
-
+raise KeyboardInterrupt
 
 labels_dict = {
     'histogram_v1': 'v1 (Global)',
