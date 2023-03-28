@@ -77,9 +77,10 @@ static void checkCudaCall(cudaError_t result) {
 
 
 __global__ void histogramKernel(unsigned char* image, long img_size, unsigned int* histogram, int hist_size) {
-    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
-    if (tid < img_size){
-        atomicAdd(&histogram[image[tid]], 1);
+    int tid = threadIdx.x + blockDim.x * blockIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    for (int i = tid; i < img_size; i += stride) {
+        atomicAdd(&histogram[image[i]], 1);
     }
 }
 
