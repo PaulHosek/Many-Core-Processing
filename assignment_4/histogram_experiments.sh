@@ -4,13 +4,11 @@ rm res_hist.csv
 # histo_atomic histo_mutex histo_avoiding_mutual_ex
 directories=(histogram_v1 histogram_v2_1_localTBhist_strided histogram_v2_2_warp_reduc histogram_v3_SIMD)
 
-repetitions=1
-#patterns=("areas" "plasma" "gradient" "uni" "pat1" "pat2")
-#patterns=("areas")
-sizes=(1000 3000 5000)
+repetitions=3
+max_size=4097
 if [ ! -f res_hist.csv ]; then
   touch res_hist.csv
-  echo "version,pattern,thread,n_rows,n_cols,time_elapsed" > res_hist.csv
+  echo "version,pattern,n_rows,n_cols,time_elapsed" > res_hist.csv
 fi
 
 
@@ -19,16 +17,23 @@ for dir in "${directories[@]}"; do
   cd "$dir"
   make clean
   make
-#  time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -s 10234 -n 107 -m 97 | awk '/histogram \(kernel\):/{print $4}')
   for ((i=0;i<repetitions;i++)); do
-    for size in "${sizes[@]}" ; do
-#      for pattern in "${patterns[@]}";do
-#            time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -n $size -m $size -i "../../../../images/${pattern}_${size}x${size}.pgm" | awk '/histogram \(kernel\):/{print $4}')
-#            echo "$dir,$pattern,$thread,$size,$size,$time_elapsed" >> ../res_hist.csv
-#      done
-      time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -n $size -m $size -s $((RANDOM)) | awk '/histogram \(kernel\):/{print $4}')
-      echo "$dir,random,$thread,$size,$size,$time_elapsed" >> ../res_hist.csv
+
+    for ((size=56;size<max_size;size = size+64)) ; do
+      time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -n "$size" -m "$size" -s $((RANDOM)) | awk '/histogram \(kernel\):/{print $4}')
+      echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist.csv
+
+      time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -n $((size-1)) -m $((size-1)) -s $((RANDOM)) | awk '/histogram \(kernel\):/{print $4}')
+      echo "$dir,random,$((size+1)),$((size+1)),$time_elapsed" >> ../res_hist.csv
     done
+    for size in 32 128 256 512 1024 2048 4096; do
+      time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -n "$size" -m "$size" -s $((RANDOM)) | awk '/histogram \(kernel\):/{print $4}')
+      echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist.csv
+
+      time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -r -n $((size-1)) -m $((size-1)) -s $((RANDOM)) | awk '/histogram \(kernel\):/{print $4}')
+      echo "$dir,random,$((size+1)),$((size+1)),$time_elapsed" >> ../res_hist.csv
+    done
+
   done
   cd ..
 done
@@ -40,8 +45,14 @@ done
 
 
 
+#patterns=("areas" "plasma" "gradient" "uni" "pat1" "pat2")
+#patterns=("areas")
+#sizes=(64 128 256 512 1024 2048 4096)#    for size in "${sizes[@]}" ; do
 
-
+#      for pattern in "${patterns[@]}";do
+#            time_elapsed=$(prun -np 1 -native '-C TitanX --gres=gpu:1' ./myhistogram -n $size -m $size -i "../../../../images/${pattern}_${size}x${size}.pgm" | awk '/histogram \(kernel\):/{print $4}')
+#            echo "$dir,$pattern,$size,$size,$time_elapsed" >> ../res_hist.csv
+#      done
 
 ##histo_seq
 #dir=histo_seq
