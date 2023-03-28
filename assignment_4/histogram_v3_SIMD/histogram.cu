@@ -103,7 +103,6 @@ __global__ void histogramKernel(unsigned char* image, long img_size, unsigned in
 
     // single thread works on <4 remaining elements
     int remainder = img_size%4;
-    printf("%d (%d) | ", tid, remainder);
     if (tid==0 && remainder!=0) {
         while(remainder) {
             int idx= img_size - remainder--;
