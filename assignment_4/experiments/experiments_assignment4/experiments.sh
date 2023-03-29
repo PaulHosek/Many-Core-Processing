@@ -1,12 +1,16 @@
 module load prun
 module load cuda91/toolkit/9.1.85
-rm res_heat.csv
+#rm res_heat.csv
 
-directories=(../../../assignment_3/heat_omp ../../../assignment_3/heat_pth_v3 ../../../assignment_3/heat_pth_v4 ../../heat_cuda ../../heat_cuda_v2)
-versions=(heat_omp heat_pth_v3 heat_pth_v4)
+#directories=(../../../assignment_3/heat_omp ../../../assignment_3/heat_pth_v3 ../../../assignment_3/heat_pth_v4 ../../heat_cuda ../../heat_cuda_v2)
+#versions=(heat_omp heat_pth_v3 heat_pth_v4)
 
-versions_cpu=(heat_omp heat_pth_v3 heat_pth_v4)
-versions_gpu=(heat_cuda heat_cuda_v2)
+directories=(../../heat_cuda_v3)
+versions=(heat_cuda_v3)
+
+#versions_cpu=(heat_omp heat_pth_v3 heat_pth_v4)
+#versions_gpu=(heat_cuda heat_cuda_v2)
+versions_gpu=(heat_cuda_v3)
 
 repetitions=10
 #threads=(1 2 4 8 16)#
@@ -96,7 +100,7 @@ cd ..
 done
 
 #histo_seq
-version="histo_seq"
+version="heat_seq"
 rm -R $version
 cp "../../../assignment_3/${version}" .
 cd "$version"
