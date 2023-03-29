@@ -389,10 +389,10 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
     
     // Print to csv file for measuring 
-    double flops_per_it = 12.0;
-    double Flops = (double)p->N * (double)p->M * 
-                    (double)(r->niter * flops_per_it +
-                    (double)r->niter / p->period) / r->time;
+    // double flops_per_it = 12.0;
+    // double Flops = (double)p->N * (double)p->M * 
+    //                 (double)(r->niter * flops_per_it +
+    //                 (double)r->niter / p->period) / r->time;
 
     //clean up GPU memory allocations
     cudaFree(d_temperature_old);
