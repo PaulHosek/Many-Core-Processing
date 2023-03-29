@@ -14,9 +14,9 @@ CFLAGS=-O2
 LIB=
 NVCCFLAGS=-O2
 else
-CFLAGS=-O0 -g3
+CFLAGS=-O0 -g
 LIB=
-NVCCFLAGS=-O0 -g3
+NVCCFLAGS=-O0 -g
 endif
 
 all: $(PRJ)
