@@ -88,6 +88,9 @@ runtime_cuda1_sem = df_plot1[df_plot1['version'] == "heat_cuda"]['runtime_sem'].
 runtime_cuda2_means = df_plot1[df_plot1['version'] == "heat_cuda_v2"]['runtime_mean'].values
 runtime_cuda2_sem = df_plot1[df_plot1['version'] == "heat_cuda_v2"]['runtime_sem'].values
 
+runtime_cuda3_means = df_plot1[df_plot1['version'] == "heat_cuda_v3"]['runtime_mean'].values
+runtime_cuda3_sem = df_plot1[df_plot1['version'] == "heat_cuda_v3"]['runtime_sem'].values
+
 # versions = df_plot1['version'].values
 # num_versions = df.version.unique().size
 # runtime_means = df_plot1['runtime_mean']
@@ -119,6 +122,9 @@ rects = ax.bar(x + offset, runtime_cuda1_means, yerr=1.96*runtime_cuda1_sem, wid
 
 offset += width
 rects = ax.bar(x + offset, runtime_cuda2_means, yerr=1.96*runtime_cuda2_sem, width=width, label="CUDA v2", color="blue")
+
+offset += width
+rects = ax.bar(x + offset, runtime_cuda3_means, yerr=1.96*runtime_cuda3_sem, width=width, label="CUDA v3", color="yellow")
 
 
 
@@ -161,6 +167,9 @@ flops_cuda1_sem = df_plot1[df_plot1['version'] == "heat_cuda"]['flops_sem'].valu
 flops_cuda2_means = df_plot1[df_plot1['version'] == "heat_cuda_v2"]['flops_mean'].values
 flops_cuda2_sem = df_plot1[df_plot1['version'] == "heat_cuda_v2"]['flops_sem'].values
 
+flops_cuda3_means = df_plot1[df_plot1['version'] == "heat_cuda_v3"]['flops_mean'].values
+flops_cuda3_sem = df_plot1[df_plot1['version'] == "heat_cuda_v3"]['flops_sem'].values
+
 # versions = df_plot1['version'].values
 # num_versions = df.version.unique().size
 # runtime_means = df_plot1['runtime_mean']
@@ -192,6 +201,9 @@ rects = ax.bar(x + offset, flops_cuda1_means, yerr=1.96*flops_cuda1_sem, width=w
 
 offset += width
 rects = ax.bar(x + offset, flops_cuda2_means, yerr=1.96*flops_cuda2_sem, width=width, label="CUDA v2", color="blue")
+
+offset += width
+rects = ax.bar(x + offset, flops_cuda3_means, yerr=1.96*flops_cuda3_sem, width=width, label="CUDA v3", color="yellow")
 
 
 
