@@ -24,7 +24,7 @@ for dir in "${directories[@]}"; do
       echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
       
       time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1)) -p 16 -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-      echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
+      echo "$dir,random,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
     done
     for size in 32 128 256 512 1024 2048 4096; do
       
@@ -32,7 +32,7 @@ for dir in "${directories[@]}"; do
       echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
       
       time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1)) -p 16 -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-      echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
+      echo "$dir,random,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
 
     done
 
@@ -51,18 +51,18 @@ cd "$dir"
 
     for ((size=56;size<max_size;size = size+64)) ; do
 
-      time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1)) -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-      echo "$dir,random,-,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
+      time_elapsed=$(prun -np 1 -v "$dir" -r -n $size -m $size -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
+      echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
 
       time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1))e -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-      echo "$dir,random,-,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
+      echo "$dir,random,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
   done
   for size in 32 128 256 512 1024 2048 4096; do
-          time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1)) -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-          echo "$dir,random,-,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
+          time_elapsed=$(prun -np 1 -v "$dir" -r -n $size -m $size -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
+          echo "$dir,random,$size,$size,$time_elapsed" >> ../res_hist_cpu.csv
 
           time_elapsed=$(prun -np 1 -v "$dir" -r -n $((size-1)) -m $((size-1)) -s $((RANDOM)) | grep -oP 'Histo took:\s*\K([0-9]+\.[0-9]*|\.?[0-9]+)([eE][+-][0-9]+)?')
-          echo "$dir,random,-,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
+          echo "$dir,random,$((size-1)),$((size-1)),$time_elapsed" >> ../res_hist_cpu.csv
 
         done
 done

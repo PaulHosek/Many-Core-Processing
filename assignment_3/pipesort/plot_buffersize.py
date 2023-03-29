@@ -43,6 +43,6 @@ plt.ylim((0,10))
 # plt.yscale("log")
 # ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5))
 legend= plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=4)
-legend.set_title("Input length", prop={'size': 12})
+legend.set_title("Version", prop={'size': 12})
 
 plt.savefig("pp_buffersize.png", bbox_inches="tight", dpi=300)
