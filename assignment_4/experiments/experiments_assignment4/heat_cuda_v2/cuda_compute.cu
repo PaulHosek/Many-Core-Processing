@@ -40,7 +40,6 @@ __global__ void update_temperatures(double * temperature_old, double * temperatu
 
     if ((tidx) && (tidx < BLOCK_SIZE_X-1) && (tidy) && (tidy < BLOCK_SIZE_Y-1) && inside_grid)
     {
-        //if (((tidx == BLOCK_SIZE_X-2) && (tidy == BLOCK_SIZE_Y-2)) || ((row == N) && (col == M-1))) printf("row=%d, col=%d, index=%d\n",row,col,index);
         old_temperature = temperature_old[index];
         c_c = conductivity[index - M];
         rest_c_c = 1 - c_c;

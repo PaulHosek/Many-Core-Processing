@@ -27,7 +27,7 @@ __global__ void update_temperatures(double * temperature_old, double * temperatu
     const int tidx = threadIdx.x;
     const int tidy = threadIdx.y;
 
-    __shared__ double temperatures[BLOCK_SIZE_Y][BLOCK_SIZE_X+1];
+    __shared__ double temperatures[BLOCK_SIZE_Y][BLOCK_SIZE_X][2];
 
     const int row = blockIdx.y * (blockDim.y - 2) + threadIdx.y;
     int col = blockIdx.x * (blockDim.x -2) + threadIdx.x - 1;
