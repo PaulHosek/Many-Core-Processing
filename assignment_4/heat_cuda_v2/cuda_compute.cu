@@ -12,47 +12,44 @@ extern "C"
 }
 #include "cuda_compute.h"
 
-#define BLOCK_SIZE_X 1024 
-#define BLOCK_SIZE_Y 1 
+#define BLOCK_SIZE_X 32 
+#define BLOCK_SIZE_Y 32 
 #define BLOCK_SIZE 1024 
 #define WARP_SIZE 32
 
+#define C_CDIR (0.25 * sqrt(2.0) / (sqrt(2.0) + 1.0))
+#define C_CDIAG (0.25 / (sqrt(2.0) + 1.0))
+
 __global__ void update_temperatures(double * temperature_old, double * temperature_new, double * conductivity, const int M, const int N)
 {
-    const double c_cdir = 0.25 * sqrt(2.0) / (sqrt(2.0) + 1.0);
-    const double c_cdiag = 0.25 / (sqrt(2.0) + 1.0);
     double old_temperature, new_temperature, c_c, rest_c_c;
-    int index, index_left, index_right;
+    int inside_grid = 0;
+    const int tidx = threadIdx.x;
+    const int tidy = threadIdx.y;
 
-    const int row = blockIdx.y * blockDim.y + threadIdx.y;
-    const int col = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ double temperatures[BLOCK_SIZE_Y][BLOCK_SIZE_X];
 
-    if ((row < N) && (col < M))
+    const int row = blockIdx.y * (blockDim.y - 2) + threadIdx.y;
+    int col = blockIdx.x * (blockDim.x -2) + threadIdx.x - 1;
+    inside_grid = (col >= 0) && (col < M) && (row < N + 1) && row;
+    col += (col < 0) * M - (col == M) * M;
+    const int index = row * M + col;
+
+    if ((row < N + 2) && (col < M)) temperatures[tidy][tidx] = temperature_old[index];
+    __syncthreads();
+
+    if ((tidx) && (tidx < BLOCK_SIZE_X-1) && (tidy) && (tidy < BLOCK_SIZE_Y-1) && inside_grid)
     {
-        index = (row + 1) * M + col;
-        index_right = index + 1;
-        index_left = index -1;
-
-        if (col == 0)
-        {
-            index_left = index_left + M;;
-        }
-        else if (col == M-1)
-        {
-            index_right = index_right - M;
-        }
-
+        //if (((tidx == BLOCK_SIZE_X-2) && (tidy == BLOCK_SIZE_Y-2)) || ((row == N) && (col == M-1))) printf("row=%d, col=%d, index=%d\n",row,col,index);
         old_temperature = temperature_old[index];
         c_c = conductivity[index - M];
         rest_c_c = 1 - c_c;
 
         new_temperature = old_temperature * c_c;
-
-        new_temperature += (temperature_old[index_left] + temperature_old[index_right] +
-                temperature_old[index - M] + temperature_old[index + M]) * rest_c_c * c_cdir;
-        new_temperature += (temperature_old[index_left - M] + temperature_old[index_left + M] +
-                temperature_old[index_right - M] + temperature_old[index_right + M]) * rest_c_c * c_cdiag;
-
+        new_temperature += (temperatures[tidy][tidx-1] + temperatures[tidy][tidx+1] +
+                temperatures[tidy-1][tidx] + temperatures[tidy+1][tidx]) * rest_c_c * C_CDIR;
+        new_temperature += (temperatures[tidy-1][tidx-1] + temperatures[tidy+1][tidx-1] +
+                temperatures[tidy-1][tidx+1] + temperatures[tidy+1][tidx+1]) * rest_c_c * C_CDIAG;
         temperature_new[index] = new_temperature;
     }
 }
@@ -275,12 +272,13 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
     if (err != cudaSuccess) fprintf(stderr, "Error in cudaMemcpy d_temperature_old: %s\n", cudaGetErrorString( err ));
     err = cudaMemcpy(d_conductivity, conductivity, N * M * sizeof(double), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) fprintf(stderr, "Error in cudaMemcpy d_conductivity: %s\n", cudaGetErrorString( err ));
-    
+
     //setup the grid and thread blocks
-    int nblocks_x = int(ceilf(M/(double)BLOCK_SIZE_X));//n divided by thread block size rounded up
-    int nblocks_y = int(ceilf(N/(double)BLOCK_SIZE_Y));
+    int nblocks_x = int(ceilf(M/(double)(BLOCK_SIZE_X-2)));//n divided by thread block size rounded up
+    int nblocks_y = int(ceilf(N/(double)(BLOCK_SIZE_Y-2)));
     int nblocks_x_statistics = int(ceilf(grid_size / (double)BLOCK_SIZE));
-    dim3 threads(BLOCK_SIZE_X, BLOCK_SIZE_Y, 1);
+    dim3 threads_temperatures(BLOCK_SIZE_X, BLOCK_SIZE_Y, 1);
+    dim3 threads_statistics(BLOCK_SIZE,1,1);
     dim3 grid_temperatures(nblocks_x, nblocks_y, 1);
     dim3 grid_statistics(nblocks_x_statistics,1,1);
 
@@ -292,20 +290,20 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
         // Check convergence every timestep
         converged = 0;
         compute_statistics = (!iters_to_next_period || it == maxiter);
-        update_temperatures<<<grid_temperatures, threads>>>(d_temperature_old, d_temperature_new, d_conductivity, M, N);
+        update_temperatures<<<grid_temperatures, threads_temperatures>>>(d_temperature_old, d_temperature_new, d_conductivity, M, N);
         cudaDeviceSynchronize();
         //check to see if all went well
         err = cudaGetLastError();
         if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
         grid_statistics.x = nblocks_x_statistics;
-        get_maxdiff_per_thread<<<grid_statistics, threads>>>(d_temperature_old, d_temperature_new, d_maxdiff, M, N);
+        get_maxdiff_per_thread<<<grid_statistics, threads_statistics>>>(d_temperature_old, d_temperature_new, d_maxdiff, M, N);
         cudaDeviceSynchronize();
         err = cudaGetLastError();
         if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
         offset=1;
         while (offset * BLOCK_SIZE < grid_size)
         {
-            get_maxdiff_per_block<<<grid_statistics, threads>>>(d_maxdiff, offset, grid_size);
+            get_maxdiff_per_block<<<grid_statistics, threads_statistics>>>(d_maxdiff, offset, grid_size);
             cudaDeviceSynchronize();
             err = cudaGetLastError();
             if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
@@ -313,7 +311,7 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
             grid_statistics.x = int(ceilf(grid_statistics.x / (double)offset));
         };
         grid_statistics.x = 1; 
-        get_maxdiff_per_block<<<grid_statistics, threads>>>(d_maxdiff, offset, grid_size);
+        get_maxdiff_per_block<<<grid_statistics, threads_statistics>>>(d_maxdiff, offset, grid_size);
         cudaDeviceSynchronize();
         err = cudaGetLastError();
         if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
@@ -328,7 +326,7 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
         if (converged || compute_statistics)
         {
             grid_statistics.x = nblocks_x_statistics;
-            initialize_statistics<<<grid_statistics, threads>>>(d_temperature_new, d_min, d_max, d_sum, M, N);
+            initialize_statistics<<<grid_statistics, threads_statistics>>>(d_temperature_new, d_min, d_max, d_sum, M, N);
             cudaDeviceSynchronize();
             err = cudaGetLastError();
             if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
@@ -336,14 +334,14 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
             while (offset * BLOCK_SIZE < grid_size)
             {
                 grid_statistics.x = int(ceilf(grid_statistics.x / (double)offset));
-                get_statistics_per_block<<<grid_statistics, threads>>>(d_min, d_max, d_sum, offset, grid_size);
+                get_statistics_per_block<<<grid_statistics, threads_statistics>>>(d_min, d_max, d_sum, offset, grid_size);
                 cudaDeviceSynchronize();
                 err = cudaGetLastError();
                 if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
                 offset *= BLOCK_SIZE;
             };
             grid_statistics.x = 1; 
-            get_statistics_per_block<<<grid_statistics, threads>>>(d_min, d_max, d_sum, offset, grid_size);
+            get_statistics_per_block<<<grid_statistics, threads_statistics>>>(d_min, d_max, d_sum, offset, grid_size);
             cudaDeviceSynchronize();
             err = cudaGetLastError();
             if (err != cudaSuccess) fprintf(stderr, "Error during kernel execution: %s\n", cudaGetErrorString(err));
@@ -387,13 +385,7 @@ __host__ void cuda_do_compute(const struct parameters* p, struct results *r)
     clock_gettime(CLOCK_MONOTONIC, &after);
     r->time = (double)(after.tv_sec - before.tv_sec) +
               (double)(after.tv_nsec - before.tv_nsec) / 1e9;
-    
-    // Print to csv file for measuring 
-    // double flops_per_it = 12.0;
-    // double Flops = (double)p->N * (double)p->M * 
-    //                 (double)(r->niter * flops_per_it +
-    //                 (double)r->niter / p->period) / r->time;
-
+                    
     //clean up GPU memory allocations
     cudaFree(d_temperature_old);
     cudaFree(d_temperature_new);
