@@ -1,2 +1,10 @@
 *.py linguist-detectable=false
-*.tex linguist-detectable=true
+*.tex linguist-detectable=false
+*.vrc linguist-detectable=false
+*.bib linguist-detectable=false
+*.cls linguist-detectable=false
+
+*.cpp linguist-detectable=true
+*.c linguist-detectable=true
+*.h linguist-detectable=true
+*.cuda linguist-detectable=true
